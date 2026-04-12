@@ -6,6 +6,7 @@ import { MobileTabBar } from './components/MobileTabBar';
 import { ToastContainer, useToast } from './components/ui/Toast';
 import { useAuth } from './hooks/useAuth';
 import { useNetworkState } from './hooks/useNetworkState';
+import { useTheme } from './hooks/useTheme';
 import { useNotifications } from './hooks/useNotifications';
 import { generateQuizUnified } from './services/aiProvider';
 import { TokenLimitError } from './services/errors';
@@ -35,6 +36,7 @@ const OfflineIndicator = () => {
 };
 
 const App: React.FC = () => {
+    useTheme();
     const { user, isAuthenticated, loading, login, register, logout, updateProfile } = useAuth();
     const { unreadCount } = useNotifications(user?.id);
     const [isAppInitialLoading, setIsAppInitialLoading] = useState(true);
@@ -317,7 +319,7 @@ const App: React.FC = () => {
     }
 
     return (
-        <div className="h-[100dvh] bg-[#F5F5FA] text-slate-800 font-sans w-full relative flex flex-col overflow-hidden">
+        <div className="h-[100dvh] bg-[#F5F5FA] dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans w-full relative flex flex-col overflow-hidden">
             <button id="debug-tts-benchmark" style={{ display: 'none' }} onClick={() => setCurrentView(AppView.TTS_BENCHMARK)}>
                 Benchmark
             </button>

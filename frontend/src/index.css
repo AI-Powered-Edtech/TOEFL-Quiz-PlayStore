@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
 
 :root {
     --sat: env(safe-area-inset-top);
@@ -9,7 +10,7 @@
 
 @layer base {
     body {
-        @apply bg-slate-100 text-slate-700;
+        @apply bg-slate-100 text-slate-700 dark:bg-slate-950 dark:text-slate-300;
         padding-top: var(--sat);
         padding-bottom: var(--sab);
         padding-left: var(--sal);

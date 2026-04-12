@@ -1,6 +1,7 @@
 
-import { BookOpen, Trophy, Flame, Target, Award, Star, ArrowLeft, LogOut, LogIn, Eye, EyeOff, Activity, Upload, Check, Copy, User, ChevronRight } from 'lucide-react';
+import { BookOpen, Trophy, Flame, Target, Award, Star, ArrowLeft, LogOut, LogIn, Eye, EyeOff, Activity, Upload, Check, Copy, User, ChevronRight, Moon, Sun } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
+import { useTheme } from '../hooks/useTheme';
 
 
 import { friendService } from '../services/friendService';
@@ -23,6 +24,7 @@ interface ProfileProps {
 }
 
 export const Profile: React.FC<ProfileProps> = ({ user, progress, onNavigate, onSignIn, onSignOut, onUpdateProfile, isAuthenticated }) => {
+    const { isDark, toggleDark } = useTheme();
 
     const [prediction, setPrediction] = useState<ScorePrediction | null>(null);
     const [loadingOracle, setLoadingOracle] = useState(false);
@@ -143,6 +145,13 @@ export const Profile: React.FC<ProfileProps> = ({ user, progress, onNavigate, on
                         <h1 className="text-xl font-bold text-slate-800 tracking-tight">Your Profile</h1>
                     </div>
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={toggleDark}
+                            className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-slate-800 rounded-full transition-colors"
+                            title={isDark ? "Light Mode" : "Dark Mode"}
+                        >
+                            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                        </button>
                         {isAuthenticated && (
                             <>
                                 <button
