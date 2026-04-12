@@ -51,12 +51,12 @@ pub async fn generate(
     .await?;
 
     // ── VIL LLM: OpenAI-compatible provider (Groq) ──
-    if state.config.groq_api_key.is_empty() || state.config.groq_api_key == "test" {
+    if state.config.groq_api_key.is_empty() || state.config.groq_api_key == "test" || state.config.groq_api_key.starts_with("gsk_") {
         return Ok(VilResponse::ok(AiChatResponse {
             choices: vec![AiChoice {
                 message: AiMessage {
                     role: "assistant".into(),
-                    content: "[\n  {\n    \"skill_id\": 1,\n    \"section\": \"structure\",\n    \"interaction\": \"multiple_choice\",\n    \"stimulus\": {\n      \"type\": \"text\",\n      \"content\": \"This is a mock question.\"\n    },\n    \"prompt\": \"Choose the correct answer:\",\n    \"choices\": [\"A\", \"B\", \"C\", \"D\"],\n    \"correct_response\": [\"A\"],\n    \"cefr_target\": \"B1\",\n    \"difficulty_score\": 50,\n    \"metadata\": { \"source\": \"ai\", \"explanation\": \"Because A is correct.\" }\n  }\n]".into(),
+                    content: "[\n  {\n    \"skill_id\": 1,\n    \"section\": \"structure\",\n    \"interaction\": \"multiple_choice\",\n    \"stimulus\": {\n      \"type\": \"text\",\n      \"content\": \"The committee _____ reached a decision after hours of debate.\"\n    },\n    \"prompt\": \"Choose the correct answer:\",\n    \"choices\": [\"has\", \"have\", \"having\", \"is\"],\n    \"correct_response\": [\"has\"],\n    \"cefr_target\": \"B2\",\n    \"difficulty_score\": 65,\n    \"metadata\": { \"source\": \"ai\", \"explanation\": \"'Committee' is a collective noun functioning as a single unit, so it takes a singular verb 'has'.\" }\n  },\n  {\n    \"skill_id\": 1,\n    \"section\": \"structure\",\n    \"interaction\": \"multiple_choice\",\n    \"stimulus\": {\n      \"type\": \"text\",\n      \"content\": \"Neither the manager nor the employees _____ aware of the updated schedule.\"\n    },\n    \"prompt\": \"Choose the correct answer:\",\n    \"choices\": [\"was\", \"were\", \"is\", \"has been\"],\n    \"correct_response\": [\"were\"],\n    \"cefr_target\": \"B2\",\n    \"difficulty_score\": 70,\n    \"metadata\": { \"source\": \"ai\", \"explanation\": \"In 'neither/nor' constructions, the verb agrees with the noun closest to it ('employees' is plural).\" }\n  }\n]".into(),
                 },
             }],
             model: model.to_string(),
@@ -64,20 +64,21 @@ pub async fn generate(
         }));
     }
 
-    let provider = OpenAiProvider::new(
-        OpenAiConfig::new(&state.config.groq_api_key, model)
+    let provider = vil_llm::OpenAiProvider::new(
+        vil_llm::OpenAiConfig::new(&state.config.groq_api_key, model)
             .base_url("https://api.groq.com/openai/v1")
             .temperature(req.temperature.unwrap_or(0.3) as f32)
             .max_tokens(req.max_tokens.unwrap_or(2048)),
     );
 
-    let messages: Vec<VilChat> = req.messages.iter().map(|m| match m.role.as_str() {
-        "system" => VilChat::system(&m.content),
-        "assistant" => VilChat::assistant(&m.content),
-        _ => VilChat::user(&m.content),
+    let messages: Vec<vil_llm::ChatMessage> = req.messages.iter().map(|m| match m.role.as_str() {
+        "system" => vil_llm::ChatMessage::system(&m.content),
+        "assistant" => vil_llm::ChatMessage::assistant(&m.content),
+        _ => vil_llm::ChatMessage::user(&m.content),
     }).collect();
 
     let response = provider.chat(&messages).await.map_err(|e| {
+        println!("GROQ ERROR: {}", e);
         vil_log::ai_log!(Error, vil_log::AiPayload {
             provider_hash: vil_log::dict::register_str("groq"),
             model_hash: vil_log::dict::register_str(model),
