@@ -5,7 +5,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 const pdfjs = (pdfjsLib as any).default || pdfjsLib;
 
 // Initialize Worker with matching version (5.4.624) to avoid version mismatch errors
-if (typeof window !== 'undefined' && pdfjs.GlobalWorkerOptions) {
+if (typeof window !== 'undefined' && pdfjs && pdfjs.GlobalWorkerOptions) {
     pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.624/build/pdf.worker.min.mjs`;
 }
 
