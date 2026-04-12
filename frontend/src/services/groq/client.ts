@@ -97,7 +97,7 @@ export const callGroq = async (
 
                 const result = await aiService.generate({
                     messages: messages.map(m => ({
-                        role: m.role as 'user' | 'assistant',
+                        role: m.role as 'user' | 'assistant' | 'system',
                         content: m.content,
                     })),
                     model: AI_MODELS.POWERFUL,

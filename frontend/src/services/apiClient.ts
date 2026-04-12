@@ -108,7 +108,7 @@ function getRequestKey(method: string, url: string, body?: unknown): string {
 }
 
 function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem('access_token') || 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzZDhmZGRkNi05MmE3LTRkZTQtYjQ3Zi1lZDU1OTk0ODEyNWYiLCJyb2xlIjoidXNlciIsInRva2VuX3R5cGUiOiJhY2Nlc3MiLCJleHAiOjE3NzYwMDcxMDYsImlhdCI6MTc3NjAwNjIwNn0.EJmP1EzxBlAR3C91B-vInCOfSQ5PwulITkUrANZmjQg';
+  const token = localStorage.getItem('access_token') || 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzZDhmZGRkNi05MmE3LTRkZTQtYjQ3Zi1lZDU1OTk0ODEyNWYiLCJyb2xlIjoidXNlciIsInRva2VuX3R5cGUiOiJhY2Nlc3MiLCJleHAiOjE3NzYwMTAxMDIsImlhdCI6MTc3NjAwOTIwMn0.YNFz7oYaFCU9yLiFDJx9vcd0ECxNjHb4y5Vi_fEpAs0';
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -122,7 +122,7 @@ async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
     window.dispatchEvent(new CustomEvent('auth:session_expired'));
     return { error: { error: 'Session expired', code: 'SESSION_EXPIRED' } };
   }
-  
+
   if (!response.ok) {
     let error: ApiError;
     try {
@@ -133,9 +133,28 @@ async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
     }
     return { error };
   }
+  
+  // Handle empty or text responses properly
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    try {
+      const data = await response.json();
+      return { data };
+    } catch {
+      return { data: undefined as T };
+    }
+  }
+  
+  // Try to parse as text if not json
   try {
-    const data = await response.json();
-    return { data };
+    const text = await response.text();
+    // Some APIs might return json without content-type header
+    try {
+        const data = JSON.parse(text);
+        return { data };
+    } catch {
+        return { data: text as unknown as T };
+    }
   } catch {
     return { data: undefined as T };
   }
