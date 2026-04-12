@@ -1,4 +1,5 @@
 import { ValidationError } from '../types/service-types';
+import { CanonicalQuestionV1 } from '../types';
 
 interface ValidationResult<T> {
   isValid: boolean;
@@ -130,5 +131,21 @@ export {
   validateSocial,
   validateWriting,
 };
+
+export function validateCanonicalQuestion(q: any): q is CanonicalQuestionV1 {
+  if (!q || typeof q !== 'object') return false;
+  if (typeof q.skill_id !== 'number') return false;
+  if (!['structure', 'written', 'reading', 'listening'].includes(q.section)) return false;
+  if (!['fill_blank', 'identify_error', 'multiple_choice'].includes(q.interaction)) return false;
+  if (!q.stimulus || typeof q.stimulus !== 'object') return false;
+  if (typeof q.prompt !== 'string') return false;
+  if (!Array.isArray(q.choices)) return false;
+  if (!Array.isArray(q.correct_response)) return false;
+  if (!['A2', 'B1', 'B2', 'C1'].includes(q.cefr_target)) return false;
+  if (typeof q.difficulty_score !== 'number') return false;
+  if (!q.metadata || typeof q.metadata !== 'object') return false;
+  if (!['ai', 'db', 'pdf'].includes(q.metadata.source)) return false;
+  return true;
+}
 
 export type { ValidationResult };

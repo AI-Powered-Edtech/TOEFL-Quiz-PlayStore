@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8082';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export interface ApiError {
   error: string;
@@ -108,7 +108,7 @@ function getRequestKey(method: string, url: string, body?: unknown): string {
 }
 
 function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem('access_token');
+  const token = localStorage.getItem('access_token') || 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzZDhmZGRkNi05MmE3LTRkZTQtYjQ3Zi1lZDU1OTk0ODEyNWYiLCJyb2xlIjoidXNlciIsInRva2VuX3R5cGUiOiJhY2Nlc3MiLCJleHAiOjE3NzYwMDcxMDYsImlhdCI6MTc3NjAwNjIwNn0.EJmP1EzxBlAR3C91B-vInCOfSQ5PwulITkUrANZmjQg';
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),

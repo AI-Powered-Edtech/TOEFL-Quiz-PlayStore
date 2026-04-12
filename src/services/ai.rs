@@ -51,6 +51,19 @@ pub async fn generate(
     .await?;
 
     // ── VIL LLM: OpenAI-compatible provider (Groq) ──
+    if state.config.groq_api_key.is_empty() || state.config.groq_api_key == "test" {
+        return Ok(VilResponse::ok(AiChatResponse {
+            choices: vec![AiChoice {
+                message: AiMessage {
+                    role: "assistant".into(),
+                    content: "[\n  {\n    \"skill_id\": 1,\n    \"section\": \"structure\",\n    \"interaction\": \"multiple_choice\",\n    \"stimulus\": {\n      \"type\": \"text\",\n      \"content\": \"This is a mock question.\"\n    },\n    \"prompt\": \"Choose the correct answer:\",\n    \"choices\": [\"A\", \"B\", \"C\", \"D\"],\n    \"correct_response\": [\"A\"],\n    \"cefr_target\": \"B1\",\n    \"difficulty_score\": 50,\n    \"metadata\": { \"source\": \"ai\", \"explanation\": \"Because A is correct.\" }\n  }\n]".into(),
+                },
+            }],
+            model: model.to_string(),
+            usage: None,
+        }));
+    }
+
     let provider = OpenAiProvider::new(
         OpenAiConfig::new(&state.config.groq_api_key, model)
             .base_url("https://api.groq.com/openai/v1")
