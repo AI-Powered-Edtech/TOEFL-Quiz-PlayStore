@@ -1,0 +1,543 @@
+Unused files (311)
+android/app/src/main/assets/public/assets/academicdiscussiontask-475623c8.js   
+android/app/src/main/assets/public/assets/adminreviewpanel-fee369fe.js         
+android/app/src/main/assets/public/assets/analytics-830e496d.js                
+android/app/src/main/assets/public/assets/audiostorageservice-0bd558a2.js      
+android/app/src/main/assets/public/assets/band9libraryhub-05e410ed.js          
+android/app/src/main/assets/public/assets/bankview-2deef69e.js                 
+android/app/src/main/assets/public/assets/bitedetailview-a8824325.js           
+android/app/src/main/assets/public/assets/bitefeed-0cb1ba8f.js                 
+android/app/src/main/assets/public/assets/biteuploadflow-1b5573cb.js           
+android/app/src/main/assets/public/assets/cefrsimulationview-2c05bca7.js       
+android/app/src/main/assets/public/assets/circleservice-d6c12ae4.js            
+android/app/src/main/assets/public/assets/client-39ea92d7.js                   
+android/app/src/main/assets/public/assets/complexityladder-8012d6bf.js         
+android/app/src/main/assets/public/assets/complexityladderprompts-0d0ebb4b.js  
+android/app/src/main/assets/public/assets/complexityladderskills-8bd0d526.js   
+android/app/src/main/assets/public/assets/compoundclient-fa32fa27.js           
+android/app/src/main/assets/public/assets/confetti.module-b57252f4.js          
+android/app/src/main/assets/public/assets/contentmoderation-9748dfad.js        
+android/app/src/main/assets/public/assets/creatordashboard-c3e1a11b.js         
+android/app/src/main/assets/public/assets/devilsadvocatelevel-eae6b827.js      
+android/app/src/main/assets/public/assets/earningsservice-5f70df15.js          
+android/app/src/main/assets/public/assets/earningsview-ed8d607d.js             
+android/app/src/main/assets/public/assets/errorboundary-9970f4db.js            
+android/app/src/main/assets/public/assets/errorjailview-02c597e0.js            
+android/app/src/main/assets/public/assets/essaydojohub-15193e4f.js             
+android/app/src/main/assets/public/assets/essayprompts-ff25cec6.js             
+android/app/src/main/assets/public/assets/featureflagservice-693b4c36.js       
+android/app/src/main/assets/public/assets/friendservice-81dd90d0.js            
+android/app/src/main/assets/public/assets/generators-92fdca95.js               
+android/app/src/main/assets/public/assets/guestid-aac83352.js                  
+android/app/src/main/assets/public/assets/guestuser-7141f521.js                
+android/app/src/main/assets/public/assets/ieltsparagraphlevel-ad136e36.js      
+android/app/src/main/assets/public/assets/ieltswritingsim-6080ed70.js          
+android/app/src/main/assets/public/assets/index-031eab69.js                    
+android/app/src/main/assets/public/assets/index-54b514c4.js                    
+android/app/src/main/assets/public/assets/index-57340a37.js                    
+android/app/src/main/assets/public/assets/index-64635f43.js                    
+android/app/src/main/assets/public/assets/index-6df6e417.js                    
+android/app/src/main/assets/public/assets/index-70957725.js                    
+android/app/src/main/assets/public/assets/index.css-c7bce4e9.css               
+android/app/src/main/assets/public/assets/integratedwritingtask-d7f9182f.js    
+android/app/src/main/assets/public/assets/leaderboardservice-81114ae3.js       
+android/app/src/main/assets/public/assets/learningpath-38c3d286.js             
+android/app/src/main/assets/public/assets/loggingservice-560757f8.js           
+android/app/src/main/assets/public/assets/logicweaverlevel-7497a299.js         
+android/app/src/main/assets/public/assets/logicweaverlevels-c1212835.js        
+android/app/src/main/assets/public/assets/logicweaverskillpicker-a50fe0b7.js   
+android/app/src/main/assets/public/assets/logicweaverskills-662c0b21.js        
+android/app/src/main/assets/public/assets/masonerrorscreen-7fe46f23.js         
+android/app/src/main/assets/public/assets/masonleaderboard-e48885db.js         
+android/app/src/main/assets/public/assets/masonlevel-95376548.js               
+android/app/src/main/assets/public/assets/masonskills-c4f431a4.js              
+android/app/src/main/assets/public/assets/microlearning-419f5b6c.js            
+android/app/src/main/assets/public/assets/modelessaylibrary-d51a8246.js        
+android/app/src/main/assets/public/assets/monitoring-2e9a18ae.js               
+android/app/src/main/assets/public/assets/monitoringdashboard-ecb4aa05.js      
+android/app/src/main/assets/public/assets/monitoringdashboard.css-3616d9fc.css 
+android/app/src/main/assets/public/assets/morehub-50d25987.js                  
+android/app/src/main/assets/public/assets/notificationcenter-af203596.js       
+android/app/src/main/assets/public/assets/oracleservice-f6a83dfb.js            
+android/app/src/main/assets/public/assets/paymentmethodsetup-c9519a2f.js       
+android/app/src/main/assets/public/assets/paywallsheet-983cd737.js             
+android/app/src/main/assets/public/assets/pdfuploadview-1b7d54bc.js            
+android/app/src/main/assets/public/assets/peerreviewhub-c65e00f0.js            
+android/app/src/main/assets/public/assets/peerreviewservice-1173d9f2.js        
+android/app/src/main/assets/public/assets/practicehub-bfb60863.js              
+android/app/src/main/assets/public/assets/profile-dcaec27b.js                  
+android/app/src/main/assets/public/assets/purify.es-6855404a.js                
+android/app/src/main/assets/public/assets/questionbankservice-bc1ef9e6.js      
+android/app/src/main/assets/public/assets/quizoverlay-6ecde45d.js              
+android/app/src/main/assets/public/assets/react-vendor-1f970b29.js             
+android/app/src/main/assets/public/assets/reportview-6cf96f6b.js               
+android/app/src/main/assets/public/assets/scoreoracleview-a5ae0261.js          
+android/app/src/main/assets/public/assets/sessionpersistenceservice-392a4bb0.js
+android/app/src/main/assets/public/assets/settings-1f039383.js                 
+android/app/src/main/assets/public/assets/simulationview-1953369e.js           
+android/app/src/main/assets/public/assets/socialhub-63752167.js                
+android/app/src/main/assets/public/assets/supabase-vendor-8ea85b7d.js          
+android/app/src/main/assets/public/assets/taskspecificprompts-fe10d33f.js      
+android/app/src/main/assets/public/assets/timeout-484dc43b.js                  
+android/app/src/main/assets/public/assets/ui-vendor-8fae0b19.js                
+android/app/src/main/assets/public/assets/useguestpolicy-7d18acd7.js           
+android/app/src/main/assets/public/assets/utils-vendor-11ce11de.js             
+android/app/src/main/assets/public/assets/web-6edb909b.js                      
+android/app/src/main/assets/public/assets/web-a7a159e0.js                      
+android/app/src/main/assets/public/assets/writinggym-47cf44d0.js               
+android/app/src/main/assets/public/assets/writinggymhub-17c98aba.js            
+android/app/src/main/assets/public/assets/writinggymprogressservice-37770842.js
+android/app/src/main/assets/public/assets/writinggymservice-4f0c24a0.js        
+android/app/src/main/assets/public/assets/youtubeplayer-4e58bde8.js            
+android/app/src/main/assets/public/cordova_plugins.js                          
+android/app/src/main/assets/public/cordova.js                                  
+android/app/src/main/assets/public/registerSW.js                               
+android/app/src/main/assets/public/sw.js                                       
+android/app/src/main/assets/public/workbox-7f693cba.js                         
+ios/App/App/public/assets/academicdiscussiontask-475623c8.js                   
+ios/App/App/public/assets/adminreviewpanel-fee369fe.js                         
+ios/App/App/public/assets/analytics-830e496d.js                                
+ios/App/App/public/assets/audiostorageservice-0bd558a2.js                      
+ios/App/App/public/assets/band9libraryhub-05e410ed.js                          
+ios/App/App/public/assets/bankview-2deef69e.js                                 
+ios/App/App/public/assets/bitedetailview-a8824325.js                           
+ios/App/App/public/assets/bitefeed-0cb1ba8f.js                                 
+ios/App/App/public/assets/biteuploadflow-1b5573cb.js                           
+ios/App/App/public/assets/cefrsimulationview-2c05bca7.js                       
+ios/App/App/public/assets/circleservice-d6c12ae4.js                            
+ios/App/App/public/assets/client-39ea92d7.js                                   
+ios/App/App/public/assets/complexityladder-8012d6bf.js                         
+ios/App/App/public/assets/complexityladderprompts-0d0ebb4b.js                  
+ios/App/App/public/assets/complexityladderskills-8bd0d526.js                   
+ios/App/App/public/assets/compoundclient-fa32fa27.js                           
+ios/App/App/public/assets/confetti.module-b57252f4.js                          
+ios/App/App/public/assets/contentmoderation-9748dfad.js                        
+ios/App/App/public/assets/creatordashboard-c3e1a11b.js                         
+ios/App/App/public/assets/devilsadvocatelevel-eae6b827.js                      
+ios/App/App/public/assets/earningsservice-5f70df15.js                          
+ios/App/App/public/assets/earningsview-ed8d607d.js                             
+ios/App/App/public/assets/errorboundary-9970f4db.js                            
+ios/App/App/public/assets/errorjailview-02c597e0.js                            
+ios/App/App/public/assets/essaydojohub-15193e4f.js                             
+ios/App/App/public/assets/essayprompts-ff25cec6.js                             
+ios/App/App/public/assets/featureflagservice-693b4c36.js                       
+ios/App/App/public/assets/friendservice-81dd90d0.js                            
+ios/App/App/public/assets/generators-92fdca95.js                               
+ios/App/App/public/assets/guestid-aac83352.js                                  
+ios/App/App/public/assets/guestuser-7141f521.js                                
+ios/App/App/public/assets/ieltsparagraphlevel-ad136e36.js                      
+ios/App/App/public/assets/ieltswritingsim-6080ed70.js                          
+ios/App/App/public/assets/index-031eab69.js                                    
+ios/App/App/public/assets/index-54b514c4.js                                    
+ios/App/App/public/assets/index-57340a37.js                                    
+ios/App/App/public/assets/index-64635f43.js                                    
+ios/App/App/public/assets/index-6df6e417.js                                    
+ios/App/App/public/assets/index-70957725.js                                    
+ios/App/App/public/assets/index.css-c7bce4e9.css                               
+ios/App/App/public/assets/integratedwritingtask-d7f9182f.js                    
+ios/App/App/public/assets/leaderboardservice-81114ae3.js                       
+ios/App/App/public/assets/learningpath-38c3d286.js                             
+ios/App/App/public/assets/loggingservice-560757f8.js                           
+ios/App/App/public/assets/logicweaverlevel-7497a299.js                         
+ios/App/App/public/assets/logicweaverlevels-c1212835.js                        
+ios/App/App/public/assets/logicweaverskillpicker-a50fe0b7.js                   
+ios/App/App/public/assets/logicweaverskills-662c0b21.js                        
+ios/App/App/public/assets/masonerrorscreen-7fe46f23.js                         
+ios/App/App/public/assets/masonleaderboard-e48885db.js                         
+ios/App/App/public/assets/masonlevel-95376548.js                               
+ios/App/App/public/assets/masonskills-c4f431a4.js                              
+ios/App/App/public/assets/microlearning-419f5b6c.js                            
+ios/App/App/public/assets/modelessaylibrary-d51a8246.js                        
+ios/App/App/public/assets/monitoring-2e9a18ae.js                               
+ios/App/App/public/assets/monitoringdashboard-ecb4aa05.js                      
+ios/App/App/public/assets/monitoringdashboard.css-3616d9fc.css                 
+ios/App/App/public/assets/morehub-50d25987.js                                  
+ios/App/App/public/assets/notificationcenter-af203596.js                       
+ios/App/App/public/assets/oracleservice-f6a83dfb.js                            
+ios/App/App/public/assets/paymentmethodsetup-c9519a2f.js                       
+ios/App/App/public/assets/paywallsheet-983cd737.js                             
+ios/App/App/public/assets/pdfuploadview-1b7d54bc.js                            
+ios/App/App/public/assets/peerreviewhub-c65e00f0.js                            
+ios/App/App/public/assets/peerreviewservice-1173d9f2.js                        
+ios/App/App/public/assets/practicehub-bfb60863.js                              
+ios/App/App/public/assets/profile-dcaec27b.js                                  
+ios/App/App/public/assets/purify.es-6855404a.js                                
+ios/App/App/public/assets/questionbankservice-bc1ef9e6.js                      
+ios/App/App/public/assets/quizoverlay-6ecde45d.js                              
+ios/App/App/public/assets/react-vendor-1f970b29.js                             
+ios/App/App/public/assets/reportview-6cf96f6b.js                               
+ios/App/App/public/assets/scoreoracleview-a5ae0261.js                          
+ios/App/App/public/assets/sessionpersistenceservice-392a4bb0.js                
+ios/App/App/public/assets/settings-1f039383.js                                 
+ios/App/App/public/assets/simulationview-1953369e.js                           
+ios/App/App/public/assets/socialhub-63752167.js                                
+ios/App/App/public/assets/supabase-vendor-8ea85b7d.js                          
+ios/App/App/public/assets/taskspecificprompts-fe10d33f.js                      
+ios/App/App/public/assets/timeout-484dc43b.js                                  
+ios/App/App/public/assets/ui-vendor-8fae0b19.js                                
+ios/App/App/public/assets/useguestpolicy-7d18acd7.js                           
+ios/App/App/public/assets/utils-vendor-11ce11de.js                             
+ios/App/App/public/assets/web-6edb909b.js                                      
+ios/App/App/public/assets/web-a7a159e0.js                                      
+ios/App/App/public/assets/writinggym-47cf44d0.js                               
+ios/App/App/public/assets/writinggymhub-17c98aba.js                            
+ios/App/App/public/assets/writinggymprogressservice-37770842.js                
+ios/App/App/public/assets/writinggymservice-4f0c24a0.js                        
+ios/App/App/public/assets/youtubeplayer-4e58bde8.js                            
+ios/App/App/public/cordova_plugins.js                                          
+ios/App/App/public/cordova.js                                                  
+ios/App/App/public/registerSW.js                                               
+ios/App/App/public/sw.js                                                       
+ios/App/App/public/workbox-7f693cba.js                                         
+kitten-tts-benchmark.ts                                                        
+lighthouserc.js                                                                
+scripts/seedDailyBites.ts                                                      
+scripts/simulate_oracle.ts                                                     
+src/admin-main.tsx                                                             
+src/components/admin/AdminAuthGate.tsx                                         
+src/components/admin/AdminLoginModal.tsx                                       
+src/components/admin/BackofficeAI.tsx                                          
+src/components/admin/BackofficeAIUsers.tsx                                     
+src/components/admin/BackofficeBlogManager.tsx                                 
+src/components/admin/BackofficeDashboard.tsx                                   
+src/components/admin/BackofficeHub.tsx                                         
+src/components/admin/BackofficeNotifications.tsx                               
+src/components/admin/BackofficeUsers.tsx                                       
+src/components/admin/CommandPalette.tsx                                        
+src/components/admin/MonitoringDashboard.css                                   
+src/components/admin/MonitoringDashboard.tsx                                   
+src/components/LeaderboardView.tsx                                             
+src/components/peerReview/BandDescriptor.tsx                                   
+src/components/peerReview/ReviewerTierBadge.tsx                                
+src/components/powerups/PowerUps.tsx                                           
+src/components/progress/MasonProgressTracker.tsx                               
+src/components/QuestionReviewCard.tsx                                          
+src/components/stubs.tsx                                                       
+src/components/SubmitConfirm.tsx                                               
+src/components/SubscriptionBadge.tsx                                           
+src/components/tips/GrammarTipsPanel.tsx                                       
+src/components/ui/ErrorBoundary.tsx                                            
+src/components/ui/ErrorToast.tsx                                               
+src/components/VocabHub.tsx                                                    
+src/components/writingGym/ComparativeAnalysisView.tsx                          
+src/components/writingGym/EvaluationEnhancements.tsx                           
+src/components/writingGym/MissionReportScreen.tsx                              
+src/components/writingGym/SampleResponseLibrary.tsx                            
+src/config/fallbackExercises.ts                                                
+src/hooks/useAccessibility.tsx                                                 
+src/hooks/useAudioPreload.ts                                                   
+src/hooks/useIdleHints.ts                                                      
+src/hooks/useNetworkStatus.ts                                                  
+src/hooks/useQuiz.ts                                                           
+src/hooks/useYouTubeScript.ts                                                  
+src/services/auditService.ts                                                   
+src/services/groq/index.ts                                                     
+src/services/groq/prompts/compoundPrompts.ts                                   
+src/services/jailService.ts                                                    
+src/services/offlineWritingService.ts                                          
+src/services/pdfQuizService.ts                                                 
+src/services/quizRepository.ts                                                 
+src/SubmitConfirm.tsx                                                          
+src/utils/lazyLoad.tsx                                                         
+supabase/functions/admin-send-notification/index.ts                            
+supabase/functions/alerts/index.ts                                             
+supabase/functions/cleanup-expired-claims/index.ts                             
+supabase/functions/groq-proxy/index.ts                                         
+supabase/functions/groq-tts-proxy/index.ts                                     
+supabase/functions/monitor-alerts/index.ts                                     
+tests/e2e/academic-discussion.spec.ts                                          
+tests/e2e/accessibility.spec.ts                                                
+tests/e2e/admin-backoffice-deep.spec.ts                                        
+tests/e2e/admin-panel.spec.ts                                                  
+tests/e2e/android-smoke.spec.ts                                                
+tests/e2e/band9-library.spec.ts                                                
+tests/e2e/cefr-simulation-deep.spec.ts                                         
+tests/e2e/complexity-ladder.spec.ts                                            
+tests/e2e/critical-journeys.spec.ts                                            
+tests/e2e/critical.spec.ts                                                     
+tests/e2e/dashboard.spec.ts                                                    
+tests/e2e/error-handling.spec.ts                                               
+tests/e2e/error-jail-bank.spec.ts                                              
+tests/e2e/essay-dojo.spec.ts                                                   
+tests/e2e/flow-backoffice.spec.ts                                              
+tests/e2e/flow-cefr.spec.ts                                                    
+tests/e2e/flow-error-jail.spec.ts                                              
+tests/e2e/flow-full-simulation.spec.ts                                         
+tests/e2e/flow-pdf-to-quiz.spec.ts                                             
+tests/e2e/flow-question-bank.spec.ts                                           
+tests/e2e/flow-score-oracle.spec.ts                                            
+tests/e2e/flow-social-hub.spec.ts                                              
+tests/e2e/flow-subscription-plans.spec.ts                                      
+tests/e2e/flow-writing-gym.spec.ts                                             
+tests/e2e/guest-mode.spec.ts                                                   
+tests/e2e/happy-path.spec.ts                                                   
+tests/e2e/ielts-paragraph.spec.ts                                              
+tests/e2e/ielts-writing-sim.spec.ts                                            
+tests/e2e/integrated-writing.spec.ts                                           
+tests/e2e/learning-path.spec.ts                                                
+tests/e2e/live-tutoring.spec.ts                                                
+tests/e2e/logic-weaver.spec.ts                                                 
+tests/e2e/mason-sub-screens.spec.ts                                            
+tests/e2e/mason.spec.ts                                                        
+tests/e2e/mobile-gestures.spec.ts                                              
+tests/e2e/mobile-native.spec.ts                                                
+tests/e2e/notification-flow.spec.ts                                            
+tests/e2e/notification-tts.spec.ts                                             
+tests/e2e/offline-mode.spec.ts                                                 
+tests/e2e/paywall-subscription.spec.ts                                         
+tests/e2e/peer-review-flow.spec.ts                                             
+tests/e2e/performance.spec.ts                                                  
+tests/e2e/practice-hub.spec.ts                                                 
+tests/e2e/profile-settings.spec.ts                                             
+tests/e2e/quiz-flow.spec.ts                                                    
+tests/e2e/quiz-generation.spec.ts                                              
+tests/e2e/quiz-view-types.spec.ts                                              
+tests/e2e/report-view.spec.ts                                                  
+tests/e2e/score-oracle-report-morehub.spec.ts                                  
+tests/e2e/server-persistence.spec.ts                                           
+tests/e2e/session-recovery.spec.ts                                             
+tests/e2e/simulation-full.spec.ts                                              
+tests/e2e/social-hub.spec.ts                                                   
+tests/e2e/sub-components.spec.ts                                               
+tests/e2e/utils/testHelpers.ts                                                 
+tests/e2e/vocab-hub.spec.ts                                                    
+tests/e2e/writing-gym-features.spec.ts                                         
+tests/e2e/youtube-player.spec.ts                                               
+tests/helpers/supabaseTestHelper.ts                                            
+tests/load/load-test.js                                                        
+tests/load/logic-weaver-load-test.js                                           
+tests/load/smoke-test.js                                                       
+tests/load/social-hub-load-test.js                                             
+tests/notification-flow.spec.ts                                                
+tts-server/server.js                                                           
+Unused dependencies (11)
+@capacitor/haptics     package.json:32:6
+@capacitor/ios         package.json:33:6
+@google/genai          package.json:40:6
+@langchain/groq        package.json:41:6
+@sentry/tracing        package.json:43:6
+@tanstack/react-table  package.json:45:6
+@types/dompurify       package.json:46:6
+fastest-validator      package.json:50:6
+langchain              package.json:54:6
+react-error-boundary   package.json:59:6
+zustand                package.json:65:6
+Unused devDependencies (1)
+concurrently  package.json:80:6
+Unlisted dependencies (1)
+@sentry/browser  src/services/supabase.ts:2:26
+Unlisted binaries (2)
+docker-compose  package.json
+k6              package.json
+Unresolved imports (6)
+../../src/features/daily-bites/components/TipButton      tests/components/TipButton.test.tsx:6:27    
+../../src/features/daily-bites/components/YouTubePlayer  tests/components/YouTubePlayer.test.tsx:6:31
+../../src/services/earningsService                       tests/services/earningsService.test.ts:3:73 
+../../src/services/earningsService                       tests/unit/earningsService.test.ts:52:8     
+../../src/services/paymentGateway                        tests/unit/paymentGateway.test.ts:3:32      
+../../types                                              tests/unit/qualityService.test.ts:9:26      
+Unused exports (124)
+useErrorBoundary                                              src/components/ErrorBoundary.tsx:249:14                   
+ErrorFallback                                                 src/components/ErrorBoundary.tsx:270:14                   
+default                                                       src/components/ErrorBoundary.tsx:306:16                   
+default                                                       src/components/writingGym/ComplexityLadder.tsx:532:16     
+TASK_1_BANK                                                   src/data/essayTaskBank.ts:9:14                            
+TASK_2_BANK                                                   src/data/essayTaskBank.ts:83:14                           
+getRandomTasks                                                src/data/essayTaskBank.ts:193:14                          
+getBankSize                                                   src/data/essayTaskBank.ts:202:14                          
+IW_XP_REWARDS                                                 src/data/integratedWritingAchievements.ts:104:14          
+getUnlockedSkills                                   function  src/data/masonSkills.ts:233:17                            
+getNextSkill                                        function  src/data/masonSkills.ts:240:17                            
+getCurrentUserRole                adminService      function  src/services/adminService.ts:65:23                        
+requireAdmin                      adminService      function  src/services/adminService.ts:82:23                        
+getAdminUsers                     adminService      function  src/services/adminService.ts:92:23                        
+assignUserRole                    adminService      function  src/services/adminService.ts:120:23                       
+removeUserRole                    adminService      function  src/services/adminService.ts:160:23                       
+logAdminAction                    adminService      function  src/services/adminService.ts:201:23                       
+getAuditLogs                      adminService      function  src/services/adminService.ts:229:23                       
+generateDistractorsUnified                                    src/services/aiProvider.ts:111:14                         
+getAvailableProviders                                         src/services/aiProvider.ts:135:14                         
+getDefaultProvider                                            src/services/aiProvider.ts:142:14                         
+preloadMultiple                                               src/services/audioCacheService.ts:263:14                  
+clearAudioCache                                               src/services/audioCacheService.ts:388:14                  
+getCacheStats                                                 src/services/audioCacheService.ts:401:14                  
+hashTranscript                                      function  src/services/audioIndexedDBCache.ts:63:17                 
+hasInIDB                                            function  src/services/audioIndexedDBCache.ts:151:23                
+clearIDBCache                                       function  src/services/audioIndexedDBCache.ts:189:23                
+getStoredAudioUrl                                             src/services/audioStorageService.ts:81:14                 
+hasStoredAudio                                                src/services/audioStorageService.ts:114:14                
+getQuestionAudioUrl                                           src/services/audioStorageService.ts:175:14                
+fetchBlogPostsBySection                             function  src/services/blogService.ts:92:23                         
+fetchFeaturedPosts                                  function  src/services/blogService.ts:118:23                        
+adminFetchAllPosts                                  function  src/services/blogService.ts:152:23                        
+adminUpsertBlogPost                                 function  src/services/blogService.ts:166:23                        
+adminDeleteBlogPost                                 function  src/services/blogService.ts:186:23                        
+getEssayProgress                                    function  src/services/essayMetricsService.ts:213:23                
+isMasonEnabled                                                src/services/featureFlagService.ts:180:14                 
+isLogicWeaverEnabled                                          src/services/featureFlagService.ts:181:14                 
+FriendError                                         class     src/services/friendService.ts:20:14                       
+callCompound                                                  src/services/groq/compoundClient.ts:61:14                 
+generateDistractorsWithCompound                               src/services/groq/compoundClient.ts:199:14                
+BASE_SCHEMA                                                   src/services/groq/prompts/common.ts:1:14                  
+COMMON_RULES                                                  src/services/groq/prompts/common.ts:18:14                 
+QUALITY_MANDATE                                               src/services/groq/prompts/common.ts:26:14                 
+getComparativeAnalysisPrompt                                  …/services/groq/prompts/integratedWritingPrompts.ts:100:14
+SKILL_SPECIFIC_PROMPTS                                        src/services/groq/prompts/structure.ts:66:14              
+DISTRACTOR_PROMPT                                             src/services/groq/prompts/writingGym.ts:156:14            
+ACADEMIC_TOPICS                                               src/services/groq/quizEngineCore.ts:10:14                 
+repairQuizQuestion                                            src/services/groq/quizGenerator.ts:386:14                 
+getGlobalLeaderboard                                          src/services/historyService.ts:91:14                      
+initKittenTts                                                 src/services/kittenTtsService.ts:71:14                    
+warmupKittenTts                                               src/services/kittenTtsService.ts:125:14                   
+saveProgress                                        function  src/services/masonProgressService.ts:254:23               
+getMyReports                                                  src/services/moderationService.ts:81:14                   
+getModerationQueue                                            src/services/moderationService.ts:108:14                  
+getModerationStats                                            src/services/moderationService.ts:198:14                  
+autoModerate                                                  src/services/moderationService.ts:254:14                  
+getUserModerationHistory                                      src/services/moderationService.ts:431:14                  
+isUserInGoodStanding                                          src/services/moderationService.ts:452:14                  
+triggerCleanup                    peerReviewServi…            src/services/peerReviewService.ts:52:14                   
+isBillingAvailable                                  function  src/services/purchaseService.ts:84:23                     
+getAvailableProducts                                function  src/services/purchaseService.ts:105:23                    
+openSubscriptionManagement                          function  src/services/purchaseService.ts:353:23                    
+QUALIFICATION_QUIZ                                            src/services/qualificationService.ts:95:14                
+submitQuiz                                                    src/services/qualificationService.ts:314:14               
+getQuizQuestions                                              src/services/qualificationService.ts:407:14               
+regenerateStructureDistractors                                src/services/questionBankService.ts:855:14                
+RATE_LIMITS                                                   src/services/socialRateLimiter.ts:14:14                   
+SocialRateLimiter                                   class     src/services/socialRateLimiter.ts:37:14                   
+getCurrentUserId                                    function  src/services/socialRateLimiter.ts:204:23                  
+checkRateLimit                                      function  src/services/socialRateLimiter.ts:216:23                  
+enforceRateLimit                                    function  src/services/socialRateLimiter.ts:234:23                  
+getSubscription                                     function  src/services/subscriptionService.ts:156:23                
+waitForAuth                                                   src/services/supabase.ts:100:14                           
+getTTSMetrics                                       function  src/services/ttsMetrics.ts:84:17                          
+getTTSSummary                                       function  src/services/ttsMetrics.ts:91:17                          
+clearTTSMetrics                                     function  src/services/ttsMetrics.ts:131:17                         
+getAudioElement                                               src/services/ttsService.ts:147:14                         
+getActiveTTSProvider                                          src/services/ttsService.ts:221:14                         
+markQuestionAsAnswered                                        src/services/userQuestionHistoryService.ts:20:14          
+clearUserHistory                                              src/services/userQuestionHistoryService.ts:99:14          
+getCompletionStats                                            src/services/userQuestionHistoryService.ts:124:14         
+getDifficultyRange                                            src/types.ts:377:14                                       
+trackRating                       analytics                   src/utils/analytics.ts:116:14                             
+getUserAnalytics                  analytics                   src/utils/analytics.ts:138:14                             
+groqCircuitBreaker                                            src/utils/CircuitBreaker.ts:364:14                        
+supabaseCircuitBreaker                                        src/utils/CircuitBreaker.ts:370:14                        
+generateContentHash                                 function  src/utils/contentModeration.ts:265:17                     
+checkDuplicate                                      function  src/utils/contentModeration.ts:282:17                     
+debugWarn                                                     src/utils/debugLogger.ts:43:14                            
+debugError                                                    src/utils/debugLogger.ts:60:14                            
+getDraftCount                     draftStorage                src/utils/draftStorage.ts:135:14                          
+hasDraft                          draftStorage                src/utils/draftStorage.ts:148:14                          
+hasUnsavedDraft                                     function  src/utils/essayDraftStorage.ts:142:17                     
+getTimeSinceLastSave                                function  src/utils/essayDraftStorage.ts:158:17                     
+getOrCreateGuestId                                            src/utils/guestId.ts:14:14                                
+isGuestId                                                     src/utils/guestId.ts:39:14                                
+clearGuestId                                                  src/utils/guestId.ts:46:14                                
+clearGuestUserId                                              src/utils/guestUser.ts:21:14                              
+MAX_LENGTHS                                                   src/utils/inputValidation.ts:32:14                        
+MIN_LENGTHS                                                   src/utils/inputValidation.ts:41:14                        
+stripTags                                           function  src/utils/inputValidation.ts:127:17                       
+measureAsync                                        function  src/utils/MetricsCollector.ts:179:23                      
+measure                                             function  src/utils/MetricsCollector.ts:199:17                      
+advocateRateLimiter                                           src/utils/RateLimiter.ts:163:14                           
+masonRateLimiter                                              src/utils/RateLimiter.ts:170:14                           
+generateSecureRandomString                          function  src/utils/secureCodeGenerator.ts:28:17                    
+generatePrefixedId                                  function  src/utils/secureCodeGenerator.ts:78:17                    
+generateToken                                       function  src/utils/secureCodeGenerator.ts:89:17                    
+generateVerificationCode                            function  src/utils/secureCodeGenerator.ts:99:17                    
+generateUniqueFilename                              function  src/utils/secureCodeGenerator.ts:109:17                   
+generateSessionId                                   function  src/utils/secureCodeGenerator.ts:122:17                   
+calculateEntropy                                    function  src/utils/secureCodeGenerator.ts:131:17                   
+hasMinimumEntropy                                   function  src/utils/secureCodeGenerator.ts:141:17                   
+generateUniqueCodes                                 function  src/utils/secureCodeGenerator.ts:150:17                   
+generateCodeWithChecksum                            function  src/utils/secureCodeGenerator.ts:170:17                   
+verifyCodeWithChecksum                              function  src/utils/secureCodeGenerator.ts:182:17                   
+generateTimeBasedCode                               function  src/utils/secureCodeGenerator.ts:215:17                   
+verifyTimeBasedCode                                 function  src/utils/secureCodeGenerator.ts:236:17                   
+CODE_CHARS                                                    src/utils/secureCodeGenerator.ts:263:10                   
+TimeoutError                                        class     src/utils/timeout.ts:1:14                                 
+showInfo                                                      src/utils/toast.ts:34:14                                  
+showLoading                                                   src/utils/toast.ts:45:14                                  
+dismissToast                                                  src/utils/toast.ts:51:14                                  
+Unused exported types (74)
+ErrorType                                  type       src/components/ErrorBoundary.tsx:12:13                 
+AppError                                   interface  src/components/ErrorBoundary.tsx:20:18                 
+ToastType                                  type       src/components/ui/Toast.tsx:5:13                       
+ToastMessage                               interface  src/components/ui/Toast.tsx:7:18                       
+BrickProps                                 interface  src/components/writingGym/MasonBrick.tsx:7:18          
+RouteConfig                                interface  src/config/routes.ts:5:18                              
+ListeningClipSpec                          interface  src/data/cefrPrompts.ts:40:18                          
+IndoglishPattern                           interface  src/data/indoglishPatterns.ts:1:18                     
+SimulationConfig                           interface  src/hooks/simulation/useFullSimulation.ts:35:18        
+UseFullSimulationReturn                    interface  src/hooks/simulation/useFullSimulation.ts:42:18        
+FeatureType                                type       src/hooks/useGuestPolicy.tsx:6:13                      
+PolicyType                                 type       src/hooks/useGuestPolicy.tsx:10:13                     
+UseMasonGameProps                          interface  src/hooks/useMasonGame.ts:23:18                        
+UserRole                     adminService  type       src/services/adminService.ts:11:13                     
+UserRoleData                 adminService  interface  src/services/adminService.ts:13:18                     
+AuditLogEntry                adminService  interface  src/services/adminService.ts:188:18                    
+AIProvider                                 type       src/services/aiProvider.ts:12:13                       
+AIProviderOptions                          interface  src/services/aiProvider.ts:14:18                       
+DevilsAdvocateEventType                    type       src/services/analytics/devilsAdvocateAnalytics.ts:6:13 
+DevilsAdvocateEventMetadata                interface  src/services/analytics/devilsAdvocateAnalytics.ts:11:18
+BlogPostDB                                 interface  src/services/blogService.ts:11:18                      
+BlogPostUpsert                             interface  src/services/blogService.ts:32:18                      
+EssayMetric                                interface  src/services/essayMetricsService.ts:8:18               
+EssayMetricsSummary                        interface  src/services/essayMetricsService.ts:25:18              
+EssayProgress                              interface  src/services/essayMetricsService.ts:199:18             
+EssayValidationResult                      interface  src/services/essayValidationService.ts:1:18            
+MultiSectionExtraction                     type       src/services/extractor.ts:45:13                        
+ExtractedToeflData                         type       src/services/extractor.ts:53:13                        
+FriendErrorCode                            type       src/services/friendService.ts:31:13                    
+CompoundModel                              type       src/services/groq/compoundClient.ts:13:13              
+CompoundConfig                             interface  src/services/groq/compoundClient.ts:15:18              
+Citation                                   interface  src/services/groq/compoundClient.ts:21:18              
+CodeExecutionResult                        interface  src/services/groq/compoundClient.ts:27:18              
+CompoundResponse                           interface  src/services/groq/compoundClient.ts:33:18              
+Message                                    interface  src/services/groq/compoundClient.ts:45:18              
+StreamingPlayerCallbacks                   interface  src/services/kittenTtsService.ts:134:18                
+ScoreResults                               interface  src/services/oracleScoringEngine.ts:17:18              
+ConfidenceLevel                            type       src/services/oracleScoringEngine.ts:24:13              
+GeneratedRecommendation                    interface  src/services/oracleScoringEngine.ts:268:18             
+PdfRange                                   interface  src/services/pdfService.ts:12:18                       
+PurchaseResult                             interface  src/services/purchaseService.ts:39:18                  
+ProductInfo                                interface  src/services/purchaseService.ts:45:18                  
+WritingGymLevel                            type       src/services/sessionPersistenceService.ts:9:13         
+SessionState                               interface  src/services/sessionPersistenceService.ts:11:18        
+SessionRecovery                            interface  src/services/sessionPersistenceService.ts:24:18        
+RateLimitResult                            interface  src/services/socialRateLimiter.ts:22:18                
+SubscriptionStatus                         type       src/services/subscriptionService.ts:22:13              
+Subscription                               interface  src/services/subscriptionService.ts:24:18              
+TTSEvent                                   type       src/services/ttsMetrics.ts:14:13                       
+TTSProvider                                type       src/services/ttsMetrics.ts:24:13                       
+TTSMetric                                  interface  src/services/ttsMetrics.ts:26:18                       
+TTSSummary                                 interface  src/services/ttsMetrics.ts:37:18                       
+StreamingPlayerCallbacks                   type       src/services/ttsService.ts:234:38                      
+QuestionValidator                          interface  src/services/validators/baseValidator.ts:9:18          
+QuizState                                  interface  src/types.ts:77:18                                     
+SimulationConfig                           interface  src/types.ts:221:18                                    
+CustomSimulationConfig                     interface  src/types.ts:258:18                                    
+SimulationSectionDef                       interface  src/types.ts:299:18                                    
+IELTSStepOption                            interface  src/types.ts:406:18                                    
+IELTSStep                                  interface  src/types.ts:413:18                                    
+ModerationAction                           interface  src/types/moderation.ts:29:18                          
+TutorialExample                            interface  src/types/qualification.ts:35:18                       
+InteractiveTask                            interface  src/types/qualification.ts:58:18                       
+AnalyticsEventType           analytics     type       src/utils/analytics.ts:10:13                           
+AnalyticsEvent               analytics     interface  src/utils/analytics.ts:12:18                           
+CefrLevelInfo                              interface  src/utils/cefrScoringUtils.ts:11:18                    
+CircuitBreakerOptions                      interface  src/utils/CircuitBreaker.ts:30:18                      
+CircuitBreakerStats                        interface  src/utils/CircuitBreaker.ts:37:18                      
+ModerationResult                           interface  src/utils/contentModeration.ts:29:18                   
+ModerationFlag                             interface  src/utils/contentModeration.ts:36:18                   
+ReviewDraft                  draftStorage  interface  src/utils/draftStorage.ts:10:18                        
+EssayDraft                                 interface  src/utils/essayDraftStorage.ts:11:18                   
+ValidationResult                           interface  src/utils/inputValidation.ts:50:18                     
+RateLimitInfo                              interface  src/utils/RateLimiter.ts:19:18                         
+Duplicate exports (3)
+ErrorBoundary|default              src/components/ErrorBoundary.tsx              
+ComplexityLadder|default           src/components/writingGym/ComplexityLadder.tsx
+sessionPersistenceService|default  src/services/sessionPersistenceService.ts     
+Configuration hints (1)

@@ -1,0 +1,182 @@
+import api from './apiClient';
+
+export interface Circle {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  creator_id: string;
+  is_public: boolean;
+  chat_mode?: string;
+  created_at: string;
+  member_count?: number;
+}
+
+export interface CircleMember {
+  id: string;
+  circle_id: string;
+  user_id: string;
+  role?: string;
+  joined_at?: string;
+  profile?: {
+    full_name?: string;
+    avatar_url?: string;
+    xp?: number;
+  };
+}
+
+export interface CircleMessage {
+  id: string;
+  circle_id: string;
+  user_id: string;
+  content: string;
+  is_system: boolean;
+  created_at: string;
+  profile?: {
+    full_name?: string;
+    avatar_url?: string;
+  };
+}
+
+export interface Friend {
+  id: string;
+  user_id: string;
+  friend_id: string;
+  profile?: {
+    full_name?: string;
+    avatar_url?: string;
+    xp?: number;
+  };
+  created_at?: string;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  user_id: string;
+  full_name?: string;
+  avatar_url?: string;
+  xp: number;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+}
+
+export interface Achievement {
+  id: string;
+  achievement_id: string;
+  feature?: string;
+  xp_earned: number;
+  created_at: string;
+}
+
+export interface Prediction {
+  id: string;
+  prediction_type: string;
+  predicted_value?: number;
+  actual_value?: number;
+  confidence?: number;
+  is_current: boolean;
+  created_at: string;
+}
+
+export const socialService = {
+  async createCircle(data: {
+    name: string;
+    description?: string;
+    is_public?: boolean;
+  }): Promise<{ ok: boolean; id?: string; error?: string }> {
+    const response = await api.post<{ ok: boolean; id: string }>('/api/social/circles', data);
+    if (response.error) {
+      return { ok: false, error: response.error.error };
+    }
+    return { ok: true, id: response.data?.id };
+  },
+
+  async joinCircle(code: string): Promise<{ ok: boolean; circle_id?: string; error?: string }> {
+    const response = await api.post<{ ok: boolean; circle_id: string }>('/api/social/circles/join', { code });
+    if (response.error) {
+      return { ok: false, error: response.error.error };
+    }
+    return { ok: true, circle_id: response.data?.circle_id };
+  },
+
+  async myCircles(): Promise<Circle[]> {
+    const response = await api.get<Circle[]>('/api/social/circles/mine');
+    return response.data || [];
+  },
+
+  async sendMessage(circleId: string, content: string): Promise<{ ok: boolean; id?: string; error?: string }> {
+    const response = await api.post<{ ok: boolean; id: string }>(`/api/social/circles/${circleId}/messages`, { content });
+    if (response.error) {
+      return { ok: false, error: response.error.error };
+    }
+    return { ok: true, id: response.data?.id };
+  },
+
+  async getMessages(circleId: string): Promise<CircleMessage[]> {
+    const response = await api.get<CircleMessage[]>(`/api/social/circles/${circleId}/messages`);
+    return response.data || [];
+  },
+
+  async addFriend(friendCode: string): Promise<{ ok: boolean; error?: string }> {
+    const response = await api.post<{ ok: boolean }>('/api/social/friends/add', { friend_code: friendCode });
+    if (response.error) {
+      return { ok: false, error: response.error.error };
+    }
+    return { ok: true };
+  },
+
+  async listFriends(): Promise<Friend[]> {
+    const response = await api.get<Friend[]>('/api/social/friends');
+    return response.data || [];
+  },
+
+  async leaderboard(): Promise<LeaderboardEntry[]> {
+    const response = await api.get<LeaderboardEntry[]>('/api/social/leaderboard');
+    return response.data || [];
+  },
+
+  async getPredictions(): Promise<Prediction[]> {
+    const response = await api.get<Prediction[]>('/api/social/predictions');
+    return response.data || [];
+  },
+
+  async savePrediction(data: {
+    prediction_type: string;
+    predicted_value?: number;
+    confidence?: number;
+    breakdown?: string;
+  }): Promise<{ ok: boolean; error?: string }> {
+    const response = await api.post<{ ok: boolean }>('/api/social/predictions', data);
+    if (response.error) {
+      return { ok: false, error: response.error.error };
+    }
+    return { ok: true };
+  },
+
+  async getAchievements(): Promise<Achievement[]> {
+    const response = await api.get<Achievement[]>('/api/social/achievements');
+    return response.data || [];
+  },
+
+  async getNotifications(): Promise<Notification[]> {
+    const response = await api.get<Notification[]>('/api/social/notifications');
+    return response.data || [];
+  },
+
+  async markNotificationRead(id: string): Promise<{ ok: boolean; error?: string }> {
+    const response = await api.patch<{ ok: boolean }>(`/api/social/notifications/${id}/read`);
+    if (response.error) {
+      return { ok: false, error: response.error.error };
+    }
+    return { ok: true };
+  },
+};
+
+export default socialService;

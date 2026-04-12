@@ -1,0 +1,8 @@
+# Sherpa-ONNX binary files (large, download at runtime)
+*.wasm
+*.onnx
+*.tar.bz2
+kitten-nano-en-v0_1-fp16/
+
+# Keep the JS files and worker
+!*.js

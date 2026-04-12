@@ -1,0 +1,61 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.env.*
+!.env.example
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Google Play Store service account key — NEVER commit this
+android/play-store-key.json
+play-store-key.json
+
+# Android keystore — NEVER commit this
+android/app/release-keystore.jks
+
+# --- TOBLERONE / TOEFL QUIZ SPECIFIC IGNORES ---
+
+# Playwright & Testing Reports
+playwright-report/
+test-results/
+temp_test_results.txt
+test-output.txt
+test_output*.json
+test_output*.txt
+
+# Local Debug & HTML Dumps
+debug-feed.html
+debug-page.html
+debug-playwright.cjs
+dump.cjs
+page_dump.html
+screenshot.b64
+html.png
+
+# Build Stats
+build-output.txt
+build-stats.html
+
+# Android / Mobile Builds
+*.apk
+*.aab

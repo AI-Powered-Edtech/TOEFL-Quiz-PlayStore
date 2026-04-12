@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+:root {
+    --sat: env(safe-area-inset-top);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
+    --sar: env(safe-area-inset-right);
+}
+
+@layer base {
+    body {
+        @apply bg-slate-100 text-slate-700;
+        padding-top: var(--sat);
+        padding-bottom: var(--sab);
+        padding-left: var(--sal);
+        padding-right: var(--sar);
+    }
+}
+
+/* ContentEditable Placeholder */
+[contenteditable="true"]:empty:before {
+    content: attr(data-placeholder);
+    pointer-events: none;
+    display: block;
+}
+
+/* Global scrollbar hiding */
+*::-webkit-scrollbar {
+    display: none;
+}
+
+* {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Screen Reader Only - for accessibility */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Custom Scrollbar for PDF Text Area */
+.pdf-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.pdf-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.pdf-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.pdf-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
