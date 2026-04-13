@@ -36,6 +36,13 @@ const OfflineIndicator = () => {
 };
 
 const App: React.FC = () => {
+    // TEMPORARY TOKEN INJECT FOR QA
+    const tempToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4ODI5NzczOC1iY2UzLTRkYjctYWVjMC1iYTdlZDQxNTUyYmYiLCJyb2xlIjoidXNlciIsInRva2VuX3R5cGUiOiJhY2Nlc3MiLCJleHAiOjE3NzYwNTA2MTIsImlhdCI6MTc3NjA0OTcxMn0.aCoZ7reVZUXMInNSBnx2uuYWvIvZZ1Y3rbC17myRvBo';
+    if (localStorage.getItem('access_token') !== tempToken) {
+        localStorage.setItem('access_token', tempToken);
+        window.location.reload();
+    }
+
     useTheme();
     const { user, isAuthenticated, loading, login, register, logout, updateProfile } = useAuth();
     const { unreadCount } = useNotifications(user?.id);

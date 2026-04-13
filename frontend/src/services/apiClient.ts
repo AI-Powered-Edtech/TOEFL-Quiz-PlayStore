@@ -107,8 +107,10 @@ function getRequestKey(method: string, url: string, body?: unknown): string {
   return `${method}:${url}:${body ? JSON.stringify(body) : ''}`;
 }
 
+import { secureStorage } from '../utils/secureStorage';
+
 function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem('access_token') || 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzZDhmZGRkNi05MmE3LTRkZTQtYjQ3Zi1lZDU1OTk0ODEyNWYiLCJyb2xlIjoidXNlciIsInRva2VuX3R5cGUiOiJhY2Nlc3MiLCJleHAiOjE3NzYwMTAxMDIsImlhdCI6MTc3NjAwOTIwMn0.YNFz7oYaFCU9yLiFDJx9vcd0ECxNjHb4y5Vi_fEpAs0';
+  const token = secureStorage.getItem('access_token');
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),

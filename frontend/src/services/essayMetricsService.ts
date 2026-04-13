@@ -51,7 +51,7 @@ export const essayMetricsService = {
 
             const newMetric: EssayMetric = {
                 ...metric,
-                id: crypto.randomUUID(),
+                id: (crypto.randomUUID && crypto.randomUUID()) || Math.random().toString(36).substring(2, 15),
                 submitted_at: new Date().toISOString()
             };
 
