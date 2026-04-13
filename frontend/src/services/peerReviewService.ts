@@ -3,7 +3,7 @@ import * as analytics from '../utils/analytics';
 import { sanitizeText } from '../utils/inputValidation';
 import { peerReviewLogger } from '../utils/monitoring';
 
-import { notificationService } from './notificationService';
+import { socialService } from './social';
 
 const SUBMISSIONS_KEY = 'peer_review_submissions_';
 const REVIEWS_KEY = 'peer_reviews_';
@@ -317,7 +317,7 @@ export const submitReview = async (
             const submissionData = submissions[subIndex];
             if (submissionData.user_id) {
                 try {
-                    await notificationService.createNotification({
+                    await socialService.createNotification({
                         user_id: submissionData.user_id,
                         type: 'peer_review',
                         title: 'Essay Review Completed',

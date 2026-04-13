@@ -177,6 +177,44 @@ export const socialService = {
     }
     return { ok: true };
   },
+
+  async getOrCreateFriendCode(userId: string): Promise<string | null> {
+    try {
+      const response = await api.get<{ friend_code: string | null }>(`/api/profile/${userId}`);
+      if (response.data?.friend_code) {
+        return response.data.friend_code;
+      }
+      const code = 'TOEFL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      const updateResponse = await api.patch(`/api/profile/${userId}`, { friend_code: code });
+      return updateResponse.error ? null : code;
+    } catch {
+      return null;
+    }
+  },
+
+  async removeFriend(friendId: string): Promise<{ ok: boolean; error?: string }> {
+    const response = await api.delete<{ ok: boolean }>(`/api/social/friends/${friendId}`);
+    if (response.error) {
+      return { ok: false, error: response.error.error };
+    }
+    return { ok: true };
+  },
+
+  async respondToRequest(requesterId: string, accept: boolean): Promise<{ ok: boolean; error?: string }> {
+    const response = await api.post<{ ok: boolean }>('/api/social/friends/respond', { requester_id: requesterId, accept });
+    if (response.error) {
+      return { ok: false, error: response.error.error };
+    }
+    return { ok: true };
+  },
+
+  async createNotification(data: any): Promise<void> {
+    try {
+      await api.post('/api/social/notifications', data);
+    } catch {
+      // Ignored for now
+    }
+  }
 };
 
 export default socialService;

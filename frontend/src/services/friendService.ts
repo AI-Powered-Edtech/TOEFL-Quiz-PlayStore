@@ -1,3 +1,6 @@
+/**
+ * @deprecated Use socialService from './social.ts' instead.
+ */
 import { validateFriendCode } from '../utils/inputValidation';
 import { generateFriendCode } from '../utils/secureCodeGenerator';
 
@@ -84,7 +87,7 @@ export const friendService = {
 
     async addFriendByCode(code: string): Promise<{ success: boolean; error?: string }> {
         try {
-            const authResponse = await apiClient.get<{ user: { id: string } | null }>('/api/auth/me');
+            const authResponse = await apiClient.get<{ user: { id: string } | null }>('/api/auth/profile');
             const myId = authResponse.data?.user?.id;
 
             if (!myId) {
@@ -155,7 +158,7 @@ export const friendService = {
 
     async removeFriend(friendId: string): Promise<boolean> {
         try {
-            const authResponse = await apiClient.get<{ user: { id: string } | null }>('/api/auth/me');
+            const authResponse = await apiClient.get<{ user: { id: string } | null }>('/api/auth/profile');
             const myId = authResponse.data?.user?.id;
 
             if (!myId) return false;
@@ -175,7 +178,7 @@ export const friendService = {
         if (!accept) return true;
 
         try {
-            const authResponse = await apiClient.get<{ user: { id: string } | null }>('/api/auth/me');
+            const authResponse = await apiClient.get<{ user: { id: string } | null }>('/api/auth/profile');
             const myId = authResponse.data?.user?.id;
 
             if (!myId) return false;

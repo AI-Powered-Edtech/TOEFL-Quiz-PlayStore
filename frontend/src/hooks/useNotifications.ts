@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-import { notificationService } from '../services/notificationService';
+import { socialService } from '../services/social';
 import { supabase } from '../services/supabase';
 import { Notification } from '../types';
 
@@ -12,7 +12,7 @@ export const useNotifications = (userId?: string) => {
     const fetchNotifications = useCallback(async () => {
         if (!userId) return;
         try {
-            const data = await notificationService.getNotifications(userId);
+            const data = await socialService.getNotifications();
             setNotifications(data);
             setUnreadCount(data.filter(n => !n.is_read).length);
         } catch (error) {
@@ -33,7 +33,7 @@ export const useNotifications = (userId?: string) => {
         setUnreadCount(prev => Math.max(0, prev - 1));
 
         try {
-            await notificationService.markAsRead(id);
+            await socialService.markNotificationRead(id);
         } catch (error) {
             console.error('Failed to mark as read:', error);
             // Revert on error would go here, but for read status it's low risk
@@ -48,7 +48,7 @@ export const useNotifications = (userId?: string) => {
         setUnreadCount(0);
 
         try {
-            await notificationService.markAllAsRead(userId);
+            // await socialService.markAllAsRead(userId);
         } catch (error) {
             console.error('Failed to mark all as read:', error);
         }

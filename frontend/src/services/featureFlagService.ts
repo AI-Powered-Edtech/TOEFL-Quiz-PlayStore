@@ -1,15 +1,16 @@
 // Feature Flag Service
 // Provides gradual rollout and A/B testing capabilities
+import { apiClient } from './apiClient';
 
 interface FeatureFlag {
     id: string;
     name: string;
-    description: string;
+    description?: string;
     enabled: boolean;
     rollout_percent: number;
-    allowed_users: string[];
-    created_at: string;
-    updated_at: string;
+    allowed_users?: string[];
+    created_at?: string;
+    updated_at?: string;
 }
 
 const DEFAULT_FLAGS: Record<string, FeatureFlag> = {
@@ -69,6 +70,7 @@ class FeatureFlagService {
     private cache: Map<string, FeatureFlag> = new Map();
     private cacheExpiry: Map<string, number> = new Map();
     private cacheTTL = 5 * 60 * 1000;
+    private fetchPromise: Promise<FeatureFlag[]> | null = null;
 
     async isEnabled(flagName: string, userId?: string): Promise<boolean> {
         try {
@@ -106,6 +108,38 @@ class FeatureFlagService {
         }
     }
 
+    private async fetchAllFlags(): Promise<FeatureFlag[]> {
+        if (this.fetchPromise) {
+            return this.fetchPromise;
+        }
+
+        this.fetchPromise = (async () => {
+            try {
+                const response = await apiClient.get<FeatureFlag[]>('/api/admin-monitoring/feature-flags');
+                if (response.error || !response.data) {
+                    throw new Error(response.error?.error || 'Failed to fetch flags');
+                }
+                
+                const flags = response.data;
+                const now = Date.now();
+                
+                flags.forEach(flag => {
+                    this.cache.set(flag.name, flag);
+                    this.cacheExpiry.set(flag.name, now + this.cacheTTL);
+                });
+                
+                return flags;
+            } catch (err) {
+                console.error('[FeatureFlags] Error fetching flags:', err);
+                return [];
+            } finally {
+                this.fetchPromise = null;
+            }
+        })();
+
+        return this.fetchPromise;
+    }
+
     private async getFlag(flagName: string): Promise<FeatureFlag | null> {
         const cached = this.cache.get(flagName);
         const expiry = this.cacheExpiry.get(flagName);
@@ -114,16 +148,12 @@ class FeatureFlagService {
             return cached;
         }
 
-        const stored = localStorage.getItem(`feature_flag_${flagName}`);
-        if (stored) {
-            try {
-                const flag = JSON.parse(stored);
-                this.cache.set(flagName, flag);
-                this.cacheExpiry.set(flagName, Date.now() + this.cacheTTL);
-                return flag;
-            } catch {
-                // Fall through to default
-            }
+        // Try to fetch from API
+        await this.fetchAllFlags();
+        
+        const updatedCached = this.cache.get(flagName);
+        if (updatedCached) {
+            return updatedCached;
         }
 
         const defaultFlag = DEFAULT_FLAGS[flagName];
@@ -149,16 +179,36 @@ class FeatureFlagService {
     }
 
     async getAllFlags(): Promise<FeatureFlag[]> {
+        const flags = await this.fetchAllFlags();
+        if (flags.length > 0) {
+            return flags;
+        }
         return Object.values(DEFAULT_FLAGS);
     }
 
-    async setFlag(flagName: string, enabled: boolean): Promise<void> {
+    async setFlag(flagName: string, enabled: boolean, rolloutPercent?: number): Promise<void> {
         const flag = await this.getFlag(flagName);
         if (flag) {
-            const updated = { ...flag, enabled, updated_at: new Date().toISOString() };
-            localStorage.setItem(`feature_flag_${flagName}`, JSON.stringify(updated));
-            this.cache.set(flagName, updated);
-            this.cacheExpiry.set(flagName, Date.now() + this.cacheTTL);
+            const updated = { 
+                ...flag, 
+                enabled, 
+                rollout_percent: rolloutPercent ?? flag.rollout_percent 
+            };
+            
+            try {
+                // Determine ID (backend uses string IDs that might map to names)
+                const id = flag.id || flag.name;
+                await apiClient.patch(`/api/admin-monitoring/feature-flags/${id}`, {
+                    enabled,
+                    rollout_percent: updated.rollout_percent
+                });
+                
+                this.cache.set(flagName, updated);
+                this.cacheExpiry.set(flagName, Date.now() + this.cacheTTL);
+            } catch (err) {
+                console.error(`[FeatureFlags] Error updating flag ${flagName}:`, err);
+                throw err;
+            }
         }
     }
 

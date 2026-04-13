@@ -2,7 +2,7 @@ import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Clock, User, Share2, Bookmark, Flame, ChevronRight, Play, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
-import { BLOG_POSTS, BlogPost } from '../../data/blogPosts';
+import { BlogPost } from '../../data/blogPosts';
 import { TOEFL_STRUCTURE_SKILLS, TOEFL_LISTENING_SKILLS, TOEFL_READING_SKILLS } from '../../data/skills';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchBlogPost, incrementBlogPostViews } from '../../services/blogService';
@@ -19,34 +19,8 @@ interface BlogPostViewProps {
 }
 
 export const BlogPostView: React.FC<BlogPostViewProps> = ({ onNavigate, onBack, onStartSkill, postId }) => {
-    let staticPost = BLOG_POSTS.find(p => p.id === postId);
-
-    if (!staticPost && postId) {
-        const skillMatch = ALL_SKILLS.find(s => s.id === postId);
-        if (skillMatch) {
-            let template = BLOG_POSTS[0];
-            if (skillMatch.part === 'Listening') {
-                template = BLOG_POSTS.find(p => p.category === 'Listening') || BLOG_POSTS[0];
-            } else if (skillMatch.part === 'Reading') {
-                template = BLOG_POSTS.find(p => p.category === 'Reading') || BLOG_POSTS[0];
-            } else {
-                template = BLOG_POSTS.find(p => p.category === 'Structure' || p.category === 'Written') || BLOG_POSTS[0];
-            }
-            staticPost = {
-                ...template,
-                id: postId,
-                title: skillMatch.name,
-                excerpt: skillMatch.description,
-            };
-        }
-    }
-
-    if (!staticPost) {
-        staticPost = BLOG_POSTS[0];
-    }
-
     const { user } = useAuth();
-    const [post, setPost] = useState(staticPost);
+    const [post, setPost] = useState<BlogPost | null>(null);
     const [loadingPost, setLoadingPost] = useState(true);
     const { scrollYProgress } = useScroll();
     const scaleX = useSpring(scrollYProgress, {
@@ -122,6 +96,14 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({ onNavigate, onBack, 
             onStartSkill(skill.name, skill.section as SectionType);
         }
     };
+
+    if (loadingPost || !post) {
+        return (
+            <div className="flex flex-col min-h-full bg-white relative items-center justify-center">
+                <p className="text-slate-500">Loading...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col min-h-full bg-white relative">

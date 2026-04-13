@@ -116,6 +116,37 @@ export const quizService = {
     const response = await api.get<ProgressResponse>('/api/quiz/progress');
     return response.data || null;
   },
+
+  async getQuizReportById(id: string): Promise<any | null> {
+    try {
+        const stored = localStorage.getItem('quiz_reports');
+        const reports = stored ? JSON.parse(stored) : [];
+        return reports.find((r: any) => r.id === id) || null;
+    } catch { return null; }
+  },
+
+  async saveQuizReport(data: any): Promise<string | null> {
+    try {
+        const id = crypto.randomUUID();
+        const report = {
+            id,
+            student_name: data.studentName,
+            quiz_topic: data.topic,
+            score: data.score,
+            total_questions: data.total,
+            correct_count: data.correct,
+            answers_snapshot: data.answers,
+            user_id: data.userId || null,
+            created_at: new Date().toISOString()
+        };
+        const stored = localStorage.getItem('quiz_reports');
+        const reports = stored ? JSON.parse(stored) : [];
+        reports.unshift(report);
+        if (reports.length > 100) reports.splice(100);
+        localStorage.setItem('quiz_reports', JSON.stringify(reports));
+        return id;
+    } catch { return null; }
+  }
 };
 
 export default quizService;

@@ -1,3 +1,6 @@
+/**
+ * @deprecated Use socialService from './social.ts' instead.
+ */
 import { Notification } from '../types';
 
 const NOTIFICATIONS_KEY = 'notifications_';
@@ -27,7 +30,7 @@ export const notificationService = {
     },
 
     async markAsRead(notificationId: string): Promise<void> {
-        const authResponse = await fetch('/api/auth/me');
+        const authResponse = await fetch('/api/auth/profile');
         if (!authResponse.ok) return;
 
         const userId = (await authResponse.json())?.user?.id;

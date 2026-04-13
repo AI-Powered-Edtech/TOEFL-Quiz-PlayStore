@@ -76,7 +76,7 @@ export const authService = {
     try {
       const response = await withRetry(
         () =>
-          api.post<AuthResponse>('/auth/register', data, {
+          api.post<AuthResponse>('/api/auth/register', data, {
             timeout: TIMEOUTS.auth,
           }),
         RETRY_CONFIG
@@ -118,7 +118,7 @@ export const authService = {
     try {
       const response = await withRetry(
         () =>
-          api.post<AuthResponse>('/auth/login', data, {
+          api.post<AuthResponse>('/api/auth/login', data, {
             timeout: TIMEOUTS.auth,
           }),
         RETRY_CONFIG
@@ -140,14 +140,14 @@ export const authService = {
   },
 
   async getProfile(): Promise<Profile | null> {
-    const response = await api.get<Profile>('/auth/profile');
+    const response = await api.get<Profile>('/api/auth/profile');
     return response.data ?? null;
   },
 
   async updateProfile(
     data: UpdateProfileRequest
   ): Promise<{ ok: boolean; error?: string }> {
-    const response = await api.patch<Profile>('/auth/profile', data);
+    const response = await api.patch<Profile>('/api/auth/profile', data);
     if (response.error) {
       return { ok: false, error: response.error.error };
     }
@@ -160,7 +160,7 @@ export const authService = {
       return { ok: false };
     }
     const response = await api.post<{ ok: boolean; access_token: string }>(
-      '/auth/refresh',
+      '/api/auth/refresh',
       {
         refresh_token: refreshToken,
       },
@@ -191,7 +191,7 @@ export const authService = {
       const response = await withRetry(
         () =>
           api.post<OAuthInitResponse>(
-            '/auth/oauth/init',
+            '/api/auth/oauth/init',
             {
               provider: 'google',
               redirect_uri: redirectUri,
@@ -214,7 +214,7 @@ export const authService = {
       const response = await withRetry(
         () =>
           api.post<AuthResponse>(
-            '/auth/oauth/callback',
+            '/api/auth/oauth/callback',
             {
               code,
               state,
@@ -248,7 +248,7 @@ export const authService = {
       const response = await withRetry(
         () =>
           api.post<TokenRotateResponse>(
-            '/auth/oauth/rotate',
+            '/api/auth/oauth/rotate',
             {
               refresh_token: refreshToken,
             },

@@ -1,3 +1,5 @@
+import { apiClient } from './apiClient';
+
 export type UserRole = 'user' | 'admin' | 'super_admin';
 
 export interface UserRoleData {
@@ -7,47 +9,16 @@ export interface UserRoleData {
     assignedBy?: string;
 }
 
-const ADMIN_USERS_KEY = 'admin_users';
-const AUDIT_LOGS_KEY = 'admin_audit_logs';
-
-const getAdminUsers = (): Record<string, UserRoleData> => {
-    try {
-        const stored = localStorage.getItem(ADMIN_USERS_KEY);
-        return stored ? JSON.parse(stored) : {};
-    } catch {
-        return {};
-    }
-};
-
-const saveAdminUsers = (users: Record<string, UserRoleData>): void => {
-    localStorage.setItem(ADMIN_USERS_KEY, JSON.stringify(users));
-};
-
-const getAuditLogsStorage = (): any[] => {
-    try {
-        const stored = localStorage.getItem(AUDIT_LOGS_KEY);
-        return stored ? JSON.parse(stored) : [];
-    } catch {
-        return [];
-    }
-};
-
-const saveAuditLogs = (logs: any[]): void => {
-    localStorage.setItem(AUDIT_LOGS_KEY, JSON.stringify(logs));
-};
-
 export async function isCurrentUserAdmin(): Promise<boolean> {
-    const userId = await getCurrentUserId();
-    if (!userId) return false;
-    return hasUserRole(userId, 'admin');
+    const role = await getCurrentUserRole();
+    return role === 'admin' || role === 'super_admin';
 }
 
 async function getCurrentUserId(): Promise<string | null> {
     try {
-        const response = await fetch('/api/auth/me');
-        if (!response.ok) return null;
-        const data = await response.json();
-        return data?.user?.id || null;
+        const response = await apiClient.get<any>('/api/auth/profile');
+        if (response.error || !response.data) return null;
+        return response.data?.user?.id || response.data?.id || null;
     } catch {
         return null;
     }
@@ -56,17 +27,29 @@ async function getCurrentUserId(): Promise<string | null> {
 export async function hasUserRole(userId: string, requiredRole: UserRole): Promise<boolean> {
     if (requiredRole === 'user') return true;
 
-    const admins = getAdminUsers();
-    const userRole = admins[userId]?.role;
+    // A more robust implementation would fetch the specific user's role from the backend.
+    // For now, if checking the current user, use getCurrentUserRole.
+    const currentUserId = await getCurrentUserId();
+    if (currentUserId === userId) {
+        const currentRole = await getCurrentUserRole();
+        return currentRole === 'admin' || currentRole === 'super_admin';
+    }
+
+    // Otherwise, try to find them in the admin list
+    const admins = await getAdminUsersList();
+    const user = admins.find(a => a.id === userId);
+    const userRole = user?.role || 'user';
     return userRole === 'admin' || userRole === 'super_admin';
 }
 
 export async function getCurrentUserRole(): Promise<UserRole | null> {
-    const userId = await getCurrentUserId();
-    if (!userId) return null;
-
-    const admins = getAdminUsers();
-    return admins[userId]?.role || 'user';
+    try {
+        const response = await apiClient.get<any>('/api/auth/profile');
+        if (response.error || !response.data) return null;
+        return response.data?.user?.role || response.data?.role || 'user';
+    } catch {
+        return null;
+    }
 }
 
 export async function requireAdmin(): Promise<void> {
@@ -77,15 +60,17 @@ export async function requireAdmin(): Promise<void> {
 }
 
 export async function getAdminUsersList(): Promise<{ id: string; email?: string; role: UserRole }[]> {
-    const isAdmin = await isCurrentUserAdmin();
-    if (!isAdmin) return [];
-
-    const admins = getAdminUsers();
-    return Object.entries(admins).map(([id, data]) => ({
-        id,
-        email: data.assignedBy,
-        role: data.role
-    }));
+    try {
+        const response = await apiClient.get<any[]>('/api/admin/users');
+        if (response.error || !response.data) return [];
+        return response.data.map(item => ({
+            id: item.user_id || item.id,
+            email: item.email,
+            role: item.role as UserRole
+        }));
+    } catch {
+        return [];
+    }
 }
 
 export async function assignUserRole(
@@ -93,25 +78,10 @@ export async function assignUserRole(
     role: UserRole,
 ): Promise<{ success: boolean; message: string }> {
     try {
-        const currentRole = await getCurrentUserRole();
-        if (currentRole !== 'super_admin') {
-            return { success: false, message: 'Only super admins can assign roles' };
+        const response = await apiClient.post<any>('/api/admin/roles', { user_id: userId, role });
+        if (response.error) {
+            return { success: false, message: response.error.error || 'Failed to assign role' };
         }
-
-        const userIdCurrent = await getCurrentUserId();
-        if (!userIdCurrent) {
-            return { success: false, message: 'Not authenticated' };
-        }
-
-        const admins = getAdminUsers();
-        admins[userId] = {
-            userId,
-            role,
-            assignedAt: new Date().toISOString(),
-            assignedBy: userIdCurrent
-        };
-        saveAdminUsers(admins);
-
         return { success: true, message: `Role '${role}' assigned successfully` };
     } catch (err) {
         return { success: false, message: String(err) };
@@ -122,15 +92,10 @@ export async function removeUserRole(
     userId: string,
 ): Promise<{ success: boolean; message: string }> {
     try {
-        const currentRole = await getCurrentUserRole();
-        if (currentRole !== 'super_admin') {
-            return { success: false, message: 'Only super admins can remove roles' };
+        const response = await apiClient.delete<any>(`/api/admin/roles/${userId}`);
+        if (response.error) {
+            return { success: false, message: response.error.error || 'Failed to remove role' };
         }
-
-        const admins = getAdminUsers();
-        delete admins[userId];
-        saveAdminUsers(admins);
-
         return { success: true, message: 'Role removed successfully' };
     } catch (err) {
         return { success: false, message: String(err) };
@@ -153,50 +118,36 @@ export async function logAdminAction(
     targetId: string,
     details?: Record<string, unknown>,
 ): Promise<void> {
-    const userId = await getCurrentUserId();
-    if (!userId) return;
-
-    try {
-        const logs = getAuditLogsStorage();
-        logs.unshift({
-            id: crypto.randomUUID(),
-            admin_id: userId,
-            action,
-            target_type: targetType,
-            target_id: targetId,
-            details,
-            created_at: new Date().toISOString(),
-        });
-
-        if (logs.length > 1000) {
-            logs.splice(1000);
-        }
-        saveAuditLogs(logs);
-    } catch (error) {
-        console.error('Failed to log admin action:', error);
-    }
+    // Backend handles audit logs automatically for admin actions.
+    // If a custom log is needed, we would add an API endpoint for it.
+    console.warn('logAdminAction called, but backend handles this automatically:', action, targetId);
 }
 
 export async function getAuditLogs(
     page = 1,
     limit = 50,
 ): Promise<AuditLogEntry[]> {
-    const isAdmin = await isCurrentUserAdmin();
-    if (!isAdmin) return [];
+    try {
+        const response = await apiClient.get<any[]>('/api/admin/audit-logs');
+        if (response.error || !response.data) return [];
+        
+        // Handle pagination locally since backend currently returns all
+        const start = (page - 1) * limit;
+        const end = start + limit;
+        const logs = response.data.slice(start, end);
 
-    const logs = getAuditLogsStorage();
-    const start = (page - 1) * limit;
-    const end = start + limit;
-
-    return logs.slice(start, end).map((item: any) => ({
-        id: item.id,
-        adminId: item.admin_id,
-        action: item.action,
-        targetType: item.target_type,
-        targetId: item.target_id,
-        details: item.details,
-        createdAt: item.created_at,
-    }));
+        return logs.map(item => ({
+            id: item.id,
+            adminId: item.admin_id,
+            action: item.action,
+            targetType: item.target_type as 'user',
+            targetId: item.target_id,
+            details: item.details,
+            createdAt: item.created_at || item.createdAt,
+        }));
+    } catch {
+        return [];
+    }
 }
 
 export { isCurrentUserAdmin as isAdminUser };

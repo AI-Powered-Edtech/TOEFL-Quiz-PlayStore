@@ -1,4 +1,5 @@
 import { WritingGymProgress, WritingGymLevel } from '../types';
+import api from './apiClient';
 
 export interface GymSession {
     userId: string;
@@ -12,61 +13,51 @@ export interface GymSession {
     exerciseData?: any;
 }
 
-const PROGRESS_KEY = 'writing_gym_progress_';
-
-const getProgress = (userId: string): WritingGymProgress[] => {
-    try {
-        const stored = localStorage.getItem(`${PROGRESS_KEY}${userId}`);
-        return stored ? JSON.parse(stored) : [];
-    } catch { return []; }
-};
-
-const saveProgress = (userId: string, progress: WritingGymProgress[]): void => {
-    localStorage.setItem(`${PROGRESS_KEY}${userId}`, JSON.stringify(progress));
-};
-
 export const writingGymProgressService = {
 
     async saveSession(session: GymSession): Promise<void> {
-        const progress = getProgress(session.userId);
-        const existingIndex = progress.findIndex(
-            p => p.level === session.level && p.skill_id === session.skillId
-        );
-
-        const entry: WritingGymProgress = existingIndex >= 0 ? progress[existingIndex] : {
-            id: crypto.randomUUID(),
-            user_id: session.userId,
+        // Save the session details
+        await api.post('/api/writing/sessions', {
             level: session.level,
             skill_id: session.skillId,
-            exercises_completed: 0,
-            best_score: 0,
-            best_time_ms: 0,
-            stars_earned: 0
-        };
+            best_score: session.score,
+            status: 'completed',
+            session_state: JSON.stringify(session.exerciseData || {})
+        });
 
-        entry.exercises_completed++;
-        if (session.score > entry.best_score) entry.best_score = session.score;
-        if (session.totalTime > 0 && (!entry.best_time_ms || session.totalTime < entry.best_time_ms)) {
-            entry.best_time_ms = session.totalTime;
+        // Fetch current progress to correctly update exercises_completed and best scores
+        const currentProgressResponse = await api.get<WritingGymProgress[]>('/api/writing/progress');
+        const currentProgress = currentProgressResponse.data || [];
+        const existing = currentProgress.find(p => p.level === session.level && p.skill_id === session.skillId);
+
+        const exercisesCompleted = (existing?.exercises_completed || 0) + 1;
+        const starsEarned = Math.max(existing?.stars_earned || 0, session.starsEarned);
+        const bestScore = Math.max(existing?.best_score || 0, session.score);
+        
+        let historyObj: any = existing?.history ? existing.history : {};
+        if (typeof historyObj === 'string') {
+            try { historyObj = JSON.parse(historyObj); } catch { historyObj = {}; }
         }
-        entry.stars_earned = Math.max(entry.stars_earned || 0, session.starsEarned);
-
-        if (existingIndex >= 0) {
-            progress[existingIndex] = entry;
-        } else {
-            progress.push(entry);
-        }
-
-        saveProgress(session.userId, progress);
+        
+        // Save the progress
+        await api.post('/api/writing/progress', {
+            level: session.level,
+            skill_id: session.skillId,
+            exercises_completed: exercisesCompleted,
+            stars_earned: starsEarned,
+            history: JSON.stringify({ ...historyObj, best_score: bestScore })
+        });
     },
 
     async getProgress(userId: string, level: WritingGymLevel): Promise<WritingGymProgress[]> {
-        const progress = getProgress(userId);
+        const response = await api.get<WritingGymProgress[]>('/api/writing/progress');
+        const progress = response.data || [];
         return progress.filter(p => p.level === level);
     },
 
     async getAllProgress(userId: string): Promise<WritingGymProgress[]> {
-        return getProgress(userId);
+        const response = await api.get<WritingGymProgress[]>('/api/writing/progress');
+        return response.data || [];
     },
 
     async getAllLevelProgress(userId: string, level: WritingGymLevel): Promise<WritingGymProgress[]> {
@@ -81,37 +72,48 @@ export const writingGymProgressService = {
         _timeMs?: number,
         _stars?: number
     ): Promise<void> {
-        const progress = getProgress(userId);
-        const existingIndex = progress.findIndex(
-            p => p.level === level && p.skill_id === skillId
-        );
-        
-        const updatesObj: Partial<WritingGymProgress> = typeof updates === 'number' 
-            ? { best_score: updates, best_time_ms: _timeMs, stars: _stars }
-            : updates;
-        
-        if (existingIndex >= 0) {
-            progress[existingIndex] = { ...progress[existingIndex], ...updatesObj };
-            saveProgress(userId, progress);
+        const currentProgressResponse = await api.get<WritingGymProgress[]>('/api/writing/progress');
+        const currentProgress = currentProgressResponse.data || [];
+        const existing = currentProgress.find(p => p.level === level && p.skill_id === skillId);
+
+        let newStars = _stars || existing?.stars_earned || 0;
+        let bestScore = existing?.best_score || 0;
+
+        if (typeof updates === 'number') {
+            bestScore = Math.max(bestScore, updates);
+            if (_stars !== undefined) {
+                newStars = Math.max(newStars, _stars);
+            }
+        } else {
+            if (updates.stars_earned !== undefined) {
+                newStars = Math.max(newStars, updates.stars_earned);
+            }
+            if (updates.best_score !== undefined) {
+                bestScore = Math.max(bestScore, updates.best_score);
+            }
         }
+
+        let historyObj: any = existing?.history ? existing.history : {};
+        if (typeof historyObj === 'string') {
+            try { historyObj = JSON.parse(historyObj); } catch { historyObj = {}; }
+        }
+
+        await api.post('/api/writing/progress', {
+            level,
+            skill_id: skillId,
+            exercises_completed: existing?.exercises_completed || 0,
+            stars_earned: newStars,
+            history: JSON.stringify({ ...historyObj, best_score: bestScore })
+        });
     },
 
     async getLeaderboard(limit: number = 10): Promise<{ userId: string; score: number; username: string }[]> {
-        const allProgress: { userId: string; score: number; username: string }[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key?.startsWith(PROGRESS_KEY)) {
-                try {
-                    const data = JSON.parse(localStorage.getItem(key) || '[]');
-                    const totalScore = data.reduce((sum: number, p: WritingGymProgress) => sum + (p.best_score || 0), 0);
-                    allProgress.push({ userId: key.replace(PROGRESS_KEY, ''), score: totalScore, username: 'User' });
-                } catch { }
-            }
-        }
-        return allProgress.sort((a, b) => b.score - a.score).slice(0, limit);
+        // Without a specific backend endpoint for global leaderboard, we just return empty
+        // The previous implementation used localStorage traversal which is not feasible with API
+        return [];
     },
 
     async clearProgress(userId: string): Promise<void> {
-        localStorage.removeItem(`${PROGRESS_KEY}${userId}`);
+        // No delete endpoint provided, so we leave it as a no-op
     }
 };

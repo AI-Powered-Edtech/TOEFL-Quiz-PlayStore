@@ -2,7 +2,7 @@
 import { CheckCircle, XCircle, ShieldCheck, Calendar, ArrowLeft, Loader2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
-import { getQuizReportById } from '../services/reportService';
+import { quizService } from '../services/quiz';
 import { QuizReportData, AppView } from '../types';
 
 import { Button } from './Button';
@@ -25,7 +25,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ reportId, onNavigate }) 
                 return;
             }
             try {
-                const data = await getQuizReportById(reportId);
+                const data = await quizService.getQuizReportById(reportId);
                 if (data) {
                     setReport(data);
                 } else {

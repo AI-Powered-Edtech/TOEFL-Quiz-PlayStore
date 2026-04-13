@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../hooks/useTheme';
 
 
-import { friendService } from '../services/friendService';
+import { socialService } from '../services/social';
 import { leaderboardService } from '../services/leaderboardService';
 import { oracleDataService } from '../services/oracleDataService';
 import { oracleService } from '../services/oracleService';
@@ -110,7 +110,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, progress, onNavigate, on
     useEffect(() => {
         // Load friend code
         if (user?.id) {
-            friendService.getOrCreateFriendCode(user.id).then(setFriendCode);
+            socialService.getOrCreateFriendCode(user.id).then(setFriendCode);
         }
     }, [user?.id]);
 

@@ -4,12 +4,12 @@ import { WritingExercise, WritingGymLevel, WritingGymProgress, IELTSWritingTask,
 import { metricsCollector } from '../utils/MetricsCollector';
 import { logicWeaverLogger } from '../utils/monitoring';
 import { logicWeaverRateLimiter, RateLimitError } from '../utils/RateLimiter';
+import api from './apiClient';
 
 import { cacheService } from './cacheService';
 import { essayTaskCache } from './essayTaskCache';
 import { validateEssayStructure as validateEssayStructureFn } from './essayValidationService';
 
-const PROGRESS_KEY_PREFIX = 'writing_gym_progress_';
 const EXERCISE_POOL_KEY = 'writing_gym_exercise_pool';
 
 interface ExercisePoolEntry {
@@ -20,21 +20,6 @@ interface ExercisePoolEntry {
     exercise_data: WritingExercise;
     created_at: string;
 }
-
-const getProgressKey = (userId: string): string => `${PROGRESS_KEY_PREFIX}${userId}`;
-
-const getLocalProgress = (userId: string): WritingGymProgress[] => {
-    try {
-        const stored = localStorage.getItem(getProgressKey(userId));
-        return stored ? JSON.parse(stored) : [];
-    } catch {
-        return [];
-    }
-};
-
-const saveLocalProgress = (userId: string, progress: WritingGymProgress[]): void => {
-    localStorage.setItem(getProgressKey(userId), JSON.stringify(progress));
-};
 
 const getExercisePool = (): ExercisePoolEntry[] => {
     try {
@@ -52,7 +37,8 @@ const saveExercisePool = (pool: ExercisePoolEntry[]): void => {
 export const writingGymService = {
 
     async getProgress(userId: string): Promise<WritingGymProgress[]> {
-        return getLocalProgress(userId);
+        const response = await api.get<WritingGymProgress[]>('/api/writing/progress');
+        return response.data || [];
     },
 
     getUnlockedLevels(progress: WritingGymProgress[] = []): WritingGymLevel[] {
@@ -376,28 +362,13 @@ export const writingGymService = {
 
     async saveLadderSession(userId: string, topic: string, levelsCompleted: number, stars: number, history: any[] = []): Promise<void> {
         try {
-            const progress = getLocalProgress(userId);
-            const existingIndex = progress.findIndex(p => 
-                p.level === 'complexity_ladder' && p.skill_id === topic
-            );
-
-            const entry: WritingGymProgress = {
-                id: existingIndex >= 0 ? progress[existingIndex].id : crypto.randomUUID(),
-                user_id: userId,
+            await api.post('/api/writing/progress', {
                 level: 'complexity_ladder',
                 skill_id: topic,
-                stars_earned: Math.max(stars, existingIndex >= 0 ? progress[existingIndex].stars_earned : 0),
-                history: history,
-                updated_at: new Date().toISOString()
-            };
-
-            if (existingIndex >= 0) {
-                progress[existingIndex] = entry;
-            } else {
-                progress.push(entry);
-            }
-
-            saveLocalProgress(userId, progress);
+                exercises_completed: levelsCompleted,
+                stars_earned: stars,
+                history: JSON.stringify(history)
+            });
         } catch (err) {
             console.error('Failed to save ladder session:', err);
             throw err;
@@ -405,7 +376,8 @@ export const writingGymService = {
     },
 
     async getCompletedLadders(userId: string): Promise<any[]> {
-        const progress = getLocalProgress(userId);
+        const response = await api.get<WritingGymProgress[]>('/api/writing/progress');
+        const progress = response.data || [];
         return progress
             .filter(p => p.level === 'complexity_ladder')
             .sort((a, b) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime());

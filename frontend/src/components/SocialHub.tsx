@@ -7,7 +7,7 @@ import {
 import React, { useState, useEffect } from 'react';
 
 import { circleService } from '../services/circleService';
-import { friendService, Friend } from '../services/friendService';
+import { socialService, Friend } from '../services/social';
 import { friendActivityService, FriendActivity } from '../services/friendActivityService';
 import { leaderboardService, UnifiedLeaderboardEntry } from '../services/leaderboardService';
 import { AppView, Circle } from '../types';
@@ -66,7 +66,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
     // Initial Data Fetch
     useEffect(() => {
         if (currentUserId) {
-            friendService.getOrCreateFriendCode(currentUserId).then(setRealFriendCode);
+            socialService.getOrCreateFriendCode(currentUserId).then(setRealFriendCode);
         }
     }, [currentUserId]);
 
@@ -80,7 +80,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
     // Fetch friend activities when friends are loaded
     useEffect(() => {
         if (activeTab === 'friends' && currentUserId && friends.length > 0) {
-            const friendIds = friends.map(f => f.friendId);
+            const friendIds = friends.map(f => f.friend_id);
             setLoadingActivities(true);
             friendActivityService.fetchFriendActivities(currentUserId, friendIds)
                 .then(setFriendActivities)
@@ -92,7 +92,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
         if (!currentUserId) return;
         setLoadingFriends(true);
         try {
-            const data = await friendService.getFriends(currentUserId);
+            const data = await socialService.listFriends();
             setFriends(data);
         } catch (e) {
             console.error(e);
@@ -106,8 +106,8 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
         setAddingFriend(true);
         setFriendError(null);
         try {
-            const result = await friendService.addFriendByCode(addFriendCode);
-            if (result.success) {
+            const result = await socialService.addFriend(addFriendCode);
+            if (result.ok) {
                 setAddFriendCode('');
                 fetchFriends(); // refresh list
                 alert('Friend added successfully!');
@@ -492,33 +492,33 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                                     ) : (
                                         friends.map((friend) => (
                                             <div
-                                                key={friend.friendId}
+                                                key={friend.friend_id}
                                                 className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all"
                                             >
                                                 <div className="relative">
                                                     <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-700 dark:text-indigo-400 font-bold text-lg">
-                                                        {friend.avatarUrl ? (
-                                                            <img src={friend.avatarUrl} alt={friend.name} className="w-full h-full rounded-xl object-cover" />
+                                                        {friend.profile?.avatar_url ? (
+                                                            <img src={friend.profile.avatar_url} alt={friend.profile.full_name || 'Friend'} className="w-full h-full rounded-xl object-cover" />
                                                         ) : (
-                                                            friend.name.charAt(0).toUpperCase()
+                                                            (friend.profile?.full_name || 'F').charAt(0).toUpperCase()
                                                         )}
                                                     </div>
                                                 </div>
 
                                                 <div className="flex-1 min-w-0">
-                                                    <h4 className="font-bold text-slate-800 dark:text-slate-200 truncate">{friend.name}</h4>
+                                                    <h4 className="font-bold text-slate-800 dark:text-slate-200 truncate">{friend.profile?.full_name || 'Anonymous'}</h4>
                                                     <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                                                         <span className="flex items-center gap-1 font-medium">
                                                             <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
-                                                            {friend.totalXp.toLocaleString()} XP
+                                                            {(friend.profile?.xp || 0).toLocaleString()} XP
                                                         </span>
                                                     </div>
                                                 </div>
 
                                                 <button
                                                     onClick={async () => {
-                                                        if (confirm(`Remove ${friend.name} from friends?`)) {
-                                                            await friendService.removeFriend(friend.friendId);
+                                                        if (confirm(`Remove ${friend.profile?.full_name || 'Friend'} from friends?`)) {
+                                                            await socialService.removeFriend(friend.friend_id);
                                                             fetchFriends();
                                                         }
                                                     }}

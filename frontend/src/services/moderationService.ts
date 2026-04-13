@@ -7,50 +7,13 @@ import {
 } from '../types/moderation';
 import { moderateContent, sanitizeContent } from '../utils/contentModeration';
 import { isCurrentUserAdmin } from './adminService';
-
-const REPORTS_KEY = 'content_reports';
-const MODERATION_QUEUE_KEY = 'moderation_queue';
-const USER_HISTORY_KEY = 'user_moderation_history';
-
-const getReports = (): any[] => {
-    try {
-        const stored = localStorage.getItem(REPORTS_KEY);
-        return stored ? JSON.parse(stored) : [];
-    } catch { return []; }
-};
-
-const saveReports = (reports: any[]): void => {
-    localStorage.setItem(REPORTS_KEY, JSON.stringify(reports));
-};
-
-const getModerationQueue = (): any[] => {
-    try {
-        const stored = localStorage.getItem(MODERATION_QUEUE_KEY);
-        return stored ? JSON.parse(stored) : [];
-    } catch { return []; }
-};
-
-const saveModerationQueue = (queue: any[]): void => {
-    localStorage.setItem(MODERATION_QUEUE_KEY, JSON.stringify(queue));
-};
-
-const getUserHistory = (): Record<string, any> => {
-    try {
-        const stored = localStorage.getItem(USER_HISTORY_KEY);
-        return stored ? JSON.parse(stored) : {};
-    } catch { return {}; }
-};
-
-const saveUserHistory = (history: Record<string, any>): void => {
-    localStorage.setItem(USER_HISTORY_KEY, JSON.stringify(history));
-};
+import { apiClient } from './apiClient';
 
 async function getCurrentUserId(): Promise<string | null> {
     try {
-        const response = await fetch('/api/auth/me');
-        if (!response.ok) return null;
-        const data = await response.json();
-        return data?.user?.id || null;
+        const response = await apiClient.get<any>('/api/auth/profile');
+        if (response.error || !response.data) return null;
+        return response.data?.user?.id || response.data?.id || null;
     } catch { return null; }
 }
 
@@ -62,40 +25,19 @@ export const submitReport = async (
     description?: string
 ): Promise<ContentReport | null> => {
     try {
-        const userId = await getCurrentUserId();
-        if (!userId) {
-            console.error('[Security] Unauthenticated report submission rejected');
-            return null;
-        }
-
-        const reports = getReports();
-        const existing = reports.find(r =>
-            r.reporter_id === userId &&
-            r.content_id === contentId &&
-            r.content_type === contentType
-        );
-
-        if (existing) {
-            console.warn('[Moderation] User has already reported this content');
-            return null;
-        }
-
-        const report = {
-            id: crypto.randomUUID(),
-            reporter_id: userId,
+        const response = await apiClient.post<ContentReport>('/api/moderation/reports', {
             content_type: contentType,
             content_id: contentId,
             reason,
-            description,
-            status: 'pending',
-            created_at: new Date().toISOString()
-        };
+            description
+        });
+        
+        if (response.error || !response.data) {
+            console.error('[Moderation] Submit report failed:', response.error);
+            return null;
+        }
 
-        reports.unshift(report);
-        saveReports(reports);
-
-        await updateReportCount(contentType, contentId);
-        return report as ContentReport;
+        return response.data;
     } catch (error) {
         console.error('[Moderation] Submit report failed:', error);
         return null;
@@ -108,11 +50,9 @@ export const getMyReports = async (
     limit: number = 20
 ): Promise<ContentReport[]> => {
     try {
-        const offset = (page - 1) * limit;
-        const reports = getReports()
-            .filter(r => r.reporter_id === reporterId)
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        return reports.slice(offset, offset + limit) as ContentReport[];
+        const response = await apiClient.get<ContentReport[]>(`/api/moderation/reports/me?page=${page}&limit=${limit}`);
+        if (response.error || !response.data) return [];
+        return response.data;
     } catch (error) {
         console.error('[Moderation] Get my reports failed:', error);
         return [];
@@ -125,16 +65,21 @@ export const getModerationQueueItems = async (
     status?: 'pending' | 'approved' | 'rejected'
 ): Promise<ModerationQueueItem[]> => {
     try {
-        const offset = (page - 1) * limit;
-        let queue = getModerationQueue().sort((a, b) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        );
-
-        if (status) {
-            queue = queue.filter(q => q.status === status);
-        }
-
-        return queue.slice(offset, offset + limit) as ModerationQueueItem[];
+        const statusQuery = status ? `&status=${status}` : '';
+        const response = await apiClient.get<ModerationQueueItem[]>(`/api/admin-monitoring/moderation/reports?page=${page}&limit=${limit}${statusQuery}`);
+        if (response.error || !response.data) return [];
+        
+        // Map backend report format to frontend queue format if necessary
+        return response.data.map((item: any) => ({
+            id: item.id,
+            content_type: item.content_type,
+            content_id: item.content_id,
+            content_preview: item.content_preview || '',
+            author_id: item.author_id || item.reporter_id || '',
+            flags: item.flags || [],
+            status: item.status,
+            created_at: item.created_at || item.createdAt
+        }));
     } catch (error) {
         console.error('[Moderation] Get queue failed:', error);
         return [];
@@ -148,31 +93,15 @@ export const resolveReport = async (
     resolutionNote?: string
 ): Promise<boolean> => {
     try {
-        const userId = await getCurrentUserId();
-        if (!userId) return false;
-
-        const isAdmin = await isCurrentUserAdmin();
-        if (!isAdmin) {
-            console.error(`[Security] Unauthorized moderation attempt on report ${reportId}`);
+        const status = action === 'dismiss' ? 'dismissed' : 'resolved';
+        const response = await apiClient.patch<any>(`/api/admin-monitoring/moderation/reports/${reportId}`, {
+            status,
+            resolution_note: resolutionNote
+        });
+        
+        if (response.error) {
+            console.error('[Moderation] Resolve report failed:', response.error);
             return false;
-        }
-
-        const reports = getReports();
-        const reportIndex = reports.findIndex(r => r.id === reportId);
-
-        if (reportIndex === -1) return false;
-
-        reports[reportIndex] = {
-            ...reports[reportIndex],
-            status: action === 'dismiss' ? 'dismissed' : 'resolved',
-            resolved_by: userId,
-            resolution_note: resolutionNote,
-            resolved_at: new Date().toISOString()
-        };
-        saveReports(reports);
-
-        if (action === 'approve') {
-            await handleContentAction(reports[reportIndex].content_type, reports[reportIndex].content_id, 'remove');
         }
 
         return true;
@@ -184,30 +113,17 @@ export const resolveReport = async (
 
 export const getModerationStats = async (): Promise<ModerationStats> => {
     try {
-        const reports = getReports();
-        const pending = reports.filter(r => r.status === 'pending').length;
-        const today = new Date().toDateString();
-        const resolvedToday = reports.filter(r =>
-            r.resolved_at && new Date(r.resolved_at).toDateString() === today
-        ).length;
-
-        const reasonCounts: Record<string, number> = {};
-        reports.forEach((r: any) => {
-            reasonCounts[r.reason] = (reasonCounts[r.reason] || 0) + 1;
-        });
-
-        const top_reasons = Object.entries(reasonCounts)
-            .map(([reason, count]) => ({ reason: reason as ReportReason, count }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 5);
-
-        return {
-            total_reports: reports.length,
-            pending_reports: pending,
-            resolved_today: resolvedToday,
-            avg_resolution_time: 0,
-            top_report_reasons: top_reasons
-        };
+        const response = await apiClient.get<ModerationStats>('/api/admin-monitoring/moderation/stats');
+        if (response.error || !response.data) {
+            return {
+                total_reports: 0,
+                pending_reports: 0,
+                resolved_today: 0,
+                avg_resolution_time: 0,
+                top_report_reasons: []
+            };
+        }
+        return response.data;
     } catch (error) {
         console.error('[Moderation] Get stats failed:', error);
         return {
@@ -226,19 +142,17 @@ export const autoModerate = async (
     content: string
 ): Promise<{ approved: boolean; flags: string[] }> => {
     try {
+        // Auto-moderation can still use local utils for immediate feedback,
+        // but it should also submit the result to the backend.
         const result = moderateContent(content, contentType === 'submission' ? 'essay' : 'feedback');
 
-        const queue = getModerationQueue();
-        queue.unshift({
-            id: crypto.randomUUID(),
+        const response = await apiClient.post<any>('/api/moderation/auto', {
             content_type: contentType,
             content_id: contentId,
             content_preview: content.substring(0, 200),
             flags: result.flags,
-            status: result.isApproved ? 'approved' : 'pending',
-            created_at: new Date().toISOString()
+            status: result.isApproved ? 'approved' : 'pending'
         });
-        saveModerationQueue(queue);
 
         return {
             approved: result.isApproved,
@@ -254,7 +168,7 @@ const updateReportCount = async (
     contentType: 'submission' | 'review',
     contentId: string
 ): Promise<void> => {
-    console.log('[Moderation] Report count update skipped - using local storage');
+    console.log('[Moderation] Report count update skipped - backend handles this');
 };
 
 const handleContentAction = async (
@@ -262,7 +176,7 @@ const handleContentAction = async (
     contentId: string,
     action: 'remove' | 'hide' | 'restore'
 ): Promise<void> => {
-    console.log('[Moderation] Content action skipped - using local storage');
+    console.log('[Moderation] Content action skipped - backend handles this');
 };
 
 const getContentAuthorId = async (
@@ -277,15 +191,16 @@ const updateUserModerationHistory = async (
     wasUpheld: boolean
 ): Promise<void> => {
     if (!userId) return;
-    console.log('[Moderation] User history update skipped - using local storage');
+    console.log('[Moderation] User history update skipped - backend handles this');
 };
 
 export const getUserModerationHistory = async (
     userId: string
 ): Promise<UserModerationHistory | null> => {
     try {
-        const history = getUserHistory();
-        return history[userId] || null;
+        const response = await apiClient.get<UserModerationHistory>(`/api/moderation/users/${userId}/history`);
+        if (response.error || !response.data) return null;
+        return response.data;
     } catch (error) {
         console.error('[Moderation] Get user history failed:', error);
         return null;

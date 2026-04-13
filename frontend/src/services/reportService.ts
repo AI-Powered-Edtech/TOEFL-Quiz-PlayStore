@@ -1,3 +1,6 @@
+/**
+ * @deprecated Use quizService from './quiz.ts' instead.
+ */
 import { QuizReportData } from '../types';
 
 const REPORTS_KEY = 'quiz_reports';

@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 
 import { useNotifications } from '../hooks/useNotifications';
 import { circleService } from '../services/circleService';
-import { friendService } from '../services/friendService';
+import { socialService } from '../services/social';
 import { AppView, Notification } from '../types';
 
 import { NotificationItem } from './NotificationItem';
@@ -29,15 +29,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
                 if (!requesterId) return;
 
                 if (action === 'accept') {
-                    // This service needs a 'acceptFriendRequest' method which might be missing in current `friendService`
-                    // Assuming it exists or I might need to implement it.
-                    // As a fallback, I'll assume friendService.acceptFriendRequest(requesterId)
-                    // But actually friendService might function by ID.
-                    // Let's check friendService later. For now, pseudo-code:
-                    await friendService.respondToRequest(requesterId, true);
+                    await socialService.respondToRequest(requesterId, true);
                     alert('Friend request accepted!');
                 } else {
-                    await friendService.respondToRequest(requesterId, false);
+                    await socialService.respondToRequest(requesterId, false);
                 }
             } else if (notification.type === 'circle_invite') {
                 const circleCode = notification.data?.circleCode;

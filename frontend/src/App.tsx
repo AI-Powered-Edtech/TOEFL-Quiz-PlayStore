@@ -12,7 +12,7 @@ import { generateQuizUnified } from './services/aiProvider';
 import { TokenLimitError } from './services/errors';
 import { saveQuizResult, calculateUserProgress } from './services/historyService';
 import { pushNotificationService } from './services/pushNotificationService';
-import { saveQuizReport } from './services/reportService';
+import { quizService } from './services/quiz';
 import { markQuestionsAsAnswered } from './services/userQuestionHistoryService';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
@@ -283,7 +283,7 @@ const App: React.FC = () => {
                 };
             });
 
-            const reportId = await saveQuizReport({
+            const reportId = await quizService.saveQuizReport({
                 topic,
                 score,
                 total: queue.length,
