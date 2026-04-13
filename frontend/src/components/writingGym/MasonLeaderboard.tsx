@@ -25,10 +25,17 @@ export const MasonLeaderboard: React.FC<MasonLeaderboardProps> = ({ onNavigate }
 
     useEffect(() => {
         loadLeaderboard();
+
+        // Auto polling every 30 seconds
+        const intervalId = setInterval(() => {
+            loadLeaderboard(true);
+        }, 30000);
+
+        return () => clearInterval(intervalId);
     }, [timeFilter]);
 
-    const loadLeaderboard = async () => {
-        setLoading(true);
+    const loadLeaderboard = async (silent = false) => {
+        if (!silent) setLoading(true);
         try {
             const data = await writingGymProgressService.getLeaderboard(100);
             const entries: LeaderboardEntry[] = data.map((e, idx) => ({
@@ -46,7 +53,7 @@ export const MasonLeaderboard: React.FC<MasonLeaderboardProps> = ({ onNavigate }
         } catch (error) {
             console.error('Failed to load leaderboard:', error);
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     };
 

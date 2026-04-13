@@ -1,9 +1,65 @@
 import { jsonrepair } from 'jsonrepair';
 
-export const parseJsonSafely = (cleanedContent: string): any => {
+/**
+ * Enhanced JSON parser that handles truncated JSON (due to token limits)
+ * and cleans up Markdown formatting often returned by LLMs.
+ */
+export const parseJsonSafely = (rawContent: string): any => {
+    if (!rawContent || typeof rawContent !== 'string') return {};
+
+    // 1. Clean Markdown and thinking blocks
+    let cleaned = rawContent
+        .replace(/<think>[\s\S]*?<\/think>/g, '')
+        .replace(/<thought>[\s\S]*?<\/thought>/g, '')
+        .replace(/```json\s*/gi, '')
+        .replace(/```\s*/g, '')
+        .trim();
+
+    // 2. Try to extract the JSON part if there is surrounding text
+    const firstBrace = cleaned.indexOf('{');
+    const firstBracket = cleaned.indexOf('[');
+    
+    let startIndex = -1;
+    if (firstBrace !== -1 && firstBracket !== -1) {
+        startIndex = Math.min(firstBrace, firstBracket);
+    } else if (firstBrace !== -1) {
+        startIndex = firstBrace;
+    } else if (firstBracket !== -1) {
+        startIndex = firstBracket;
+    }
+
+    if (startIndex !== -1) {
+        cleaned = cleaned.substring(startIndex);
+    }
+
+    // 3. Try standard parse first
     try {
-        return JSON.parse(jsonrepair(cleanedContent));
-    } catch (e) {
-        return JSON.parse(cleanedContent);
+        return JSON.parse(cleaned);
+    } catch (e1) {
+        // 4. Try jsonrepair for truncated or malformed JSON
+        try {
+            const repaired = jsonrepair(cleaned);
+            return JSON.parse(repaired);
+        } catch (e2) {
+            // 5. Fallback: aggressive extraction
+            // Sometimes the JSON is so broken jsonrepair fails. 
+            // We can try to find the last valid closing brace/bracket and parse that.
+            try {
+                const lastBrace = cleaned.lastIndexOf('}');
+                const lastBracket = cleaned.lastIndexOf(']');
+                const endIndex = Math.max(lastBrace, lastBracket);
+                
+                if (endIndex !== -1) {
+                    const truncated = cleaned.substring(0, endIndex + 1);
+                    const repaired2 = jsonrepair(truncated);
+                    return JSON.parse(repaired2);
+                }
+            } catch (e3) {
+                console.error('[jsonParser] All parsing attempts failed. Raw:', rawContent.substring(0, 100));
+            }
+            
+            // If everything fails, return an empty object/array to prevent app crashes
+            return cleaned.trim().startsWith('[') ? [] : {};
+        }
     }
 };

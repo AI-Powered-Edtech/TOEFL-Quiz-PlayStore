@@ -6,6 +6,7 @@ export interface RetryOptions {
     initialDelayMs: number;
     maxDelayMs: number;
     backoffMultiplier: number;
+    onRetry?: (error: Error, attempt: number, delayMs: number) => void;
 }
 
 export class RetryError extends Error {
@@ -54,6 +55,10 @@ export async function retryWithBackoff<T>(
                 `Retrying in ${delay}ms...`
             );
 
+            if (options.onRetry) {
+                options.onRetry(lastError, attempt, delay);
+            }
+
             // Wait before next attempt
             await sleep(delay);
 
@@ -87,15 +92,16 @@ function isRetryableError(error: unknown): boolean {
     // Circuit breaker OPEN — fail fast, use fallback content
     if (message.includes('circuit breaker')) return false;
 
-    // Don't retry client errors (4xx) including 429 (rate limit)
+    // Don't retry client errors (4xx) except 429 (rate limit)
     if (message.includes('400') || message.includes('401') ||
-        message.includes('403') || message.includes('404') ||
-        message.includes('429') || message.includes('rate limit')) {
+        message.includes('403') || message.includes('404')) {
         return false;
     }
 
-    // Retry on server errors (5xx), timeouts, network errors
+    // Retry on server errors (5xx), timeouts, network errors, and rate limits (429)
     return (
+        message.includes('429') ||
+        message.includes('rate limit') ||
         message.includes('timeout') ||
         message.includes('network') ||
         message.includes('500') ||

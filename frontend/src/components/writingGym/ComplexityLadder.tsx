@@ -108,6 +108,7 @@ export const ComplexityLadder: React.FC<Props> = ({ onNavigate }) => {
                 throw new Error('Invalid ladder response');
             }
 
+            setTopic(effectiveTopic);
             setLevels(ladder);
             setStatus('playing');
 
@@ -155,7 +156,18 @@ export const ComplexityLadder: React.FC<Props> = ({ onNavigate }) => {
                         setHint(null);
                         setStatus('playing');
                         // Persist progress
-                        updatePersistedSession({ currentIdx: nextIdx, history: [...history, { levelName: currentLevel.name, instruction: currentLevel.instruction, userSentence: userInput, timestamp: new Date().toISOString() }] }).catch((e: any) => { console.error('Failed to update session:', e); });
+                        updatePersistedSession({
+                            levels,
+                            topic,
+                            selectedSkillId,
+                            currentIdx: nextIdx,
+                            history: [...history, {
+                                levelName: currentLevel.name,
+                                instruction: currentLevel.instruction,
+                                userSentence: userInput,
+                                timestamp: new Date().toISOString()
+                            }]
+                        }).catch((e: any) => { console.error('Failed to update session:', e); });
                     } else {
                         // All levels complete
                         setStatus('complete');

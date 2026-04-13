@@ -318,6 +318,39 @@ const ConfidenceBadge: React.FC<{ level: 'low' | 'medium' | 'high'; dataPoints: 
     );
 };
 
+// Skeleton loader components
+const SkeletonScoreCard = () => (
+    <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 animate-pulse">
+        <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-800" />
+            <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-800" />
+        </div>
+        <div className="h-2 w-16 bg-slate-200 dark:bg-slate-800 rounded mb-3" />
+        <div className="h-8 w-24 bg-slate-200 dark:bg-slate-800 rounded mb-3" />
+        <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full mb-3" />
+        <div className="flex gap-1">
+            <div className="h-3 w-8 bg-slate-200 dark:bg-slate-800 rounded" />
+            <div className="h-3 w-8 bg-slate-200 dark:bg-slate-800 rounded" />
+            <div className="h-3 w-8 bg-slate-200 dark:bg-slate-800 rounded" />
+        </div>
+    </div>
+);
+
+const SkeletonChart = () => (
+    <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 animate-pulse">
+        <div className="flex items-center justify-between mb-4">
+            <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded" />
+            <div className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded-full" />
+        </div>
+        <div className="h-24 w-full bg-slate-200 dark:bg-slate-800 rounded mb-4" />
+        <div className="flex gap-2">
+            <div className="flex-1 h-12 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+            <div className="flex-1 h-12 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+            <div className="flex-1 h-12 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+        </div>
+    </div>
+);
+
 // ================================================================
 // Main View
 // ================================================================
@@ -459,30 +492,6 @@ export const ScoreOracleView: React.FC<ScoreOracleViewProps> = ({ onNavigate, us
     };
 
     // ============ LOADING STATE ============
-    if (loading) {
-        return (
-            <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-950">
-                <div className="flex-shrink-0 bg-[#2563EB] z-10 px-5 py-6">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => onNavigate(AppView.MORE_HUB)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 text-white">
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
-                        <div>
-                            <h1 className="text-2xl font-bold text-white tracking-tight">Score Oracle</h1>
-                            <p className="text-blue-100 text-xs font-medium opacity-80">Predict Your Test Scores</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="flex-1 flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-3">
-                        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                        <p className="text-sm text-slate-500 font-medium">Analyzing your progress...</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     if (error) {
         return (
             <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-950">
@@ -608,10 +617,22 @@ export const ScoreOracleView: React.FC<ScoreOracleViewProps> = ({ onNavigate, us
                             )}
                         </>
                     ) : (
-                        <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                            <Loader2 className="w-8 h-8 mb-3 animate-spin opacity-40" />
-                            <p className="text-sm font-medium">Calculating predictions...</p>
-                        </div>
+                        <>
+                            {/* Skeleton Confidence Badge */}
+                            <div className="mb-5">
+                                <div className="h-14 w-full bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse" />
+                            </div>
+
+                            {/* Skeleton Score Cards */}
+                            <div className="grid grid-cols-2 gap-3 mb-6">
+                                {[1, 2, 3, 4].map(i => <SkeletonScoreCard key={i} />)}
+                            </div>
+
+                            {/* Skeleton Chart */}
+                            <div className="mb-6">
+                                <SkeletonChart />
+                            </div>
+                        </>
                     )}
 
                     {/* CEFR Card — Independent from TOEFL/IELTS */}

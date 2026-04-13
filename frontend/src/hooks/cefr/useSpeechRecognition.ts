@@ -9,6 +9,7 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
     const { initialTranscripts = {}, onTranscriptChange } = options;
     const [isRecording, setIsRecording] = useState(false);
     const [speakingTranscripts, setSpeakingTranscripts] = useState<Record<string, string>>(initialTranscripts);
+    const [speechError, setSpeechError] = useState<string | null>(null);
     const recognitionRef = useRef<any>(null);
 
     const isSpeechRecognitionSupported = useCallback((): boolean => {
@@ -52,11 +53,17 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
 
         recognition.onerror = (event: any) => {
             console.error("[CEFR] Speech recognition error:", event.error);
+            if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                setSpeechError('permission denied');
+            } else {
+                setSpeechError(event.error);
+            }
             setIsRecording(false);
         };
 
         recognition.onend = () => setIsRecording(false);
 
+        setSpeechError(null); // Clear error on new start
         recognition.start();
         recognitionRef.current = recognition;
         setIsRecording(true);
@@ -75,6 +82,7 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
         setSpeakingTranscripts,
         toggleRecording,
         stopRecording,
-        isSpeechRecognitionSupported
+        isSpeechRecognitionSupported,
+        speechError
     };
 };

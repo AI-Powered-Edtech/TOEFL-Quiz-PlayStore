@@ -79,6 +79,7 @@ export const CefrSimulationView: React.FC<CefrSimulationViewProps> = ({ onNaviga
         toggleRecording,
         stopRecording,
         isSpeechRecognitionSupported,
+        speechError,
     } = useSpeechRecognition({
         initialTranscripts: speakingTranscripts,
         onTranscriptChange: (partId, transcript) => {
@@ -569,12 +570,18 @@ export const CefrSimulationView: React.FC<CefrSimulationViewProps> = ({ onNaviga
                             </div>
                         </div>
 
-                        {!isSpeechSupported ? (
+                        {(!isSpeechSupported || speechError) ? (
                             <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4 text-red-800">
                                 <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="font-semibold text-sm">Browser Not Supported</p>
-                                    <p className="text-xs mt-1">Your browser does not support Speech Recognition. Type your answer below instead, or open in Chrome.</p>
+                                    <p className="font-semibold text-sm">{speechError ? 'Microphone Error' : 'Browser Not Supported'}</p>
+                                    <p className="text-xs mt-1">
+                                        {speechError === 'permission denied'
+                                            ? 'Microphone permission was denied. Type your answer below instead.'
+                                            : speechError
+                                                ? `Speech recognition failed (${speechError}). Type your answer below instead.`
+                                                : 'Your browser does not support Speech Recognition. Type your answer below instead, or open in Chrome.'}
+                                    </p>
                                     <textarea
                                         value={liveTranscripts[key] || ''}
                                         onChange={(e) => {

@@ -1,6 +1,7 @@
 import api, { withRetry, TIMEOUTS, RETRY_CONFIG } from './apiClient';
 import { validateAuth } from './validationService';
 import { secureStorage } from '../utils/secureStorage';
+import { offlineSyncService } from './offlineSyncService';
 
 export interface Profile {
   id: string;
@@ -87,6 +88,14 @@ export const authService = {
       if (response.data) {
         secureStorage.setItem('access_token', response.data.access_token);
         secureStorage.setItem('refresh_token', response.data.refresh_token);
+
+        // Migrate guest data to backend right after successful registration
+        try {
+          await offlineSyncService.migrateGuestDataToBackend(response.data.access_token);
+        } catch (migrationError) {
+          console.error('Failed to migrate guest data after registration:', migrationError);
+        }
+
         return { ok: true };
       }
       return { ok: false, error: 'Unknown error' };
@@ -229,6 +238,14 @@ export const authService = {
       if (response.data) {
         secureStorage.setItem('access_token', response.data.access_token);
         secureStorage.setItem('refresh_token', response.data.refresh_token);
+
+        // Migrate guest data to backend right after successful OAuth login/registration
+        try {
+          await offlineSyncService.migrateGuestDataToBackend(response.data.access_token);
+        } catch (migrationError) {
+          console.error('Failed to migrate guest data after OAuth:', migrationError);
+        }
+
         return { ok: true };
       }
       return { ok: false, error: 'Unknown error' };

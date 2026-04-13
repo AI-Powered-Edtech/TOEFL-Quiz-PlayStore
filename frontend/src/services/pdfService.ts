@@ -82,3 +82,16 @@ export const extractTextFromRange = async (
 
     return fullText.trim();
 };
+
+/**
+ * Splits text into chunks based on word count to anticipate LLM context window limits.
+ * Default is 1200 words (~1600 tokens).
+ */
+export const chunkText = (text: string, wordsPerChunk = 1200): string[] => {
+    const words = text.split(/\s+/);
+    const chunks = [];
+    for (let i = 0; i < words.length; i += wordsPerChunk) {
+        chunks.push(words.slice(i, i + wordsPerChunk).join(' '));
+    }
+    return chunks;
+};

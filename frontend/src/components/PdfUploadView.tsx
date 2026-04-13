@@ -10,7 +10,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { TOEFL_STRUCTURE_SKILLS, TOEFL_READING_SKILLS, TOEFL_LISTENING_SKILLS } from '../data/skills';
 import { smartExtractTOEFL, extractMultiSection } from '../services/extractor';
 import { generateQuestionsFromContext, generateQuizFromContext, generateMultiSectionFromContext } from '../services/groq/generators';
-import { loadPdfDocument, extractTextFromRange } from '../services/pdfService';
+import { loadPdfDocument, extractTextFromRange, chunkText } from '../services/pdfService';
 import { questionBank } from '../services/questionBankService';
 import { QuizData, AppView } from '../types';
 import { showSuccess, showError } from '../utils/toast';
@@ -90,6 +90,11 @@ export const PdfUploadView: React.FC<PdfUploadViewProps> = ({ onNavigate, onQuiz
         // Enforce file size limit
         if (file.size > MAX_FILE_SIZE) {
             showError('File size exceeds 20MB limit. Please upload a smaller PDF.');
+            return;
+        }
+
+        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+            showError('Invalid file format. Please upload a valid PDF document.');
             return;
         }
 
@@ -181,15 +186,6 @@ export const PdfUploadView: React.FC<PdfUploadViewProps> = ({ onNavigate, onQuiz
         if (selection && selection.toString().length > 10) {
             setSelectedText(selection.toString());
         }
-    };
-
-    const splitTextIntoChunks = (text: string, wordsPerChunk = 1200): string[] => {
-        const words = text.split(/\s+/);
-        const chunks = [];
-        for (let i = 0; i < words.length; i += wordsPerChunk) {
-            chunks.push(words.slice(i, i + wordsPerChunk).join(' '));
-        }
-        return chunks;
     };
 
     // Helper to clean questions (fix grading & display) with quality validation
@@ -318,7 +314,7 @@ export const PdfUploadView: React.FC<PdfUploadViewProps> = ({ onNavigate, onQuiz
             let questions: QuizData[] = [];
 
             // Use bulk processing (chunking) for all modes
-            const chunks = splitTextIntoChunks(extractedText, 800);
+            const chunks = chunkText(extractedText, 800);
             setGenerationProgress({ current: 0, total: chunks.length, questions: 0 });
 
             for (let i = 0; i < chunks.length; i++) {

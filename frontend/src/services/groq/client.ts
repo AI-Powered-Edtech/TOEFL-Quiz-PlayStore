@@ -3,6 +3,8 @@ import { retryWithBackoff, MASON_RETRY_CONFIG } from '../../utils/retry';
 import { aiService, AI_MODELS } from '../ai';
 import { groqCircuitBreaker } from './circuitBreaker';
 
+import { showInfo } from '../../utils/toast';
+
 export const cleanJson = (text: string): string => {
     let cleaned = text.replace(/<think>[\s\S]*?<\/think>/g, '').replace(/<thought>[\s\S]*?<\/thought>/g, '');
     cleaned = cleaned.replace(/```json/g, '').replace(/```/g, '');
@@ -79,15 +81,14 @@ export const callGroq = async (
 ) => {
     const userId = await getCurrentUserId();
 
-    const rateLimit = await groqRateLimiter.check(userId);
-    if (!rateLimit.allowed) {
-        const retryAfterSec = Math.ceil((rateLimit.retryAfter || 5000) / 1000);
-        throw new Error(
-            `Rate limit exceeded. Please wait ${retryAfterSec} seconds before trying again.`
-        );
-    }
-
     return retryWithBackoff(async () => {
+        // Local rate limiter check moved inside retry logic so it can be retried
+        const rateLimit = await groqRateLimiter.check(userId);
+        if (!rateLimit.allowed) {
+            const retryAfterSec = Math.ceil((rateLimit.retryAfter || 5000) / 1000);
+            throw new Error(`Rate limit exceeded (429). Please wait ${retryAfterSec} seconds before trying again.`);
+        }
+
         return groqCircuitBreaker.execute('groq-api', async () => {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 45000);
@@ -129,5 +130,13 @@ export const callGroq = async (
                 throw error;
             }
         });
-    }, MASON_RETRY_CONFIG);
+    }, {
+        ...MASON_RETRY_CONFIG,
+        onRetry: (error, attempt, delay) => {
+            if (error.message.includes('429') || error.message.includes('rate limit')) {
+                const retrySec = Math.ceil(delay / 1000);
+                showInfo(`AI sedang sibuk/cooldown. Mencoba lagi dalam ${retrySec} detik... (Percobaan ${attempt})`);
+            }
+        }
+    });
 };
