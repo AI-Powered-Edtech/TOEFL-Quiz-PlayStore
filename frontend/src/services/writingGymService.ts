@@ -56,6 +56,9 @@ export const writingGymService = {
     },
 
     getUnlockedLevels(progress: WritingGymProgress[] = []): WritingGymLevel[] {
+        if (import.meta.env.DEV) {
+            return ['mason', 'logic_weaver', 'complexity_ladder', 'ielts_paragraph'];
+        }
         const levels: WritingGymLevel[] = ['mason'];
 
         if (!progress || !Array.isArray(progress)) return levels;

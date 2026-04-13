@@ -223,7 +223,7 @@ export const WritingGymHub: React.FC<WritingGymHubProps> = ({ onNavigate, onBack
                                 <span className="bg-blue-500/50 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border border-blue-400/30">
                                     Current Focus
                                 </span>
-                                {nextMasonSkill && (
+                                {nextMasonSkill?.id && (
                                     <span className="text-blue-100 text-sm font-medium">
                                         Level {nextMasonSkill.id.replace(/\D/g, '')}
                                     </span>
@@ -242,7 +242,7 @@ export const WritingGymHub: React.FC<WritingGymHubProps> = ({ onNavigate, onBack
                             <Button
                                 variant="secondary"
                                 onClick={() => {
-                                    if (nextMasonSkill) {
+                                    if (nextMasonSkill?.id) {
                                         localStorage.setItem('mason_current_skill', nextMasonSkill.id);
                                     }
                                     onNavigate(AppView.WRITING_GYM_LEVEL_1);
@@ -417,4 +417,3 @@ export const WritingGymHub: React.FC<WritingGymHubProps> = ({ onNavigate, onBack
         </div>
     );
 };
-

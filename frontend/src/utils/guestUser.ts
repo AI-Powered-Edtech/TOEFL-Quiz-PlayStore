@@ -7,7 +7,7 @@ export const getGuestUserId = (): string => {
     let guestId = localStorage.getItem(GUEST_ID_KEY);
 
     if (!guestId) {
-        guestId = crypto.randomUUID();
+        guestId = (crypto.randomUUID && crypto.randomUUID()) || `guest_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
         localStorage.setItem(GUEST_ID_KEY, guestId);
     }
 
