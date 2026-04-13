@@ -476,6 +476,12 @@ export interface EssaySubmission {
       improved: string;
       skill_ref?: string;
     }[];
+    // Rich analysis from essay evaluation
+    grammatical_range?: number;
+    lexical_heatmap?: Array<{ word: string; level: string; comment?: string }>;
+    coherence_flow?: Array<{ paragraph: number; transition_strength: string; suggestion?: string }>;
+    grammar_errors?: Array<{ type: string; original: string; correction: string; explanation: string }>;
+    grammar_summary?: string;
   };
   created_at: string;
 }

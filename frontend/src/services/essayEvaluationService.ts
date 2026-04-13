@@ -73,15 +73,20 @@ Evaluate this essay according to the system prompt.
                 linguistic_range: mapToPercent(breakdown.lexical_resource),
                 coherence: mapToPercent(breakdown.coherence_cohesion),
                 task_response: mapToPercent(breakdown.task_response),
+                grammatical_range: mapToPercent(breakdown.grammatical_range),
                 suggestions: [
                     parsed.feedback,
                     ...(parsed.vocabulary_srs || []).map((v: any) => `Try using "${v.word}" (${v.definition}) instead of simpler words.`),
-                ].slice(0, 3) as string[],
+                ].filter(Boolean).slice(0, 3) as string[],
                 improvements: (parsed.indoglish_analysis || []).map((item: any) => ({
-                    original: item.fragment,
-                    improved: item.correction,
-                    skill_ref: item.explanation
-                }))
+                    original: item.original,
+                    improved: item.suggestion,
+                    skill_ref: item.reason
+                })),
+                lexical_heatmap: parsed.lexical_heatmap,
+                coherence_flow: parsed.coherence_flow,
+                grammar_errors: parsed.grammar_errors,
+                grammar_summary: parsed.grammar_summary
             };
 
         } catch (error) {

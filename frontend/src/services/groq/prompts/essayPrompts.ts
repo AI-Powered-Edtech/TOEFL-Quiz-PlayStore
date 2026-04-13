@@ -138,11 +138,20 @@ OUTPUT FORMAT (JSON):
   "topic": "The essay topic/question...",
   "content": "The full essay text...",
   "band_score": 9.0,
+  "task_type": "Task 2",
+  "category": "Education",
+  "word_count": 280,
+  "breakdown": {
+    "task_response": 9.0,
+    "coherence_cohesion": 9.0,
+    "lexical_resource": 9.0,
+    "grammatical_range": 9.0
+  },
   "annotations": [
     {
       "id": "1",
       "quote": "text snippet from essay",
-      "type": "vocabulary", 
+      "type": "vocabulary",
       "comment": "Explanation of why this is advanced vocabulary (C1/C2)"
     },
     {
@@ -162,6 +171,9 @@ OUTPUT FORMAT (JSON):
 
 RULES:
 - Essay must be approx 250-300 words.
+- task_type must be "Task 1" or "Task 2"
+- category must be a generic essay category (e.g. Education, Environment, Technology, etc.)
+- word_count must be the exact word count of the essay content.
 - Include at least 5 annotations covering different aspects (Vocab, Grammar, Cohesion, Task Response).
 - Ensure "quote" text exists EXACTLY in the "content".
 `;

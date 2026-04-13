@@ -84,9 +84,18 @@ export const generateModelEssay = async (
         }
 
         // Ensure ID and basic fields
-        parsed.id = parsed.id || crypto.randomUUID();
+        parsed.id = parsed.id || ((crypto.randomUUID && crypto.randomUUID()) || Math.random().toString(36).substring(2, 15));
         parsed.created_at = new Date().toISOString();
         parsed.source = 'ai_generated';
+        parsed.task_type = parsed.task_type || 'Task 2';
+        parsed.category = parsed.category || 'Education';
+        parsed.word_count = parsed.word_count || parsed.content?.split(/\s+/).length || 250;
+        parsed.breakdown = parsed.breakdown || {
+            task_response: parsed.band_score || 9.0,
+            coherence_cohesion: parsed.band_score || 9.0,
+            lexical_resource: parsed.band_score || 9.0,
+            grammatical_range: parsed.band_score || 9.0
+        };
         parsed.views_count = 0;
         parsed.saves_count = 0;
 

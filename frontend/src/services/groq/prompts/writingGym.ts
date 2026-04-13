@@ -101,10 +101,12 @@ Generate a clause combination exercise (Logic Weaver Level).
 
 === OUTPUT SCHEMA ===
 {
-  "main_clause": "The first independent clause (8-15 words)",
-  "subordinate_clause": "The second clause to connect (8-15 words)",
-  "connectors": ["correct_one", "distractor1", "distractor2", "distractor3"],
-  "correct_connector": "the correct connector from array",
+  "clauses": {
+    "main": "The first independent clause (8-15 words)",
+    "subordinate": "The second clause to connect (8-15 words)"
+  },
+  "options": ["correct_one", "distractor1", "distractor2", "distractor3"],
+  "correct_answer": "the correct connector from array",
   "relationship_type": "cause_effect | contrast | addition | etc.",
   "explanation": "Explain WHY this connector creates logical flow",
   "translation": "Terjemahan bahasa Indonesia yang natural",
@@ -115,10 +117,12 @@ Generate a clause combination exercise (Logic Weaver Level).
 
 Example 1 (Contrast - Climate Science):
 {
-  "main_clause": "The development of renewable energy sources is crucial for reducing greenhouse gas emissions",
-  "subordinate_clause": "The cost of renewable energy technologies, such as solar and wind power, remains relatively high",
-  "connectors": ["furthermore", "in addition", "however", "therefore"],
-  "correct_connector": "however",
+  "clauses": {
+    "main": "The development of renewable energy sources is crucial for reducing greenhouse gas emissions",
+    "subordinate": "The cost of renewable energy technologies, such as solar and wind power, remains relatively high"
+  },
+  "options": ["furthermore", "in addition", "however", "therefore"],
+  "correct_answer": "however",
   "relationship_type": "contrast",
   "explanation": "These clauses present opposing ideas: importance vs. cost barrier",
   "translation": "Pengembangan sumber energi terbarukan sangat penting untuk mengurangi emisi gas rumah kaca, namun biaya teknologi energi terbarukan seperti tenaga surya dan angin masih relatif tinggi.",
@@ -127,10 +131,12 @@ Example 1 (Contrast - Climate Science):
 
 Example 2 (Cause & Effect - Psychology):
 {
-  "main_clause": "Chronic sleep deprivation significantly impairs cognitive function and memory consolidation",
-  "subordinate_clause": "Students who consistently lack adequate sleep often struggle with academic performance",
-  "connectors": ["however", "therefore", "although", "despite"],
-  "correct_connector": "therefore",
+  "clauses": {
+    "main": "Chronic sleep deprivation significantly impairs cognitive function and memory consolidation",
+    "subordinate": "Students who consistently lack adequate sleep often struggle with academic performance"
+  },
+  "options": ["however", "therefore", "although", "despite"],
+  "correct_answer": "therefore",
   "relationship_type": "cause_effect",
   "explanation": "The second clause is a logical consequence of the first",
   "translation": "Kurang tidur kronis secara signifikan mengganggu fungsi kognitif dan konsolidasi memori, oleh karena itu siswa yang secara konsisten kurang tidur sering kesulitan dengan kinerja akademis.",
@@ -139,10 +145,12 @@ Example 2 (Cause & Effect - Psychology):
 
 Example 3 (Concession - Technology):
 {
-  "main_clause": "Social media platforms have revolutionized global communication and information sharing",
-  "subordinate_clause": "Concerns about privacy violations and misinformation continue to mount",
-  "connectors": ["moreover", "nevertheless", "consequently", "specifically"],
-  "correct_connector": "nevertheless",
+  "clauses": {
+    "main": "Social media platforms have revolutionized global communication and information sharing",
+    "subordinate": "Concerns about privacy violations and misinformation continue to mount"
+  },
+  "options": ["moreover", "nevertheless", "consequently", "specifically"],
+  "correct_answer": "nevertheless",
   "relationship_type": "concession",
   "explanation": "Acknowledges benefit while introducing persistent concerns",
   "translation": "Platform media sosial telah merevolusi komunikasi global dan berbagi informasi, namun demikian kekhawatiran tentang pelanggaran privasi dan misinformasi terus meningkat.",

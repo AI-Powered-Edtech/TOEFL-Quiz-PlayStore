@@ -157,6 +157,11 @@ export const generateWritingGymExercise = async (
             if (!parsed.options && parsed.connectors) {
                 parsed.options = parsed.connectors;
             }
+            
+            // Normalize correct answer
+            if (!parsed.correct_answer && parsed.correct_connector) {
+                parsed.correct_answer = parsed.correct_connector;
+            }
         }
 
         return parsed;
