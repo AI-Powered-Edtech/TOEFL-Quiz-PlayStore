@@ -1,165 +1,125 @@
-# Blog & Skills Spec
+# TOEFL E-Learning Center (Blog & Skills Documentation) Spec
 
-## Why
-Blog dan Skill Modules menyediakan konten edukasi untuk self-paced learning. Kedua fitur ini memperkaya pengalaman pengguna dengan materi belajar di luar quiz.
+## 1. Overview
+The "Blog" feature is evolving from a simple article feed into a **Comprehensive TOEFL E-Learning Center**. It serves as the central documentation and learning hub for *all* TOEFL skills (Structure, Written Expression, Reading, Listening, and Speaking). 
 
-## What Changes
-- Blog System (artikel edukasi)
-- Skill Module System (structured learning)
-- Skill Modules dengan AI Chat
+Instead of just random articles, this feature will systematically store, organize, and present all theoretical knowledge, tips, strategies, and formulas needed to master every specific TOEFL skill tested in the app.
 
-## Impact
-- Affected specs: Dashboard, Practice Hub
-- Affected code: `frontend/src/components/blog/*`, `frontend/src/components/modules/*`
+## 2. Goals & Objectives
+- **Centralized Knowledge Base:** Provide a structured library of all 60+ TOEFL Structure skills, Reading strategies, and Listening patterns.
+- **Self-Paced E-Learning:** Allow users to study the theory before or after they practice in the Quiz Engine or Writing Gym.
+- **Seamless Integration:** Connect theoretical reading directly to practical exercises (e.g., "Read about Subject-Verb Agreement" -> "Take a Quiz on this specific skill").
+- **AI Tutor Support:** Integrate an AI Assistant on every documentation page so users can ask for further clarification or more examples if they don't understand the written material.
 
----
+## 3. Architecture & Structure
 
-## ADDED Requirements
+### 3.1 Content Organization
+The E-Learning Center is categorized by TOEFL Section, then by Skill Topic:
 
-### Requirement: Blog System
-The system SHALL provide educational articles.
+1. **Structure & Written Expression (Grammar)**
+   - Sentences with One Clause (Skills 1-5)
+   - Sentences with Multiple Clauses (Skills 6-12)
+   - Reduced Sentences (Skills 13-14)
+   - Inverted Subjects and Verbs (Skills 15-19)
+   - Problems with Subject/Verb Agreement (Skills 20-23)
+   - Problems with Parallel Structure (Skills 24-26)
+   - *...and so on up to Skill 60.*
+2. **Reading Comprehension**
+   - Questions about the Ideas of the Passage
+   - Directly Answered Questions
+   - Indirectly Answered Questions
+   - Vocabulary Questions
+   - Review Questions
+3. **Listening Comprehension**
+   - Part A: Short Dialogues (Focus on the second line, synonyms, avoid similar sounds, etc.)
+   - Part B: Long Conversations
+   - Part C: Long Talks
+4. **Writing Gym (Essay Dojo & Mason)**
+   - Structuring an IELTS/TOEFL Essay
+   - Connectors and Logic Weaving
+   - Band 9 Vocabulary
 
-#### Blog Categories
-1. **Structure** - Grammar concepts
-2. **Listening** - Listening tips
-3. **Reading** - Reading strategies
-4. **Writing** - Writing guides
-5. **General** - Study tips, motivation
+### 3.2 Data Schema (Backend Alignment)
+The backend `blog` service (`/api/blog/posts`) should serve structured E-Learning modules.
 
-#### Blog Features
-1. Listing by category
-2. Search
-3. Bookmark
-4. Share
-5. Related skills
-
-#### Scenario: Browse Blog
-- **GIVEN** user opens blog
-- **WHEN** articles loaded
-- **THEN** shows recent posts
-- **AND** category filters
-
-#### Scenario: Read Article
-- **GIVEN** user selects article
-- **WHEN** article loads
-- **THEN** shows full content
-- **AND** related skills at bottom
-
-#### Scenario: Share Article
-- **GIVEN** reading article
-- **WHEN** clicks share
-- **THEN** generates shareable link
-- **AND** can copy/link
-
-### Requirement: Skill Module System
-The system SHALL provide structured skill learning modules.
-
-#### Module Structure
-1. **Skill List** - Browse skills
-2. **Skill Reader** - Read skill content
-3. **Practice Link** - Practice related quiz
-4. **Progress Tracking** - Track completed
-
-#### Skill Categories
-- Grammar (structure)
-- Vocabulary
-- Reading Comprehension
-- Listening Strategies
-- Writing Techniques
-- Speaking Tips
-
-#### Scenario: Browse Skills
-- **GIVEN** user opens skill list
-- **WHEN** skills loaded
-- **THEN** shows available skills
-- **AND** completion status
-
-#### Scenario: Read Skill
-- **GIVEN** selects skill
-- **WHEN** skill content shown
-- **THEN** clear explanations
-- **AND** examples provided
-
-#### Scenario: Practice from Skill
-- **GIVEN** reading skill
-- **WHEN** views practice link
-- **THEN** starts relevant quiz
-- **AND** skill progress saved
-
-### Requirement: AI Chat in Skills
-The system SHALL provide AI tutor for skill questions.
-
-#### AI Chat Features
-1. Ask questions about skill
-2. Get explanations
-3. Example requests
-4. Socratic prompting
-
-#### Scenario: Ask AI
-- **GIVEN** viewing skill
-- **WHEN** opens AI chat
-- **AND** types question
-- **THEN** AI responds
-- **AND** links to content
-
----
-
-## Content Management
-
-### Blog Post Schema
 ```json
 {
-  "id": "string",
-  "title": "string",
-  "content": "string (markdown)",
-  "category": "string",
-  "skills": "string[]",
+  "id": "uuid",
+  "skill_id": "string (e.g., 'S1', 'R3', 'L1')",
+  "title": "string (e.g., 'Skill 1: Be Sure the Sentence Has a Subject and a Verb')",
+  "section": "string (e.g., 'STRUCTURE', 'READING', 'LISTENING')",
+  "category": "string (e.g., 'Sentences with One Clause')",
+  "content": "string (Markdown format with rich text, tables, and highlighted formulas)",
+  "examples": [
+    {
+      "text": "The boy _____ going to the movies.",
+      "options": ["he is", "he always was", "is", "will be"],
+      "correct_answer": "is",
+      "explanation": "The sentence has a subject 'boy' but is missing a verb. 'is' provides the missing verb."
+    }
+  ],
+  "estimated_read_time": "integer (minutes)",
   "author": "string",
-  "published_at": "string",
-  "views": "number",
-  "estimated_read": "minutes"
+  "published_at": "timestamp",
+  "views_count": "integer"
 }
 ```
 
-### Skill Module Schema
-```json
-{
-  "id": "string",
-  "name": "string",
-  "category": "string",
-  "level": "A2|B1|B2|C1",
-  "content": "string (markdown)",
-  "examples": "Example[]",
-  "practice_skill_id": "string",
-  "order": "number"
-}
-```
+## 4. UI/UX Design (Mobile-First)
 
----
+### 4.1 E-Learning Hub (Main Page)
+- **Hero Section:** "Your TOEFL Library" with a search bar to quickly find a skill (e.g., "Appositives", "Inversion").
+- **Progress Tracking:** Visual indicators showing how many skill documents the user has read.
+- **Section Tabs:** Scrollable horizontal tabs (`Structure`, `Reading`, `Listening`, `Writing`).
+- **Accordion/Collapsible Lists:** Group skills logically. E.g., clicking "Sentences with One Clause" expands to show Skills 1 to 5.
 
-## Content Guidelines
+### 4.2 Document Reader View (Skill Detail Page)
+- **Clean Typography:** Optimized for mobile reading (large font size, adequate line height, dark/light mode support).
+- **Formula Highlighting:** Key grammar formulas (e.g., `SUBJECT + VERB`) highlighted in colored, rounded boxes.
+- **Interactive Examples:** Users can tap to reveal the correct answer and explanation for in-text examples.
+- **Floating Action Button (FAB) - Practice Now:** A sticky button at the bottom: "Practice this Skill". Clicking this redirects to the Quiz Engine specifically filtered for this `skill_id`.
+- **Floating Action Button (FAB) - AI Tutor:** A button to open a bottom sheet chat interface where the user can chat with the AI about the current article.
 
-### Quality Standards
-1. Accurate information (checkable)
-2. Proper sources cited
-3. Examples relevant
-4. CEFR appropriate language
-5. Updated regularly
+## 5. User Flows
 
-### Moderation
-1. Content review before publish
-2. Flag inappropriate
-3. Update outdated
-4. Remove low quality
+### Flow 1: Study then Practice
+1. User navigates to the `Blog / E-Learning` tab via the bottom navigation bar.
+2. User selects `Structure` -> `Skill 15: Invert the Subject and Verb with Question Words`.
+3. User reads the theory, reviews the formulas, and taps on interactive examples to test their understanding.
+4. User feels confident and clicks the sticky **"Practice this Skill"** button.
+5. System routes user to `QuizView` with a payload enforcing `skillIdOverride: 'S15'`.
 
----
+### Flow 2: Confused during Reading
+1. User is reading `Skill 4: Present Participles`.
+2. User is confused about the difference between a verb and an adjective.
+3. User taps the **"Ask AI Tutor"** button.
+4. A chat drawer opens. The system prompt injects the context: *"The user is currently reading about TOEFL Skill 4: Present Participles."*
+5. User asks: "Can you give me 3 more examples?"
+6. AI generates custom examples instantly.
 
-## Analytics Events
+### Flow 3: Reviewing Mistakes from Quiz
+1. User finishes a Quiz and reviews their mistakes in the **Assessment Report** or **Error Jail**.
+2. User sees they failed a question related to `Skill 13: Reduced Relative Clauses`.
+3. User clicks the "Learn Theory" button next to the error.
+4. System routes the user directly to the E-Learning document for `Skill 13`.
 
-- `blog_view` - Article viewed
-- `blog_share` - Article shared
-- `blog_bookmark` - Article bookmarked
-- `skill_module_view` - Module viewed
-- `skill_module_complete` - Module read
-- `skill_practice_start` - Practice started
-- `ai_chat_query` - AI asked
+## 6. Implementation Plan & Phases
+
+**Phase 1: Backend & Data Structure**
+- Ensure `blog_posts` table in PostgreSQL/SQLite supports `skill_id`, `section`, and `category` fields.
+- Create an admin seeder script or Markdown parser to batch-upload all 60 Structure skills into the database.
+
+**Phase 2: Frontend UI Development**
+- Refactor `frontend/src/components/blog/BlogList.tsx` into an `ELearningHub.tsx` with section tabs and accordions.
+- Refactor `BlogPostView.tsx` into `SkillDocumentReader.tsx` with optimized typography, interactive example blocks, and sticky action buttons.
+
+**Phase 3: Integration (The Glue)**
+- Connect the "Practice Now" button to the `useNavigationStore` and Quiz Engine.
+- Implement the "Ask AI" bottom sheet using the existing `aiService.ts` and a custom system prompt.
+- Update `ErrorJailView.tsx` and `ReportView.tsx` to link back to the `SkillDocumentReader.tsx`.
+
+## 7. Metrics & Analytics
+- `doc_viewed`: Track which skills are read most often.
+- `doc_practice_clicked`: Conversion rate from reading theory to starting a practice session.
+- `doc_ai_tutor_used`: Track how often users need AI assistance to understand a specific skill (helps identify confusing documentation).
+- `doc_time_spent`: Average time spent reading a skill.

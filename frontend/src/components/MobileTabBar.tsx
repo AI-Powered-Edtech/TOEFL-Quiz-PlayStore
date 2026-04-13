@@ -41,7 +41,11 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({ currentView, onNavig
     ];
 
     return (
-        <nav id="mobile-tab-bar" className="fixed bottom-4 left-4 right-4 z-50 bg-white/90 backdrop-blur-md shadow-xl shadow-slate-200/50 border border-white/50 rounded-2xl md:w-fit md:left-1/2 md:-translate-x-1/2 md:bottom-8 md:px-6">
+        <nav 
+            id="mobile-tab-bar" 
+            className="fixed left-4 right-4 z-50 bg-white/90 backdrop-blur-md shadow-xl shadow-slate-200/50 border border-white/50 rounded-2xl md:w-fit md:left-1/2 md:-translate-x-1/2 md:px-6"
+            style={{ bottom: 'calc(1rem + var(--sab))' }}
+        >
             <div className="px-2 py-3">
                 <div className="flex justify-around items-center">
                     {tabs.map((tab) => {
