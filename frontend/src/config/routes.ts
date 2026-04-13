@@ -179,9 +179,13 @@ export const getRoutes = (deps: any): RouteConfig[] => {
                         'Written Expression': 'STRUCTURE',
                         'Listening': 'LISTENING',
                         'Reading': 'READING',
+                        'listening': 'LISTENING',
+                        'reading': 'READING',
+                        'writing': 'STRUCTURE',
+                        'speaking': 'SPEAKING'
                     };
-                    const section = partToSection[skill.part || ''] || 'STRUCTURE';
-                    deps.handleStartSkill(skill.numeric_id ? String(skill.numeric_id) : skill.name, section);
+                    const section = partToSection[skill.part || skill.category || ''] || 'STRUCTURE';
+                    deps.handleStartSkill(skill.numeric_id ? String(skill.numeric_id) : (skill.id || skill.name), section);
                 },
                 onOpenOnboarding: () => console.log("Onboarding"),
                 onboardingStatus: 'completed',
