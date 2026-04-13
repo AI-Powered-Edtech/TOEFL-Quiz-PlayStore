@@ -7,8 +7,9 @@ export const useAuth = () => {
     const { user, isAuthenticated, isLoading } = useAuthStore();
 
     useEffect(() => {
-        if (authService.isAuthenticated()) {
-            useAuthStore.getState().refreshProfile();
+        const store = useAuthStore.getState();
+        if (authService.isAuthenticated() && !store.user && !store.isLoading) {
+            store.refreshProfile();
         }
     }, []);
 
