@@ -5,6 +5,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../services/supabase';
 import { AppView, SectionType } from '../../types';
+import { fetchFeaturedPosts, fetchBlogPostsBySection } from '../../services/blogService';
+import { BlogPost } from '../../data/blogPosts';
 
 interface BlogListingViewProps {
     onNavigate: (view: AppView, params?: any) => void;
@@ -13,12 +15,21 @@ interface BlogListingViewProps {
 export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) => {
     const { user } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
+    const [featuredPosts, setFeaturedPosts] = useState<BlogPost[]>([]);
     const [categoryProgress, setCategoryProgress] = useState({
         STRUCTURE: { completed: 10, total: 19 },
         WRITTEN: { completed: 5, total: 41 },
         LISTENING: { completed: 20, total: 27 },
         READING: { completed: 1, total: 6 },
     });
+
+    useEffect(() => {
+        let isMounted = true;
+        fetchFeaturedPosts().then(posts => {
+            if (isMounted) setFeaturedPosts(posts);
+        }).catch(console.error);
+        return () => { isMounted = false; };
+    }, []);
 
     useEffect(() => {
         const fetchProgress = async () => {
@@ -91,63 +102,37 @@ export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) 
                     </div>
 
                     <div className="flex gap-4 overflow-x-auto pb-6 -mx-5 px-5 custom-scrollbar snap-x">
-                        {/* Card 1 */}
-                        <div
-                            onClick={() => onNavigate(AppView.BLOG_POST, { postId: 'mastering-connectors' })}
-                            className="snap-center shrink-0 w-[240px] md:w-[280px] bg-white border border-slate-100 rounded-[28px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] cursor-pointer active:scale-95 transition-transform"
-                        >
-                            <div className="h-[140px] bg-blue-500 p-4 relative">
-                                <div className="absolute top-4 left-4 bg-white/95 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-full">
-                                    Structure
-                                </div>
-                                <div className="absolute bottom-4 right-4 bg-black/20 text-white backdrop-blur-md text-xs font-bold px-2 py-1 flex items-center gap-1 rounded-lg">
-                                    <Clock className="w-3 h-3" /> 15 min
-                                </div>
-                            </div>
-                            <div className="p-5">
-                                <h3 className="font-bold text-slate-900 text-lg font-serif leading-tight mb-2">Mastering Connectors</h3>
-                                <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-4">
-                                    Learn how to effectively use connecting words to improve your TOEFL score.
-                                </p>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-blue-600 flex items-center gap-1">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-600" /> 4 lessons
-                                    </span>
-                                    <div className="flex items-center gap-1 text-xs font-bold text-slate-700">
-                                        <Star className="w-3 h-3 text-amber-400 fill-amber-400" /> 4.8
+                        {featuredPosts.length === 0 ? (
+                            <p className="text-sm text-slate-400 font-medium">No featured skills found.</p>
+                        ) : (
+                            featuredPosts.map((post, idx) => (
+                                <div
+                                    key={post.id}
+                                    onClick={() => onNavigate(AppView.BLOG_POST, { postId: post.id })}
+                                    className="snap-center shrink-0 w-[240px] md:w-[280px] bg-white border border-slate-100 rounded-[28px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] cursor-pointer active:scale-95 transition-transform"
+                                >
+                                    <div className={`h-[140px] ${idx % 2 === 0 ? 'bg-blue-500' : 'bg-emerald-400'} p-4 relative`}>
+                                        <div className="absolute top-4 left-4 bg-white/95 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-full">
+                                            {post.category || 'TOEFL'}
+                                        </div>
+                                        <div className="absolute bottom-4 right-4 bg-black/20 text-white backdrop-blur-md text-xs font-bold px-2 py-1 flex items-center gap-1 rounded-lg">
+                                            <Clock className="w-3 h-3" /> {post.readTime}
+                                        </div>
+                                    </div>
+                                    <div className="p-5">
+                                        <h3 className="font-bold text-slate-900 text-lg font-serif leading-tight mb-2 line-clamp-2">{post.title}</h3>
+                                        <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-4">
+                                            {post.excerpt || 'Learn strategies to improve your score on this topic.'}
+                                        </p>
+                                        <div className="flex items-center justify-between">
+                                            <span className={`text-xs font-bold ${idx % 2 === 0 ? 'text-blue-600' : 'text-emerald-600'} flex items-center gap-1`}>
+                                                <div className={`w-1.5 h-1.5 rounded-full ${idx % 2 === 0 ? 'bg-blue-600' : 'bg-emerald-600'}`} /> Core Skill
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* Card 2 */}
-                        <div
-                            onClick={() => onNavigate(AppView.BLOG_POST, { postId: 'active-listening-strategies' })}
-                            className="snap-center shrink-0 w-[240px] md:w-[280px] bg-white border border-slate-100 rounded-[28px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] cursor-pointer active:scale-95 transition-transform"
-                        >
-                            <div className="h-[140px] bg-emerald-400 p-4 relative">
-                                <div className="absolute top-4 left-4 bg-white/95 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-full">
-                                    Listening
-                                </div>
-                                <div className="absolute bottom-4 right-4 bg-black/20 text-white backdrop-blur-md text-xs font-bold px-2 py-1 flex items-center gap-1 rounded-lg">
-                                    <Clock className="w-3 h-3" /> 20 min
-                                </div>
-                            </div>
-                            <div className="p-5">
-                                <h3 className="font-bold text-slate-900 text-lg font-serif leading-tight mb-2">Active Listening</h3>
-                                <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-4">
-                                    Strategies to identify key points in long academic lectures.
-                                </p>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-600" /> 3 lessons
-                                    </span>
-                                    <div className="flex items-center gap-1 text-xs font-bold text-slate-700">
-                                        <Star className="w-3 h-3 text-amber-400 fill-amber-400" /> 4.9
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                            ))
+                        )}
                     </div>
                 </div>
 
