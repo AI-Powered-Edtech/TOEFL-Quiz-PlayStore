@@ -44,10 +44,12 @@ export async function isCurrentUserAdmin(): Promise<boolean> {
 
 async function getCurrentUserId(): Promise<string | null> {
     try {
-        const response = await fetch('/api/auth/me');
+        const token = localStorage.getItem('access_token');
+        const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+        const response = await fetch('/api/auth/profile', { headers });
         if (!response.ok) return null;
         const data = await response.json();
-        return data?.user?.id || null;
+        return data?.id || null;
     } catch {
         return null;
     }

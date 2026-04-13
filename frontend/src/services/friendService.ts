@@ -84,8 +84,8 @@ export const friendService = {
 
     async addFriendByCode(code: string): Promise<{ success: boolean; error?: string }> {
         try {
-            const authResponse = await apiClient.get<{ user: { id: string } | null }>('/api/auth/me');
-            const myId = authResponse.data?.user?.id;
+            const authResponse = await apiClient.get<{ id: string } | null>('/api/auth/profile');
+            const myId = authResponse.data?.id;
 
             if (!myId) {
                 return { success: false, error: 'You must be signed in.' };
@@ -155,8 +155,8 @@ export const friendService = {
 
     async removeFriend(friendId: string): Promise<boolean> {
         try {
-            const authResponse = await apiClient.get<{ user: { id: string } | null }>('/api/auth/me');
-            const myId = authResponse.data?.user?.id;
+            const authResponse = await apiClient.get<{ id: string } | null>('/api/auth/profile');
+            const myId = authResponse.data?.id;
 
             if (!myId) return false;
 
@@ -175,8 +175,8 @@ export const friendService = {
         if (!accept) return true;
 
         try {
-            const authResponse = await apiClient.get<{ user: { id: string } | null }>('/api/auth/me');
-            const myId = authResponse.data?.user?.id;
+            const authResponse = await apiClient.get<{ id: string } | null>('/api/auth/profile');
+            const myId = authResponse.data?.id;
 
             if (!myId) return false;
 
