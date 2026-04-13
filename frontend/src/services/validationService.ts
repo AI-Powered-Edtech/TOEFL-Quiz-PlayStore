@@ -120,6 +120,13 @@ function validateWriting(
     : null;
 }
 
+export function validateCanonicalQuestion(question: any): boolean {
+  if (!question) return false;
+  if (!question.id || !question.text || !Array.isArray(question.options)) return false;
+  if (question.options.length < 2) return false;
+  return true;
+}
+
 export {
   authSchemas,
   socialSchemas,

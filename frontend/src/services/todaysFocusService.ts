@@ -25,7 +25,6 @@ function getSkillByNumericId(numericId: number): Skill | null {
     return ALL_SKILLS.find(s => s.id === prefixedId) || null;
 }
 
-export const TodaysFocusService = todaysFocusService;
 export const todaysFocusService = {
 
     async getTodaysFocus(userId: string): Promise<TodaysFocusResult> {
@@ -126,3 +125,5 @@ export const todaysFocusService = {
         return this.getTodaysFocus(userId);
     }
 };
+
+export const TodaysFocusService = todaysFocusService;
