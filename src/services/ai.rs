@@ -51,7 +51,7 @@ pub async fn generate(
     .await?;
 
     // ── VIL LLM: OpenAI-compatible provider (Groq) ──
-    if state.config.groq_api_key.is_empty() || state.config.groq_api_key == "test" || state.config.groq_api_key.starts_with("gsk_") {
+    if state.config.groq_api_key.is_empty() || state.config.groq_api_key == "test" {
         return Ok(VilResponse::ok(AiChatResponse {
             choices: vec![AiChoice {
                 message: AiMessage {
