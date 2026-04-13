@@ -13,6 +13,8 @@ export const generateDevilsAdvocateChallenge = async (
     const systemPrompt = `You are a critical thinking AI trained in rhetoric, logic, and argumentation.
 Your role is to identify the core claim in a user's argument and generate a strong, evidence-based counter-argument.
 
+If the user's argument is gibberish, too short, or nonsensical, still return valid JSON but gently point it out in the counter_point.
+
 TASKS:
 1. Extract the main claim from the user's argument
 2. Identify any logical fallacies (if present)
@@ -55,7 +57,12 @@ Generate a critical counter-argument. Be intellectually rigorous but fair.`;
         );
 
         const cleaned = cleanJson(content);
-        return parseJsonSafely(cleaned);
+        try {
+            return parseJsonSafely(cleaned);
+        } catch (parseError) {
+            console.error('[DevilsAdvocate] JSON parse error:', parseError, cleaned);
+            throw new Error('AI returned an invalid format. Please try rephrasing your argument.');
+        }
     } catch (e) {
         console.error('[DevilsAdvocate] Challenge generation failed:', e);
         throw e;

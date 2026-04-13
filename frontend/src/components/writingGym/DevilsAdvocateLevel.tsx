@@ -157,6 +157,13 @@ export const DevilsAdvocateLevel: React.FC<{ onNavigate: (view: AppView) => void
             setError(`Argument too short. Minimum ${MIN_ARGUMENT_LENGTH} characters required.`);
             return;
         }
+        
+        // Ensure it's not just gibberish by checking word count
+        if (trimmed.split(/\s+/).filter(w => w.length > 0).length < 3) {
+            setError(`Argument must contain at least 3 words.`);
+            return;
+        }
+
         if (userArgument.length > MAX_ARGUMENT_LENGTH) {
             setError(`Argument too long. Maximum ${MAX_ARGUMENT_LENGTH} characters allowed.`);
             return;
@@ -166,6 +173,11 @@ export const DevilsAdvocateLevel: React.FC<{ onNavigate: (view: AppView) => void
         setStep('analyzing');
         try {
             const data = await devilsAdvocateService.generateChallenge(userArgument, user?.id);
+            
+            if (!data || !data.counter_point) {
+                throw new Error("AI returned an invalid format. Please try rephrasing your argument.");
+            }
+            
             setChallenge(data);
 
             // Save initial session to database
@@ -194,6 +206,8 @@ export const DevilsAdvocateLevel: React.FC<{ onNavigate: (view: AppView) => void
             console.error(e);
             const errorMessage = e instanceof Error && e.message.includes('Rate limit')
                 ? e.message
+                : e instanceof Error && e.message.includes('format')
+                    ? e.message
                 : e instanceof Error && e.message.includes('API')
                     ? 'AI service temporarily unavailable. Please try again.'
                     : 'Failed to generate challenge. Please check your connection and try again.';
