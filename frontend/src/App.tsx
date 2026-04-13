@@ -36,13 +36,6 @@ const OfflineIndicator = () => {
 };
 
 const App: React.FC = () => {
-    // TEMPORARY TOKEN INJECT FOR QA
-    const tempToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4ODI5NzczOC1iY2UzLTRkYjctYWVjMC1iYTdlZDQxNTUyYmYiLCJyb2xlIjoidXNlciIsInRva2VuX3R5cGUiOiJhY2Nlc3MiLCJleHAiOjE3NzYwNTA2MTIsImlhdCI6MTc3NjA0OTcxMn0.aCoZ7reVZUXMInNSBnx2uuYWvIvZZ1Y3rbC17myRvBo';
-    if (localStorage.getItem('access_token') !== tempToken) {
-        localStorage.setItem('access_token', tempToken);
-        window.location.reload();
-    }
-
     useTheme();
     const { user, isAuthenticated, loading, login, register, logout, updateProfile } = useAuth();
     const { unreadCount } = useNotifications(user?.id);
@@ -226,7 +219,7 @@ const App: React.FC = () => {
                 const sectionFromQuestion = queue[0]?.section || currentSection.toLowerCase();
 
                 await saveQuizResult({
-                    id: crypto.randomUUID(),
+                    id: (crypto.randomUUID && crypto.randomUUID()) || Math.random().toString(36).substring(2, 15),
                     userName: user?.full_name || 'Guest',
                     date: new Date().toISOString(),
                     topic,
@@ -243,7 +236,7 @@ const App: React.FC = () => {
                         .map((q, idx) => {
                             const choiceIdx = answers[idx];
                             if (choiceIdx === undefined) return null;
-                            const questionId = q.id || crypto.randomUUID();
+                            const questionId = q.id || ((crypto.randomUUID && crypto.randomUUID()) || Math.random().toString(36).substring(2, 15));
                             const isCorrect = q.correct_response.includes(q.choices[choiceIdx]);
                             return {
                                 questionId,

@@ -5,6 +5,11 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { SentryErrorBoundary } from './components/SentryErrorBoundary';
 import { reportWebVitals } from './utils/reportWebVitals';
+import { secureStorage } from './utils/secureStorage';
+
+// TEMPORARY TOKEN INJECT FOR QA
+const tempToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyOTM0YTFhMC1mMDNlLTQ5MDAtOTU0ZS0zZDAxYTljNTI2MmIiLCJyb2xlIjoidXNlciIsInRva2VuX3R5cGUiOiJhY2Nlc3MiLCJleHAiOjE3NzYwNTc3ODYsImlhdCI6MTc3NjA1Njg4Nn0.V51ZEsIsCXOA2V5P7zA9h1aAJugAxDBkGcdmom-OO_k';
+secureStorage.setItem('access_token', tempToken);
 
 // Initialize Sentry
 Sentry.init({
