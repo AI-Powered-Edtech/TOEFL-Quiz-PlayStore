@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login Hack</title>
+</head>
+<body>
+<script>
+async function hackLogin() {
+    try {
+        const resReg = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: "e2e_tester_" + Date.now(), password: "password123", full_name: "Tester" })
+        });
+        const regData = await resReg.json();
+        if (regData.access_token) {
+            localStorage.setItem('access_token', regData.access_token);
+            localStorage.setItem('refresh_token', regData.refresh_token);
+            window.location.href = '/';
+        } else {
+            document.body.innerHTML = 'Registration failed: ' + JSON.stringify(regData);
+        }
+    } catch (e) {
+        document.body.innerHTML = 'Error: ' + e.message;
+    }
+}
+hackLogin();
+</script>
+</body>
+</html>

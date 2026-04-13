@@ -52,11 +52,25 @@ pub async fn generate(
 
     // ── VIL LLM: OpenAI-compatible provider (Groq) ──
     if state.config.groq_api_key.is_empty() || state.config.groq_api_key == "test" {
+        // Simple heuristic to return appropriate mock based on prompt
+        let prompt_text = req.messages.iter().map(|m| m.content.clone()).collect::<Vec<_>>().join(" ");
+        let mut mock_content = "[\n  {\n    \"skill_id\": 1,\n    \"section\": \"structure\",\n    \"interaction\": \"multiple_choice\",\n    \"stimulus\": {\n      \"type\": \"text\",\n      \"content\": \"The committee _____ reached a decision after hours of debate.\"\n    },\n    \"prompt\": \"Choose the correct answer:\",\n    \"choices\": [\"has\", \"have\", \"having\", \"is\"],\n    \"correct_response\": [\"has\"],\n    \"cefr_target\": \"B2\",\n    \"difficulty_score\": 65,\n    \"metadata\": { \"source\": \"ai\", \"explanation\": \"'Committee' is a collective noun functioning as a single unit, so it takes a singular verb 'has'.\" }\n  }\n]".to_string();
+
+        if prompt_text.contains("Logic Weaver") {
+            mock_content = "{\n  \"clauses\": {\n    \"main\": \"The development of renewable energy sources is crucial\",\n    \"subordinate\": \"The cost remains relatively high\"\n  },\n  \"options\": [\"furthermore\", \"in addition\", \"however\", \"therefore\"],\n  \"correct_answer\": \"however\",\n  \"relationship_type\": \"contrast\",\n  \"explanation\": \"These clauses present opposing ideas\",\n  \"translation\": \"Pengembangan sumber energi terbarukan sangat penting, namun biaya masih relatif tinggi.\",\n  \"topic_category\": \"Climate Science\"\n}".to_string();
+        } else if prompt_text.contains("Mason Level") {
+            mock_content = "{\n  \"target_sentence\": \"The professor claims that the theory is invalid.\",\n  \"fragments\": [\"The professor\", \"claims that\", \"the theory\", \"is invalid\", \".\"],\n  \"translation\": \"Profesor tersebut mengklaim bahwa teori itu tidak valid.\",\n  \"explanation\": \"Noun clause as object.\",\n  \"hints\": [\"Start with the subject\"],\n  \"difficulty_level\": \"intermediate\"\n}".to_string();
+        } else if prompt_text.contains("Paragraph Builder") {
+            mock_content = "{\n  \"task_prompt\": \"Topic statement\",\n  \"steps\": [\n    {\n      \"step_type\": \"Topic Sentence\",\n      \"options\": [\n        { \"id\": \"A\", \"text\": \"Complex sentence\", \"band_level\": 9, \"feedback\": \"Good.\" },\n        { \"id\": \"B\", \"text\": \"Strong sentence\", \"band_level\": 8, \"feedback\": \"Okay.\" },\n        { \"id\": \"C\", \"text\": \"Basic sentence\", \"band_level\": 7, \"feedback\": \"Basic.\" }\n      ]\n    }\n  ]\n}".to_string();
+        } else if prompt_text.contains("Devil's Advocate") {
+            mock_content = "{\n  \"detected_claim\": \"Test claim\",\n  \"counter_point\": \"Test counter point\",\n  \"logical_fallacy_check\": \"None\",\n  \"suggested_starters\": [\"While it's true...\", \"I acknowledge...\", \"That's a valid point...\"]\n}".to_string();
+        }
+
         return Ok(VilResponse::ok(AiChatResponse {
             choices: vec![AiChoice {
                 message: AiMessage {
                     role: "assistant".into(),
-                    content: "[\n  {\n    \"skill_id\": 1,\n    \"section\": \"structure\",\n    \"interaction\": \"multiple_choice\",\n    \"stimulus\": {\n      \"type\": \"text\",\n      \"content\": \"The committee _____ reached a decision after hours of debate.\"\n    },\n    \"prompt\": \"Choose the correct answer:\",\n    \"choices\": [\"has\", \"have\", \"having\", \"is\"],\n    \"correct_response\": [\"has\"],\n    \"cefr_target\": \"B2\",\n    \"difficulty_score\": 65,\n    \"metadata\": { \"source\": \"ai\", \"explanation\": \"'Committee' is a collective noun functioning as a single unit, so it takes a singular verb 'has'.\" }\n  },\n  {\n    \"skill_id\": 1,\n    \"section\": \"structure\",\n    \"interaction\": \"multiple_choice\",\n    \"stimulus\": {\n      \"type\": \"text\",\n      \"content\": \"Neither the manager nor the employees _____ aware of the updated schedule.\"\n    },\n    \"prompt\": \"Choose the correct answer:\",\n    \"choices\": [\"was\", \"were\", \"is\", \"has been\"],\n    \"correct_response\": [\"were\"],\n    \"cefr_target\": \"B2\",\n    \"difficulty_score\": 70,\n    \"metadata\": { \"source\": \"ai\", \"explanation\": \"In 'neither/nor' constructions, the verb agrees with the noun closest to it ('employees' is plural).\" }\n  }\n]".into(),
+                    content: mock_content,
                 },
             }],
             model: model.to_string(),

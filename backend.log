@@ -1,0 +1,197 @@
+[1m[92m   Compiling[0m toefl-quiz-backend v0.2.0 (/workspace)
+[1m[33mwarning[0m[1m: unused import: `std::time::Duration`[0m
+ [1m[94m--> [0msrc/main.rs:2:5
+  [1m[94m|[0m
+[1m[94m2[0m [1m[94m|[0m use std::time::Duration;
+  [1m[94m|[0m     [1m[33m^^^^^^^^^^^^^^^^^^^[0m
+  [1m[94m|[0m
+  [1m[94m= [0m[1mnote[0m: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+[1m[33mwarning[0m[1m: unused imports: `ChatMessage as VilChat`, `OpenAiConfig`, and `OpenAiProvider`[0m
+ [1m[94m--> [0msrc/services/ai.rs:6:15
+  [1m[94m|[0m
+[1m[94m6[0m [1m[94m|[0m use vil_llm::{ChatMessage as VilChat, LlmProvider, OpenAiConfig, OpenAiProvider};
+  [1m[94m|[0m               [1m[33m^^^^^^^^^^^^^^^^^^^^^^[0m               [1m[33m^^^^^^^^^^^^[0m  [1m[33m^^^^^^^^^^^^^^[0m
+
+[1m[33mwarning[0m[1m: unused variable: `email`[0m
+   [1m[94m--> [0msrc/services/oauth.rs:137:9
+    [1m[94m|[0m
+[1m[94m137[0m [1m[94m|[0m     let email = user_info["email"]
+    [1m[94m|[0m         [1m[33m^^^^^[0m [1m[33mhelp: if this is intentional, prefix it with an underscore: `_email`[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+[1m[33mwarning[0m[1m: unused variable: `claims`[0m
+  [1m[94m--> [0msrc/services/blog.rs:49:5
+   [1m[94m|[0m
+[1m[94m49[0m [1m[94m|[0m     claims: Claims,
+   [1m[94m|[0m     [1m[33m^^^^^^[0m [1m[33mhelp: if this is intentional, prefix it with an underscore: `_claims`[0m
+
+[1m[33mwarning[0m: `toefl-quiz-backend` (bin "toefl-quiz-backend") generated 4 warnings (run `cargo fix --bin "toefl-quiz-backend" -p toefl-quiz-backend` to apply 4 suggestions)
+[1m[92m    Finished[0m `dev` profile [unoptimized + debuginfo] target(s) in 7.01s
+[1m[92m     Running[0m `target/debug/toefl-quiz-backend`
+[db] Migration complete — 35 tables
+
+  ╔══════════════════════════════════════════════════╗
+  ║  VX — Process-Oriented Server (Tri-Lane)        ║
+  ╚══════════════════════════════════════════════════╝
+
+  App:          toefl-quiz
+  Port:         8082
+  Heap:         64 MB
+  Services:     11
+  Endpoints:    80
+  Mesh routes:  11
+  Ingress:      IngressBridge (oneshot rendezvous)
+  Egress:       EgressHandle (bridge-backed)
+
+  [  PUBLIC]  auth (8 endpoints) -> /api/auth
+                 POST /api/auth/register  [AsyncTask]
+                 POST /api/auth/login  [AsyncTask]
+                 POST /api/auth/refresh  [AsyncTask]
+                  GET /api/auth/profile  [AsyncTask]
+                PATCH /api/auth/profile  [AsyncTask]
+                 POST /api/auth/oauth/init  [AsyncTask]
+                 POST /api/auth/oauth/callback  [AsyncTask]
+                 POST /api/auth/oauth/rotate  [AsyncTask]
+  [  PUBLIC]  admin (5 endpoints) -> /api/admin
+                  GET /api/admin/users  [AsyncTask]
+                 POST /api/admin/roles  [AsyncTask]
+               DELETE /api/admin/roles/:user_id  [AsyncTask]
+                 POST /api/admin/verify-pin  [AsyncTask]
+                  GET /api/admin/audit-logs  [AsyncTask]
+  [  PUBLIC]  quiz (14 endpoints) -> /api/quiz
+                  GET /api/quiz/questions  [AsyncTask]
+                  GET /api/quiz/simulation  [AsyncTask]
+                 POST /api/quiz/results  [AsyncTask]
+                  GET /api/quiz/history  [AsyncTask]
+                  GET /api/quiz/progress  [AsyncTask]
+                  GET /api/quiz/bank/count  [AsyncTask]
+                  GET /api/quiz/bank/questions  [AsyncTask]
+                  GET /api/quiz/bank/skill  [AsyncTask]
+                  GET /api/quiz/bank/:id  [AsyncTask]
+                 POST /api/quiz/bank  [AsyncTask]
+                PATCH /api/quiz/bank/:id  [AsyncTask]
+               DELETE /api/quiz/bank/:id  [AsyncTask]
+                  GET /api/quiz/passages/:id  [AsyncTask]
+                 POST /api/quiz/passages  [AsyncTask]
+  [  PUBLIC]  ai (3 endpoints) -> /api/ai
+                 POST /api/ai/generate  [AsyncTask]
+                 POST /api/ai/tts  [AsyncTask]
+                  GET /api/ai/token-usage  [AsyncTask]
+  [  PUBLIC]  writing (13 endpoints) -> /api/writing
+                  GET /api/writing/progress  [AsyncTask]
+                 POST /api/writing/progress  [AsyncTask]
+                  GET /api/writing/sessions  [AsyncTask]
+                 POST /api/writing/sessions  [AsyncTask]
+                 POST /api/writing/exercise  [AsyncTask]
+                 POST /api/writing/evaluate  [AsyncTask]
+                  GET /api/writing/model-essays  [AsyncTask]
+                  GET /api/writing/vocabulary  [AsyncTask]
+                 POST /api/writing/vocabulary  [AsyncTask]
+                 POST /api/writing/devils-advocate  [AsyncTask]
+                 POST /api/writing/peer-review/submissions  [AsyncTask]
+                  GET /api/writing/peer-review/queue  [AsyncTask]
+                 POST /api/writing/peer-review/reviews  [AsyncTask]
+  [  PUBLIC]  social (13 endpoints) -> /api/social
+                 POST /api/social/circles  [AsyncTask]
+                 POST /api/social/circles/join  [AsyncTask]
+                  GET /api/social/circles/mine  [AsyncTask]
+                 POST /api/social/circles/:id/messages  [AsyncTask]
+                  GET /api/social/circles/:id/messages  [AsyncTask]
+                 POST /api/social/friends/add  [AsyncTask]
+                  GET /api/social/friends  [AsyncTask]
+                  GET /api/social/leaderboard  [AsyncTask]
+                  GET /api/social/predictions  [AsyncTask]
+                 POST /api/social/predictions  [AsyncTask]
+                  GET /api/social/achievements  [AsyncTask]
+                  GET /api/social/notifications  [AsyncTask]
+                PATCH /api/social/notifications/:id/read  [AsyncTask]
+  [  PUBLIC]  creator (8 endpoints) -> /api/creator
+                 POST /api/creator/register  [AsyncTask]
+                  GET /api/creator/profile  [AsyncTask]
+                 POST /api/creator/bites  [AsyncTask]
+                  GET /api/creator/bites  [AsyncTask]
+                 POST /api/creator/bites/:id/view  [AsyncTask]
+                 POST /api/creator/bites/:id/tip  [AsyncTask]
+                 POST /api/creator/payouts  [AsyncTask]
+                  GET /api/creator/stats  [AsyncTask]
+  [  PUBLIC]  monitoring (2 endpoints) -> /api/monitoring
+                 POST /api/monitoring/logs/batch  [AsyncTask]
+                 POST /api/monitoring/metrics/batch  [AsyncTask]
+  [  PUBLIC]  storage (4 endpoints) -> /api/storage
+                 POST /api/storage/avatars  [AsyncTask]
+                  GET /api/storage/avatars/:filename  [AsyncTask]
+                 POST /api/storage/audio  [AsyncTask]
+                  GET /api/storage/audio/:filename  [AsyncTask]
+  [  PUBLIC]  blog (4 endpoints) -> /api/blog
+                  GET /api/blog/posts  [AsyncTask]
+                  GET /api/blog/posts/:skill_id  [AsyncTask]
+                 POST /api/blog/admin/posts  [AsyncTask]
+               DELETE /api/blog/admin/posts/:skill_id  [AsyncTask]
+  [  PUBLIC]  admin-monitoring (6 endpoints) -> /api/admin-monitoring
+                  GET /api/admin-monitoring/health  [AsyncTask]
+                  GET /api/admin-monitoring/errors  [AsyncTask]
+                  GET /api/admin-monitoring/feature-flags  [AsyncTask]
+                PATCH /api/admin-monitoring/feature-flags/:id  [AsyncTask]
+                  GET /api/admin-monitoring/moderation/reports  [AsyncTask]
+                PATCH /api/admin-monitoring/moderation/reports/:id  [AsyncTask]
+
+  Tri-Lane Mesh:
+    ingress→auth (Trigger + Data + Control)
+    ingress→blog (Trigger + Data + Control)
+    ingress→monitoring (Trigger + Data + Control)
+    ingress→ai (Trigger + Data + Control)
+    ingress→quiz (Trigger + Data + Control)
+    ingress→social (Trigger + Data + Control)
+    ingress→admin (Trigger + Data + Control)
+    ingress→writing (Trigger + Data + Control)
+    ingress→admin-monitoring (Trigger + Data + Control)
+    ingress→storage (Trigger + Data + Control)
+    ingress→creator (Trigger + Data + Control)
+
+
+  vil-server: toefl-quiz
+  Listening:    http://0.0.0.0:8082
+  Health:       http://localhost:8082/health
+  Readiness:    http://localhost:8082/ready
+  Metrics:      http://localhost:8082/metrics
+  Info:         http://localhost:8082/info
+  Observer:     http://localhost:8082/_vil/dashboard/
+
+  Press Ctrl+C to stop
+
+  ─── Open another terminal ─────────────────────────────────
+
+  1. Dashboard:  http://localhost:8082/_vil/dashboard/
+
+  2. Test:
+     curl -s -X POST http://localhost:8082/api/auth/trigger \
+       -H 'Content-Type: application/json' \
+       -d '{"prompt":"hello"}'
+
+  3. Warmup (required before benchmark):
+     hey -m POST -H 'Content-Type: application/json' \
+       -d '{"prompt":"bench"}' -c 300 -n 3000 \
+       http://localhost:8082/api/auth/trigger > /dev/null
+
+  4. Upstream baseline:
+     hey -m POST -H 'Content-Type: application/json' \
+       -d '{"model":"gpt-4","messages":[{"role":"user","content":"bench"}]}' \
+       -c 300 -n 3000 http://localhost:4545/v1/chat/completions
+
+  5. Gateway benchmark:
+     hey -m POST -H 'Content-Type: application/json' \
+       -d '{"prompt":"bench"}' -c 300 -n 3000 \
+       http://localhost:8082/api/auth/trigger
+
+     Compare Requests/sec between step 4 vs 5 to measure overhead.
+     For dashboard view, use: -z 30s instead of -n 3000
+
+  Alternative: vastar (faster, with SLO insight):
+     vastar -m POST -H 'Content-Type: application/json' \
+       -d '{"prompt":"bench"}' -c 300 -n 3000 \
+       http://localhost:8082/api/auth/trigger
+
+  ────────────────────────────────────────────────────────────
+

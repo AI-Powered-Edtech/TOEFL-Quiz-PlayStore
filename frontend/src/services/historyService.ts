@@ -76,10 +76,8 @@ export const getHistory = async (): Promise<QuizResult[]> => {
 export const saveQuizResult = async (result: QuizResult, userId?: string): Promise<void> => {
     try {
         const apiResult = await quizService.saveResult({
-            skill_id: result.skillId !== undefined 
-                ? (typeof result.skillId === 'string' ? parseInt(result.skillId, 10) : result.skillId) 
-                : 0,
-            section: result.section,
+            skill_id: result.skillId !== undefined ? String(result.skillId) : undefined,
+            section: result.section || 'STRUCTURE',
             score: result.score,
             correct_count: result.correctCount,
             total_questions: result.totalQuestions
