@@ -37,7 +37,7 @@ export const WritingGymHub: React.FC<WritingGymHubProps> = ({ onNavigate, onBack
     const { tier, isPaid } = useSubscription();
 
     const [progress, setProgress] = useState<WritingGymProgress[]>([]);
-    const [unlockedLevels, setUnlockedLevels] = useState<WritingGymLevel[]>(['mason']);
+    const [unlockedLevels, setUnlockedLevels] = useState<WritingGymLevel[]>(['mason', 'ielts_paragraph', 'logic_weaver', 'complexity_ladder']);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showPaywall, setShowPaywall] = useState(false);

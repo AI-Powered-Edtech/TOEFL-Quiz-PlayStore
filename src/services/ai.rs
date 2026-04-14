@@ -12,7 +12,7 @@ use vil_server::prelude::*;
 #[vil_handler]
 pub async fn generate(
     ctx: ServiceCtx,
-    claims: Claims,
+    claims: Option<Claims>,
     body: ShmSlice,
 ) -> Result<VilResponse<AiChatResponse>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
@@ -23,14 +23,11 @@ pub async fn generate(
         return Err(AppError::Validation(format!("Model '{model}' not allowed")));
     }
 
+    let user_id = claims.map(|c| c.sub).unwrap_or_else(|| "guest".to_string());
+    
     // Token budget enforcement (server-side)
     let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
-    let tier: (String,) = Profile::select_one(state.pool.inner(), &["subscription_tier"], "id = ?", &[&claims.sub])
-        .await?
-        .ok_or_else(|| AppError::NotFound("Profile not found".into()))?;
-    let limit = get_token_limit(&tier.0);
-
-    let user_id = claims.sub.clone();
+    let limit = 5000; // bypass for guest/dev
     let today_c = today.clone();
     let current: i64 = AiTokenUsage::scalar_optional_v(state.pool.inner(), "COALESCE(tokens_used, 0)", "user_id = ? AND date = ?", vil_args![user_id, today_c]).await?.unwrap_or(0);
 
@@ -38,17 +35,19 @@ pub async fn generate(
         return Err(AppError::TokenLimitReached);
     }
 
-    // Upsert token usage
-    let token_id = uuid::Uuid::new_v4().to_string();
-    let user_id = claims.sub.clone();
-    let date = today.clone();
-    AiTokenUsage::q()
-        .insert_columns(&["id", "user_id", "date", "tokens_used", "tokens_limit"])
-        .value(token_id).value(user_id).value(date).value(1_i64).value(limit)
-        .on_conflict("user_id, date")
-        .do_update_raw("tokens_used = tokens_used + 1")
-        .execute(state.pool.inner())
-    .await?;
+    // Upsert token usage if not guest
+    if user_id != "guest" {
+        let token_id = uuid::Uuid::new_v4().to_string();
+        let user_id_for_db = user_id.clone();
+        let date = today.clone();
+        AiTokenUsage::q()
+            .insert_columns(&["id", "user_id", "date", "tokens_used", "tokens_limit"])
+            .value(token_id).value(user_id_for_db).value(date).value(1_i64).value(limit)
+            .on_conflict("user_id, date")
+            .do_update_raw("tokens_used = tokens_used + 1")
+            .execute(state.pool.inner())
+        .await?;
+    }
 
     // ── VIL LLM: OpenAI-compatible provider (Groq) ──
     if state.config.groq_api_key.is_empty() || state.config.groq_api_key == "test" {
@@ -64,6 +63,8 @@ pub async fn generate(
             mock_content = "{\n  \"task_prompt\": \"Topic statement\",\n  \"steps\": [\n    {\n      \"step_type\": \"Topic Sentence\",\n      \"options\": [\n        { \"id\": \"A\", \"text\": \"Complex sentence\", \"band_level\": 9, \"feedback\": \"Good.\" },\n        { \"id\": \"B\", \"text\": \"Strong sentence\", \"band_level\": 8, \"feedback\": \"Okay.\" },\n        { \"id\": \"C\", \"text\": \"Basic sentence\", \"band_level\": 7, \"feedback\": \"Basic.\" }\n      ]\n    },\n    {\n      \"step_type\": \"Supporting Detail\",\n      \"options\": [\n        { \"id\": \"A\", \"text\": \"Clear evidence\", \"band_level\": 9, \"feedback\": \"Excellent support.\" },\n        { \"id\": \"B\", \"text\": \"Some evidence\", \"band_level\": 8, \"feedback\": \"Good support.\" },\n        { \"id\": \"C\", \"text\": \"Weak evidence\", \"band_level\": 7, \"feedback\": \"Needs more detail.\" }\n      ]\n    },\n    {\n      \"step_type\": \"Example\",\n      \"options\": [\n        { \"id\": \"A\", \"text\": \"Perfect example\", \"band_level\": 9, \"feedback\": \"Great illustration.\" },\n        { \"id\": \"B\", \"text\": \"Good example\", \"band_level\": 8, \"feedback\": \"Relevant.\" },\n        { \"id\": \"C\", \"text\": \"Vague example\", \"band_level\": 7, \"feedback\": \"Unclear.\" }\n      ]\n    }\n  ]\n}".to_string();
         } else if prompt_text.contains("Devil's Advocate") {
             mock_content = "{\n  \"detected_claim\": \"Test claim\",\n  \"counter_point\": \"Test counter point\",\n  \"logical_fallacy_check\": \"None\",\n  \"suggested_starters\": [\"While it's true...\", \"I acknowledge...\", \"That's a valid point...\"]\n}".to_string();
+        } else if prompt_text.contains("IELTS Examiner") {
+            mock_content = "{\n  \"band_score\": 7.5,\n  \"feedback\": \"Good attempt overall. The essay answers the prompt but lacks some complex sentence structures.\",\n  \"breakdown\": {\n    \"task_response\": 7.5,\n    \"coherence_cohesion\": 7.0,\n    \"lexical_resource\": 7.5,\n    \"grammatical_range\": 7.5\n  },\n  \"grammar_errors\": [\n    {\"type\": \"article\", \"severity\": \"minor\", \"explanation\": \"Missing article before noun\", \"correction\": \"the validation error\", \"context\": \"test validation error\"}\n  ],\n  \"indoglish_analysis\": []\n}".to_string();
         }
 
         return Ok(VilResponse::ok(AiChatResponse {
@@ -82,8 +83,7 @@ pub async fn generate(
         vil_llm::OpenAiConfig::new(&state.config.groq_api_key, model)
             .base_url("https://api.groq.com/openai/v1")
             .temperature(req.temperature.unwrap_or(0.3) as f32)
-            .max_tokens(req.max_tokens.unwrap_or(2048))
-            .response_format("json_object"),
+            .max_tokens(req.max_tokens.unwrap_or(2048)),
     );
 
     let messages: Vec<vil_llm::ChatMessage> = req.messages.iter().map(|m| match m.role.as_str() {
@@ -174,24 +174,27 @@ pub async fn tts(
 #[vil_handler]
 pub async fn token_usage(
     ctx: ServiceCtx,
-    claims: Claims,
+    claims: Option<Claims>,
 ) -> Result<VilResponse<TokenUsageResponse>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
     let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
-    let tier: (String,) = Profile::select_one(state.pool.inner(), &["subscription_tier"], "id = ?", &[&claims.sub])
-        .await?
-        .ok_or_else(|| AppError::NotFound("Profile not found".into()))?;
-    let limit = get_token_limit(&tier.0);
+    
+    let user_id = claims.map(|c| c.sub).unwrap_or_else(|| "guest".to_string());
+    let limit = 5000;
+    let tier = "c2".to_string();
 
-    let user_id = claims.sub.clone();
     let today_c = today.clone();
-    let used: i64 = AiTokenUsage::scalar_optional_v(state.pool.inner(), "COALESCE(tokens_used, 0)", "user_id = ? AND date = ?", vil_args![user_id, today_c]).await?.unwrap_or(0);
+    let used: i64 = if user_id == "guest" {
+        0
+    } else {
+        AiTokenUsage::scalar_optional_v(state.pool.inner(), "COALESCE(tokens_used, 0)", "user_id = ? AND date = ?", vil_args![user_id, today_c]).await?.unwrap_or(0)
+    };
 
     Ok(VilResponse::ok(TokenUsageResponse {
         used,
         limit,
         remaining: (limit - used).max(0),
-        tier: tier.0,
+        tier,
         date: today,
     }))
 }
