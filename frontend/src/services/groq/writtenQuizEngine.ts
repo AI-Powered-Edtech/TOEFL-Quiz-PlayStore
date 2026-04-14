@@ -59,7 +59,7 @@ export const generateWrittenBatch = async (
     const { uniqueSeed, diversityInstruction } = buildDiversityBlock(count);
 
     // Written-specific format reminder (models pay most attention to end of prompt)
-    const formatReminder = `\n\n⚠️ ABSOLUTELY CRITICAL FORMAT REMINDER: Every "prompt" field MUST contain {A}word(s){/A} {B}word(s){/B} {C}word(s){/C} {D}word(s){/D} tags. "choices" MUST be ["A","B","C","D"]. Without tags = REJECTED.`;
+    const formatReminder = `\n\n⚠️ ABSOLUTELY CRITICAL FORMAT REMINDER: Every "prompt" field MUST contain the FULL sentence with {A}word(s){/A} {B}word(s){/B} {C}word(s){/C} {D}word(s){/D} tags INLINE. "choices" MUST be EXACTLY ["A","B","C","D"]. "interaction" MUST be "identify_error". Without tags = REJECTED. Do NOT write "Choose the correct answer". Write ONLY the sentence.`;
 
     const userPrompt = `Generate ${count} UNIQUE written expression questions for Skill ID ${numericSkillId}.
 Context: ${contextInstruction}

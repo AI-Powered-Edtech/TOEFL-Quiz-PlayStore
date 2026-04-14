@@ -15,9 +15,10 @@ interaction: identify_error
 === FORMAT (ABSOLUTELY CRITICAL) ===
 1. "prompt" MUST contain the FULL sentence with EXACTLY FOUR tags: {A}word(s){/A}, {B}word(s){/B}, {C}word(s){/C}, {D}word(s){/D}. DO NOT use any other tags like {E} or {F}.
 2. EXACTLY one tagged portion contains a grammatical error.
-3. "choices" MUST be exactly ["A", "B", "C", "D"]
-4. "correct_response" MUST be the letter of the error, e.g. ["B"]
-5. ABSOLUTELY DO NOT DUPLICATE WORDS. 
+3. "interaction" MUST be "identify_error".
+4. "choices" MUST be exactly ["A", "B", "C", "D"]. DO NOT put words in the choices array.
+5. "correct_response" MUST be exactly ["A"], ["B"], ["C"], or ["D"].
+6. ABSOLUTELY DO NOT DUPLICATE WORDS. 
    - WRONG: "have {A}have{/A}" (You wrote 'have' twice!)
    - WRONG: "{B}been{/B} been" (You wrote 'been' twice!)
    - CORRECT: "{A}have{/A}"

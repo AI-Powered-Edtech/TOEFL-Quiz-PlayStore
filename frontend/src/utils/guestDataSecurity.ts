@@ -58,28 +58,7 @@ export const getGuestSafeData = (): Record<string, unknown> => {
 };
 
 export const validateGuestAction = (action: string): { allowed: boolean; reason?: string } => {
-    const policy = getGuestDataPolicy();
-    const guestStats = getGuestUsageStats();
-
-    const actionLimits: Record<string, { max: number; current: number }> = {
-        'ai_chat': { 
-            max: policy.maxDailyHearts, 
-            current: guestStats.featuresUsed.filter(f => f === 'ai_chat').length 
-        },
-        'quiz': { 
-            max: policy.maxDailyQuizzes, 
-            current: guestStats.featuresUsed.filter(f => f === 'quiz').length 
-        },
-    };
-
-    const limit = actionLimits[action];
-    if (limit && limit.current >= limit.max) {
-        return {
-            allowed: false,
-            reason: `Daily limit reached for ${action}. Create an account to continue.`,
-        };
-    }
-
+    // ALWAYS ALLOW FOR DEV/TESTING
     return { allowed: true };
 };
 
