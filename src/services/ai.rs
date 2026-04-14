@@ -3,10 +3,10 @@ use crate::middleware::auth::Claims;
 use crate::models::ai::*;
 use crate::models::profile::Profile;
 use crate::models::responses::*;
-use vil_llm::{ChatMessage as VilChat, LlmProvider, OpenAiConfig, OpenAiProvider};
+use vil::ai::{ChatMessage as VilChat, LlmProvider, OpenAiConfig, OpenAiProvider};
 use vil_orm::vil_args;
 use vil_server::axum::response::Response as AxumResponse;
-use vil_server::prelude::*;
+use vil::prelude::*;
 
 /// POST /api/ai/generate — Groq LLM proxy via VIL LLM Provider
 #[vil_handler]
@@ -68,25 +68,25 @@ pub async fn generate(
     // MOCK LOGIC DISABLED FOR TASK 1.1
     // if state.config.groq_api_key.is_empty() || state.config.groq_api_key == "test" { ... }
 
-    let provider = vil_llm::OpenAiProvider::new(
-        vil_llm::OpenAiConfig::new(&state.config.groq_api_key, model)
+    let provider = vil::ai::OpenAiProvider::new(
+        vil::ai::OpenAiConfig::new(&state.config.groq_api_key, model)
             .base_url("https://api.groq.com/openai/v1")
             .temperature(req.temperature.unwrap_or(0.3) as f32)
             .max_tokens(req.max_tokens.unwrap_or(2048)),
     );
 
-    let messages: Vec<vil_llm::ChatMessage> = req.messages.iter().map(|m| match m.role.as_str() {
-        "system" => vil_llm::ChatMessage::system(&m.content),
-        "assistant" => vil_llm::ChatMessage::assistant(&m.content),
-        _ => vil_llm::ChatMessage::user(&m.content),
+    let messages: Vec<vil::ai::ChatMessage> = req.messages.iter().map(|m| match m.role.as_str() {
+        "system" => vil::ai::ChatMessage::system(&m.content),
+        "assistant" => vil::ai::ChatMessage::assistant(&m.content),
+        _ => vil::ai::ChatMessage::user(&m.content),
     }).collect();
 
     let response = provider.chat(&messages).await.map_err(|e| {
         println!("GROQ ERROR: {}", e);
-        vil_log::ai_log!(Error, vil_log::AiPayload {
-            provider_hash: vil_log::dict::register_str("groq"),
-            model_hash: vil_log::dict::register_str(model),
-            ..vil_log::AiPayload::default()
+        vil::prelude::vil_log::ai_log!(Error, vil::prelude::vil_log::AiPayload {
+            provider_hash: vil::prelude::vil_log::dict::register_str("groq"),
+            model_hash: vil::prelude::vil_log::dict::register_str(model),
+            ..vil::prelude::vil_log::AiPayload::default()
         });
         AppError::AiUnavailable(e.to_string())
     })?;
@@ -95,14 +95,14 @@ pub async fn generate(
     let (in_tok, out_tok) = response.usage.as_ref()
         .map(|u| (u.prompt_tokens, u.completion_tokens))
         .unwrap_or((0, 0));
-    vil_log::ai_log!(Info, vil_log::AiPayload {
-        provider_hash: vil_log::dict::register_str("groq"),
-        model_hash: vil_log::dict::register_str(model),
+    vil::prelude::vil_log::ai_log!(Info, vil::prelude::vil_log::AiPayload {
+        provider_hash: vil::prelude::vil_log::dict::register_str("groq"),
+        model_hash: vil::prelude::vil_log::dict::register_str(model),
         input_tokens: in_tok,
         output_tokens: out_tok,
         op_type: 0, // chat
         provider_status: 200,
-        ..vil_log::AiPayload::default()
+        ..vil::prelude::vil_log::AiPayload::default()
     });
 
     Ok(VilResponse::ok(AiChatResponse {

@@ -4,8 +4,8 @@ use crate::middleware::auth::Claims;
 use crate::models::admin::*;
 use crate::models::responses::*;
 use vil_orm::vil_args;
-use vil_server::prelude::*;
-use vil_server_auth::VilPassword;
+use vil::prelude::*;
+use vil::auth::VilPassword;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, sqlx::FromRow)]

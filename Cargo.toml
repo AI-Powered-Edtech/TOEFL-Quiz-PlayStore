@@ -5,38 +5,9 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
-# VIL Framework — Server
-vil_sdk = "0.1"
-vil_server = "0.1"
-vil_server_core = "0.1"
-vil_server_auth = "0.1"
-vil_server_web = "0.1"
-vil_json = "0.1"
-
-# VIL Framework — Database
-vil_db_sqlx = { version = "0.1", features = ["sqlite"] }
-vil_db_semantic = "0.1"
-vil_server_db = "0.1"
-
-# VIL Framework — ORM
-vil_orm_derive = "0.1"
-vil_orm = "0.1"
-
-# VIL Framework — AI Stack
-vil_llm = "0.1"
-vil_ai_gateway = "0.1"
-vil_ai_trace = "0.1"
-vil_cost_tracker = "0.1"
-vil_prompts = "0.1"
-vil_prompt_shield = "0.1"
-vil_output_parser = "0.1"
-vil_guardrails = "0.1"
-
-# VIL Framework — Infrastructure
-vil_trigger_cron = "0.1"
-vil_ws = "0.1"
-vil_cache = "0.1"
-vil_log = "0.1"
+# VIL Framework
+vil = { version = "0.2.1", features = ["web", "log", "ai", "db-sqlite", "vil-orm", "sdk", "ws", "cache"] }
+vil_migrate = "0.2.0"
 tracing = "0.1"
 
 # Async runtime
@@ -64,6 +35,12 @@ rand = "0.8"
 rmp-serde = "1.3"
 base64 = "0.22"
 urlencoding = "2.1"
+vil_server = "0.1.14"
+vil_server_core = "0.1.14"
+vil_json = "0.1"
+vil_orm = "0.1"
+vil_orm_derive = "0.1"
+vil_server_macros = "0.1"
 
 [dev-dependencies]
 vil_server_test = "0.1"

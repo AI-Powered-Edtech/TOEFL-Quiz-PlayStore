@@ -8,6 +8,8 @@
 
 ## BAGIAN 1: KOMPONEN YANG TIDAK TERSEDIA DI VIL (Harus Kami Buat Manual)
 
+> **UPDATE (VIL v0.2.1):** Fitur-fitur yang hilang ini sekarang telah tersedia langsung di meta-crate `vil = "0.2.1"` dan modul seperti `vil::auth` serta `vil_migrate`. Seluruh project telah di-upgrade ke v0.2.1. Daftar di bawah adalah catatan historis masalah pada v0.1.
+
 Selama development TOEFL Quiz, ini semua yang TIDAK tersedia di VIL dan harus kami build dari nol:
 
 ### 1.1 Password Hashing & User Registration

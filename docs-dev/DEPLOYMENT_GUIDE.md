@@ -255,42 +255,53 @@ chmod 600 /opt/toefl-quiz/.env
 
 ## 4. BUILD & DEPLOY BINARY
 
-### 4.1 Build di Mesin Development
+### 4.1 Build Server
+
+Buka terminal di laptop local:
 
 ```bash
-cd ~/Aplikasi-Ibrohim/new-toefl-quiz
+git clone https://git.vastar.ai/toef-ibrohim.git
+cd toef-ibrohim
 
-# Build release (optimized)
-cargo build --release
+# Install VIL CLI (v0.2)
+cargo install --path crates/vil_cli --bin vil || cargo install vil_cli
 
-# Cek binary size
-ls -lh target/release/toefl-quiz-backend
-# Expected: ~15-20 MB
+# Build release untuk target Linux MUSL (static binary)
+rustup target add x86_64-unknown-linux-musl
+cargo build --release --target x86_64-unknown-linux-musl
 ```
 
-### 4.2 Copy ke LXC
+### 4.2 Transfer Binary ke LXC
 
 ```bash
-scp target/release/toefl-quiz-backend root@10.10.0.14:/opt/toefl-quiz/
-ssh root@10.10.0.14 "chown toeflquiz:toeflquiz /opt/toefl-quiz/toefl-quiz-backend && chmod +x /opt/toefl-quiz/toefl-quiz-backend"
+# Upload ke LXC
+scp target/x86_64-unknown-linux-musl/release/toefl-quiz-backend root@10.10.0.95:/opt/toefl-quiz/
+
+# Upload file .env (atau download via infisical CLI di dalam LXC)
+scp .env root@10.10.0.95:/opt/toefl-quiz/
 ```
 
-### 4.3 Test Manual
+### 4.3 Menjalankan VIL CLI
+
+Di dalam LXC, Anda dapat menggunakan `vil` command (jika di-install) atau langsung mengeksekusi binary. VIL v0.2.1 menyediakan command bawaan yang sangat berguna untuk production:
 
 ```bash
-ssh root@10.10.0.14
-su -s /bin/bash toeflquiz -c "cd /opt/toefl-quiz && ./toefl-quiz-backend"
+# Menjalankan server
+vil run
+# atau
+./toefl-quiz-backend
 
-# Di terminal lain:
-curl http://10.10.0.14:8082/health
-# → {"service":"vil-server","status":"healthy"}
+# Menjalankan database migration (baru di v0.2)
+vil migrate run
 
-curl -X POST http://10.10.0.14:8082/api/auth/register \
-  -H 'Content-Type: application/json' \
-  -d '{"username":"admin","password":"adminpass123","full_name":"Admin"}'
-# → {"ok":true,"access_token":"...","profile":{...}}
+# Melihat metrics live dari terminal
+vil metrics
 
-# Ctrl+C untuk stop
+# Melihat status process di Shared Memory (SHM)
+vil registry --ports --samples
+
+# Melakukan load test (benchmark) ke server
+vil bench --requests 5000 --concurrency 200
 ```
 
 ---

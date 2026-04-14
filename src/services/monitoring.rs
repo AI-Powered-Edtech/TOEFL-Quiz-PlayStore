@@ -1,7 +1,7 @@
 use crate::error::AppError;
 use crate::models::monitoring::*;
 use crate::models::responses::*;
-use vil_server::prelude::*;
+use vil::prelude::*;
 
 #[vil_handler]
 pub async fn batch_logs(

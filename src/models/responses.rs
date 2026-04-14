@@ -1,6 +1,6 @@
 //! Typed response models — replace all serde_json::json!() with VilModel structs
 use serde::{Deserialize, Serialize};
-use vil_server::prelude::VilModel;
+use vil::prelude::VilModel;
 
 // ── Generic ──
 

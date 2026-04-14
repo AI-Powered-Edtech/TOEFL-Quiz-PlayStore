@@ -4,7 +4,7 @@ use crate::models::creator::*;
 use crate::models::responses::*;
 use crate::models::views::*;
 use vil_orm::vil_args;
-use vil_server::prelude::*;
+use vil::prelude::*;
 
 #[vil_handler]
 pub async fn register_creator(

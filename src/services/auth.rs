@@ -3,8 +3,8 @@ use crate::middleware::auth::Claims;
 use crate::models::profile::*;
 use crate::models::responses::*;
 use crate::AppState;
-use vil_server::prelude::*;
-use vil_server_auth::VilPassword;
+use vil::prelude::*;
+use vil::auth::VilPassword;
 
 #[vil_handler]
 pub async fn register(
@@ -70,18 +70,18 @@ pub async fn login(
     let valid = VilPassword::verify(&req.password, hash_str)
         .unwrap_or(false);
     if !valid {
-        vil_log::security_log!(Warn, vil_log::SecurityPayload {
+        vil::prelude::vil_log::security_log!(Warn, vil::prelude::vil_log::SecurityPayload {
             event_type: 0,
             outcome: 1,
-            ..vil_log::SecurityPayload::default()
+            ..vil::prelude::vil_log::SecurityPayload::default()
         });
         return Err(AppError::Auth("Invalid credentials".into()));
     }
 
-    vil_log::security_log!(Info, vil_log::SecurityPayload {
+    vil::prelude::vil_log::security_log!(Info, vil::prelude::vil_log::SecurityPayload {
         event_type: 0,
         outcome: 0,
-        ..vil_log::SecurityPayload::default()
+        ..vil::prelude::vil_log::SecurityPayload::default()
     });
 
     use crate::models::admin::AdminUser;

@@ -1,7 +1,7 @@
 //! Database view structs — sqlx::FromRow for direct query-to-response mapping
 //! These eliminate manual tuple queries + .map() patterns
 use serde::{Deserialize, Serialize};
-use vil_server::prelude::VilModel;
+use vil::prelude::VilModel;
 
 // ── Social views ──
 

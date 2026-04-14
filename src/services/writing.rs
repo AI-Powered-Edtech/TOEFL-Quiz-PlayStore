@@ -5,7 +5,7 @@ use crate::models::profile::Profile;
 use crate::models::responses::*;
 use crate::models::views::*;
 use crate::models::writing::*;
-use vil_server::prelude::*;
+use vil::prelude::*;
 
 // ── Writing Gym Progress ──
 
@@ -166,7 +166,7 @@ pub async fn evaluate_essay(
 
     // VIL Guardrails — content safety on evaluation input
     {
-        let toxicity = vil_guardrails::ToxicityChecker::with_defaults();
+        let toxicity = vil::ai::ToxicityChecker::with_defaults();
         if toxicity.score(&req.essay) > 0.7 {
             return Err(AppError::Validation("Essay contains inappropriate content.".into()));
         }
@@ -191,7 +191,7 @@ pub async fn evaluate_essay(
     // AI evaluation via Groq (if API key configured)
     if !state.config.groq_api_key.is_empty() {
         // VIL LLM — essay evaluation via OpenAI-compatible Groq provider
-        use vil_llm::{ChatMessage as VilChat, OpenAiConfig, OpenAiProvider, LlmProvider};
+        use vil::ai::{ChatMessage as VilChat, OpenAiConfig, OpenAiProvider, LlmProvider};
 
         let system_prompt = format!(
             "You are an IELTS writing examiner. Evaluate the essay and return JSON with: \
@@ -352,7 +352,7 @@ pub async fn devils_advocate(
 
     // VIL LLM — devils advocate via Groq
     if !state.config.groq_api_key.is_empty() {
-        use vil_llm::{ChatMessage as VilChat, OpenAiConfig, OpenAiProvider, LlmProvider};
+        use vil::ai::{ChatMessage as VilChat, OpenAiConfig, OpenAiProvider, LlmProvider};
 
         let provider = OpenAiProvider::new(
             OpenAiConfig::new(&state.config.groq_api_key, "llama-3.1-8b-instant")
@@ -398,7 +398,7 @@ pub async fn submit_essay(
 
     // VIL Guardrails — content safety check
     {
-        use vil_guardrails::{GuardrailsEngine, PiiDetector, ToxicityChecker};
+        use vil::ai::{GuardrailsEngine, PiiDetector, ToxicityChecker};
 
         let engine = GuardrailsEngine::new();
         let _result = engine.check(&req.essay_content);

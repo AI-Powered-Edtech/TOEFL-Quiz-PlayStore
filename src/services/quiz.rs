@@ -4,7 +4,7 @@ use crate::models::profile::Profile;
 use crate::models::quiz::*;
 use crate::models::responses::*;
 use vil_orm::vil_args;
-use vil_server::prelude::*;
+use vil::prelude::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QuestionListResponse {

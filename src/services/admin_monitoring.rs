@@ -7,7 +7,7 @@ use crate::models::quiz::QuizResult;
 use crate::models::responses::*;
 use crate::models::views::*;
 use vil_orm::vil_args;
-use vil_server::prelude::*;
+use vil::prelude::*;
 
 /// GET /api/admin/monitoring/health — system health dashboard
 #[vil_handler]

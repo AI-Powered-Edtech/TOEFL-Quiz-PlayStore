@@ -1,7 +1,7 @@
 use crate::error::AppError;
 use crate::middleware::auth::Claims;
 use crate::models::responses::*;
-use vil_server::prelude::*;
+use vil::prelude::*;
 
 const UPLOAD_DIR: &str = "uploads";
 const MAX_FILE_SIZE: usize = 10 * 1024 * 1024; // 10MB

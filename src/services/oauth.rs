@@ -5,8 +5,8 @@ use crate::models::profile::*;
 use crate::AppState;
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use std::time::{SystemTime, UNIX_EPOCH};
-use vil_server::prelude::*;
-use vil_server_auth::VilPassword;
+use vil::prelude::*;
+use vil::auth::VilPassword;
 
 const STATE_EXPIRY_SECS: i64 = 600;
 const PKCE_LENGTH: usize = 32;

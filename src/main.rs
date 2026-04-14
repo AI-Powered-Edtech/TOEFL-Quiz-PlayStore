@@ -1,8 +1,8 @@
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
-use vil_server::prelude::*;
-use vil_server_auth::VilJwt;
+use vil::prelude::*;
+use vil::auth::VilJwt;
 use crate::models::oauth::OAuthStateStore;
 
 mod config;
@@ -19,12 +19,12 @@ use crate::services::{admin, admin_monitoring, ai, auth, oauth, blog, creator, m
 
 #[tokio::main]
 async fn main() {
-    // vil_log builder — dev_mode auto-detects debug/release profile.
+    // vil::prelude::vil_log builder — dev_mode auto-detects debug/release profile.
     // dev_mode(true): tracing fallback (colored terminal)
     // dev_mode(false): full SPSC ring buffer (structured, fast)
     dotenv::dotenv().ok();
 
-    let _log = vil_log::init()
+    let _log = vil::prelude::vil_log::init()
         .dev_mode(cfg!(debug_assertions))
         .build();
 
@@ -187,20 +187,20 @@ async fn main() {
         return;
     }
 
-    vil_log::app_log!(Info, "server.starting", { port: port as u64 });
+    vil::prelude::vil_log::app_log!(Info, "server.starting", { port: port as u64 });
     app.run().await;
 }
 
 #[derive(Clone)]
 pub struct AppState {
-    pub pool: Arc<vil_db_sqlx::SqlxPool>,
+    pub pool: Arc<vil::vil_db_sqlx::SqlxPool>,
     pub config: AppConfig,
     pub jwt: Arc<VilJwt>,
     pub oauth_state: Arc<RwLock<OAuthStateStore>>,
 }
 
 impl AppState {
-    pub fn new(pool: vil_db_sqlx::SqlxPool, config: AppConfig, jwt: Arc<VilJwt>) -> Self {
+    pub fn new(pool: vil::vil_db_sqlx::SqlxPool, config: AppConfig, jwt: Arc<VilJwt>) -> Self {
         Self {
             pool: Arc::new(pool),
             config,

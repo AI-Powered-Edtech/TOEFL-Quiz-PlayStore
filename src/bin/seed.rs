@@ -1,4 +1,4 @@
-use vil_server_auth::VilPassword;
+use vil::auth::VilPassword;
 use sqlx::sqlite::SqlitePoolOptions;
 use uuid::Uuid;
 

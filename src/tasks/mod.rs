@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use vil_db_sqlx::SqlxPool;
+use vil::vil_db_sqlx::SqlxPool;
 
 pub async fn run_periodic_tasks(pool: Arc<SqlxPool>) {
     let mut interval = tokio::time::interval(std::time::Duration::from_secs(1800)); // 30 min
@@ -8,11 +8,11 @@ pub async fn run_periodic_tasks(pool: Arc<SqlxPool>) {
         interval.tick().await;
 
         if let Err(_e) = cleanup_expired_claims(&pool).await {
-            vil_log::app_log!(Error, "task.cleanup_claims_failed", {});
+            vil::prelude::vil_log::app_log!(Error, "task.cleanup_claims_failed", {});
         }
 
         if let Err(_e) = cleanup_old_logs(&pool).await {
-            vil_log::app_log!(Error, "task.cleanup_logs_failed", {});
+            vil::prelude::vil_log::app_log!(Error, "task.cleanup_logs_failed", {});
         }
     }
 }
@@ -25,7 +25,7 @@ async fn cleanup_expired_claims(pool: &SqlxPool) -> Result<(), sqlx::Error> {
     ).await?;
 
     if affected > 0 {
-        vil_log::app_log!(Info, "task.claims_released", { count: affected });
+        vil::prelude::vil_log::app_log!(Info, "task.claims_released", { count: affected });
     }
     Ok(())
 }

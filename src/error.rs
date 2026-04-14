@@ -87,36 +87,36 @@ impl IntoResponse for AppError {
 
 impl From<sqlx::Error> for AppError {
     fn from(e: sqlx::Error) -> Self {
-        vil_log::db_log!(Error, vil_log::DbPayload {
+        vil::prelude::vil_log::db_log!(Error, vil::prelude::vil_log::DbPayload {
             error_code: 1,
-            ..vil_log::DbPayload::default()
+            ..vil::prelude::vil_log::DbPayload::default()
         });
         Self::Internal(e.to_string())
     }
 }
 
 // VIL Way: Convert AppError → VilError for #[vil_handler] compatibility
-impl From<AppError> for vil_server::prelude::VilError {
+impl From<AppError> for vil::prelude::VilError {
     fn from(e: AppError) -> Self {
         match e {
-            AppError::Auth(m) => vil_server::prelude::VilError::unauthorized(m),
-            AppError::Forbidden(m) => vil_server::prelude::VilError::forbidden(m),
-            AppError::NotFound(m) => vil_server::prelude::VilError::not_found(m),
-            AppError::Validation(m) => vil_server::prelude::VilError::validation(m),
+            AppError::Auth(m) => vil::prelude::VilError::unauthorized(m),
+            AppError::Forbidden(m) => vil::prelude::VilError::forbidden(m),
+            AppError::NotFound(m) => vil::prelude::VilError::not_found(m),
+            AppError::Validation(m) => vil::prelude::VilError::validation(m),
             AppError::RateLimited { retry_after_secs } => {
-                vil_server::prelude::VilError::bad_request(format!("Rate limited. Retry after {retry_after_secs}s"))
+                vil::prelude::VilError::bad_request(format!("Rate limited. Retry after {retry_after_secs}s"))
             }
             AppError::TokenLimitReached => {
-                vil_server::prelude::VilError::bad_request("Daily AI token limit reached")
+                vil::prelude::VilError::bad_request("Daily AI token limit reached")
             }
             AppError::AiUnavailable(_) => {
-                vil_server::prelude::VilError::internal("AI service temporarily unavailable")
+                vil::prelude::VilError::internal("AI service temporarily unavailable")
             }
             AppError::Config(m) => {
-                vil_server::prelude::VilError::bad_request(m)
+                vil::prelude::VilError::bad_request(m)
             }
             AppError::Internal(_) => {
-                vil_server::prelude::VilError::internal("An internal error occurred")
+                vil::prelude::VilError::internal("An internal error occurred")
             }
         }
     }

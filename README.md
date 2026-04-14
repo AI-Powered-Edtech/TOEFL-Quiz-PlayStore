@@ -6,12 +6,12 @@
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | [VIL](https://crates.io/users/cxl-silicon-dev) (VilApp + ServiceProcess + Tri-Lane mesh) |
+| Framework | [VIL v0.2.1](https://crates.io/crates/vil) (VilApp + ServiceProcess + Tri-Lane mesh) |
 | Runtime | Rust + Tokio |
-| Database | SQLite (WAL mode) via `vil_db_sqlx` |
-| Auth | JWT (jsonwebtoken) + Argon2id (password hashing) |
-| AI | Groq API proxy (server-side, SSE-ready) |
-| Logging | vil_log (SPSC ring buffer, 7 semantic log types) |
+| Database | SQLite (WAL mode) via `vil::vil_db_sqlx` and `vil_migrate` |
+| Auth | JWT (`vil::auth`) + Argon2id |
+| AI | Groq API proxy via `vil::ai` |
+| Logging | `vil::log` (SPSC ring buffer, 7 semantic log types) |
 | Observability | VIL Observer Dashboard (built-in) |
 
 ## Quick Start
@@ -21,15 +21,24 @@
 git clone https://git.vastar.ai/toef-ibrohim.git
 cd toef-ibrohim
 
+# Install VIL CLI (v0.2)
+cargo install --path crates/vil_cli --bin vil || cargo install vil_cli
+
 # Setup environment
 cp .env.example .env
 # Edit .env — minimal: JWT_SECRET
 
 # Run (development)
-DATABASE_URL="sqlite:data.db" JWT_SECRET="your-secret" cargo run
+DATABASE_URL="sqlite:data.db" JWT_SECRET="your-secret" vil run
+
+# Run benchmark
+vil bench --requests 1000 --concurrency 10
+
+# Inspect registry
+vil registry --ports --samples
 
 # Run E2E tests (server harus jalan di port 18082)
-DATABASE_URL="sqlite:test_e2e.db" JWT_SECRET="e2e-test-key" PORT=18082 cargo run &
+DATABASE_URL="sqlite:test_e2e.db" JWT_SECRET="e2e-test-key" PORT=18082 vil run &
 sleep 5
 cargo test --test e2e -- --test-threads=1
 ```

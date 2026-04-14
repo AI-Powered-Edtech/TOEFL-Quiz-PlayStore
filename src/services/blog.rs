@@ -4,7 +4,7 @@ use crate::middleware::auth::Claims;
 use crate::models::blog::BlogPost;
 use crate::models::responses::*;
 use crate::models::views::*;
-use vil_server::prelude::*;
+use vil::prelude::*;
 
 /// GET /api/blog/posts — list published posts
 #[vil_handler]
