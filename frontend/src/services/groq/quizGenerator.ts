@@ -73,6 +73,7 @@ export const generateQuizBatch = async (
 
         // Detect Written Expression (Skills 20-60)
         const isWrittenExpression =
+            section === 'WRITTEN' ||
             (numericSkillId >= 20 && numericSkillId <= 60) ||
             topic.toLowerCase().includes('written expression');
 

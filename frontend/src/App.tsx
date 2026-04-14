@@ -168,7 +168,7 @@ const App: React.FC = () => {
 
         try {
             const topicToUse = typeof skillIdOrTopic === 'string' ? skillIdOrTopic : `Skill ${skillIdOrTopic}`;
-            const sect = sectionVal || 'STRUCTURE';
+            let sect = sectionVal || 'STRUCTURE';
 
             let numericSkillId: number | undefined = undefined;
             if (typeof skillIdOrTopic === 'number') {
@@ -176,6 +176,10 @@ const App: React.FC = () => {
             } else if (typeof skillIdOrTopic === 'string') {
                 const match = skillIdOrTopic.match(/(?:Skill\s*)?(\d+)|S(\d+)/i);
                 if (match) numericSkillId = parseInt(match[1] || match[2], 10);
+            }
+
+            if (numericSkillId && numericSkillId >= 20 && numericSkillId <= 60 && sect === 'STRUCTURE') {
+                sect = 'WRITTEN';
             }
 
             if (numericSkillId) setCurrentSkillId(numericSkillId);
@@ -191,6 +195,13 @@ const App: React.FC = () => {
                 setCurrentView(AppView.DASHBOARD);
                 showError('Failed to generate questions. Please try again.');
                 return;
+            }
+
+            try {
+                const { default: questionBank } = await import('./services/questionBankService');
+                await questionBank.saveQuestions(questions);
+            } catch (err) {
+                console.warn('[App] Failed to save questions to Question Bank:', err);
             }
 
             quizStore.startQuiz(questions);
@@ -253,6 +264,34 @@ const App: React.FC = () => {
                         } catch (err) {
                             console.warn('[App] Failed to save question history:', err);
                         }
+                    }
+                }
+
+                // Add to Error Jail (for both logged in and guest users)
+                const guestUserId = user?.id || 'guest';
+                const allEntries = queue
+                    .map((q, idx) => {
+                        const choiceIdx = answers[idx];
+                        if (choiceIdx === undefined) return null;
+                        const isCorrect = q.correct_response.includes(q.choices[choiceIdx]);
+                        return {
+                            section: (q.section || sectionFromQuestion).toLowerCase(),
+                            isCorrect,
+                            questionSnapshot: { ...q }
+                        };
+                    })
+                    .filter((e): e is NonNullable<typeof e> => e !== null);
+
+                if (allEntries.length > 0) {
+                    try {
+                        const { addToErrorJail } = await import('./services/errorJailService');
+                        for (const entry of allEntries) {
+                            if (!entry.isCorrect) {
+                                await addToErrorJail(guestUserId, entry.questionSnapshot as any, entry.section);
+                            }
+                        }
+                    } catch (err) {
+                        console.warn('[App] Failed to add to error jail:', err);
                     }
                 }
 

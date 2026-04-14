@@ -1,5 +1,5 @@
 import api from './apiClient';
-import { BlogPost } from '../data/blogPosts';
+import { BlogPost, BLOG_POSTS } from '../data/blogPosts';
 
 export interface InteractiveExample {
     question: string;
@@ -109,9 +109,13 @@ export async function fetchBlogPost(skillId: string): Promise<BlogPost | null> {
         if (response.data) {
             return detailRowToLegacy(response.data, skillId);
         }
+        const localPost = BLOG_POSTS.find(p => p.id === skillId || p.skillId?.toString() === skillId);
+        if (localPost) return localPost;
         return null;
     } catch (e) {
         console.error('[BlogService] Error fetching post', e);
+        const localPost = BLOG_POSTS.find(p => p.id === skillId || p.skillId?.toString() === skillId);
+        if (localPost) return localPost;
         return null;
     }
 }
@@ -121,30 +125,30 @@ export async function fetchBlogPostsBySection(
 ): Promise<BlogPost[]> {
     try {
         const response = await api.get<PostListRow[]>('/api/blog/posts');
-        if (response.data) {
+        if (response.data && response.data.length > 0) {
             return response.data
                 .filter(p => p.section === section)
                 .map(listRowToLegacy);
         }
-        return [];
+        return BLOG_POSTS.filter(p => p.category.toLowerCase() === section.toLowerCase());
     } catch (e) {
         console.error('[BlogService] Error fetching posts by section', e);
-        return [];
+        return BLOG_POSTS.filter(p => p.category.toLowerCase() === section.toLowerCase());
     }
 }
 
 export async function fetchFeaturedPosts(): Promise<BlogPost[]> {
     try {
         const response = await api.get<PostListRow[]>('/api/blog/posts');
-        if (response.data) {
+        if (response.data && response.data.length > 0) {
             return response.data
                 .filter(p => p.is_featured === 1)
                 .map(listRowToLegacy);
         }
-        return [];
+        return BLOG_POSTS;
     } catch (e) {
         console.error('[BlogService] Error fetching featured posts', e);
-        return [];
+        return BLOG_POSTS;
     }
 }
 

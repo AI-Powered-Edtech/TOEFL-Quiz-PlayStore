@@ -1,0 +1,8 @@
+- [ ] Nonaktifkan limit kuota (bypass Guest Limit Reached) dalam Mode Dev.
+- [ ] Ubah konfigurasi layanan AI (`ai.rs` atau setara) agar mengutamakan pemanggilan Groq API secara fungsional tanpa *mock* *hardcoded*.
+- [ ] Modifikasi *prompt* `READING` agar mengembalikan JSON yang benar dan memastikan UI tidak menampilkan blok teks mentah/halusinasi (seperti `[` atau `{"skill_id"` di layar `Passage`).
+- [ ] Pastikan bahwa memilih "Written Expression" merender komponen antarmuka yang benar, alih-alih UI "Structure".
+- [ ] Modifikasi fungsionalitas kuis setelah di-*generate* untuk menyimpan soal ke dalam basis data lokal.
+- [ ] Pastikan `Question Bank` menarik data pertanyaan dari penyimpanan lokal.
+- [ ] Implementasikan pencatatan jawaban yang salah agar terpopulasi di `Error Jail`.
+- [ ] Tampilkan minimal *mock list* atau *fetch* lokal fungsional di halaman `Blog` (sehingga kontennya tidak kosong).

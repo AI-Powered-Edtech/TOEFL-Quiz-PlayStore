@@ -20,16 +20,31 @@ export const parseJsonSafely = (rawContent: string): any => {
     const firstBracket = cleaned.indexOf('[');
     
     let startIndex = -1;
+    let isArray = false;
+
     if (firstBrace !== -1 && firstBracket !== -1) {
-        startIndex = Math.min(firstBrace, firstBracket);
+        if (firstBrace < firstBracket) {
+            startIndex = firstBrace;
+            isArray = false;
+        } else {
+            startIndex = firstBracket;
+            isArray = true;
+        }
     } else if (firstBrace !== -1) {
         startIndex = firstBrace;
+        isArray = false;
     } else if (firstBracket !== -1) {
         startIndex = firstBracket;
+        isArray = true;
     }
 
     if (startIndex !== -1) {
-        cleaned = cleaned.substring(startIndex);
+        const lastIndex = isArray ? cleaned.lastIndexOf(']') : cleaned.lastIndexOf('}');
+        if (lastIndex !== -1 && lastIndex >= startIndex) {
+            cleaned = cleaned.substring(startIndex, lastIndex + 1);
+        } else {
+            cleaned = cleaned.substring(startIndex);
+        }
     }
 
     // 3. Try standard parse first

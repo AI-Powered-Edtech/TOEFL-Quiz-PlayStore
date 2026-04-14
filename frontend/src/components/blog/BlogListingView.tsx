@@ -17,10 +17,10 @@ export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) 
     const [searchQuery, setSearchQuery] = useState('');
     const [featuredPosts, setFeaturedPosts] = useState<BlogPost[]>([]);
     const [categoryProgress, setCategoryProgress] = useState({
-        STRUCTURE: { completed: 10, total: 19 },
-        WRITTEN: { completed: 5, total: 41 },
-        LISTENING: { completed: 20, total: 27 },
-        READING: { completed: 1, total: 6 },
+        STRUCTURE: { completed: 0, total: 60 },
+        WRITTEN: { completed: 0, total: 40 },
+        LISTENING: { completed: 0, total: 30 },
+        READING: { completed: 0, total: 10 },
     });
 
     useEffect(() => {
@@ -161,7 +161,7 @@ export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) 
                                     <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(categoryProgress.STRUCTURE.completed / categoryProgress.STRUCTURE.total) * 100}%` }} />
                                 </div>
                             </div>
-                            <p className="text-[10px] sm:text-xs text-slate-500 font-medium">19 skills • grammar</p>
+                            <p className="text-[10px] sm:text-xs text-slate-500 font-medium">{categoryProgress.STRUCTURE.total} skills • grammar</p>
                         </div>
 
                         {/* Written */}
@@ -184,7 +184,7 @@ export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) 
                                     <div className="h-full bg-fuchsia-500 rounded-full" style={{ width: `${(categoryProgress.WRITTEN.completed / categoryProgress.WRITTEN.total) * 100}%` }} />
                                 </div>
                             </div>
-                            <p className="text-[10px] sm:text-xs text-slate-500 font-medium">41 skills • error ID</p>
+                            <p className="text-[10px] sm:text-xs text-slate-500 font-medium">{categoryProgress.WRITTEN.total} skills • error ID</p>
                         </div>
 
                         {/* Listening */}
@@ -207,7 +207,7 @@ export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) 
                                     <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(categoryProgress.LISTENING.completed / categoryProgress.LISTENING.total) * 100}%` }} />
                                 </div>
                             </div>
-                            <p className="text-[10px] sm:text-xs text-slate-500 font-medium">27 skills • comprehension</p>
+                            <p className="text-[10px] sm:text-xs text-slate-500 font-medium">{categoryProgress.LISTENING.total} skills • comprehension</p>
                         </div>
 
                         {/* Reading */}
@@ -230,7 +230,7 @@ export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) 
                                     <div className="h-full bg-orange-500 rounded-full" style={{ width: `${(categoryProgress.READING.completed / categoryProgress.READING.total) * 100}%` }} />
                                 </div>
                             </div>
-                            <p className="text-[10px] sm:text-xs text-slate-500 font-medium">6 skills • vocabulary</p>
+                            <p className="text-[10px] sm:text-xs text-slate-500 font-medium">{categoryProgress.READING.total} skills • vocabulary</p>
                         </div>
                     </div>
                 </div>
@@ -243,31 +243,21 @@ export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) 
                     </div>
 
                     <div className="space-y-3">
-                        <div
-                            onClick={() => onNavigate(AppView.BLOG_POST, { postId: 'idioms-toefl-guide' })}
-                            className="border border-slate-100 rounded-2xl p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:bg-slate-50 active:scale-[0.98] transition-all"
-                        >
-                            <div className="w-14 h-14 bg-indigo-400 rounded-xl flex items-center justify-center shrink-0">
-                                <Book className="w-6 h-6 text-white" />
+                        {featuredPosts.length > 0 && featuredPosts.slice(0, 2).map((post, idx) => (
+                            <div
+                                key={post.id}
+                                onClick={() => onNavigate(AppView.BLOG_POST, { postId: post.id })}
+                                className="border border-slate-100 rounded-2xl p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:bg-slate-50 active:scale-[0.98] transition-all"
+                            >
+                                <div className={`w-14 h-14 ${idx % 2 === 0 ? 'bg-indigo-400' : 'bg-teal-400'} rounded-xl flex items-center justify-center shrink-0`}>
+                                    <Book className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="font-bold text-slate-900 text-[15px] mb-1">{post.title}</h3>
+                                    <p className="text-xs text-slate-500 font-medium">{post.readTime} • {post.category}</p>
+                                </div>
                             </div>
-                            <div className="flex-1">
-                                <h3 className="font-bold text-slate-900 text-[15px] mb-1">Idioms for TOEFL</h3>
-                                <p className="text-xs text-slate-500 font-medium">15 min • 5 lessons</p>
-                            </div>
-                        </div>
-
-                        <div
-                            onClick={() => onNavigate(AppView.BLOG_POST, { postId: 'lecture-breakdown' })}
-                            className="border border-slate-100 rounded-2xl p-4 flex items-center gap-4 bg-white shadow-sm cursor-pointer hover:bg-slate-50 active:scale-[0.98] transition-all"
-                        >
-                            <div className="w-14 h-14 bg-teal-400 rounded-xl flex items-center justify-center shrink-0">
-                                <Headphones className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="font-bold text-slate-900 text-[15px] mb-1">Lecture Breakdown</h3>
-                                <p className="text-xs text-slate-500 font-medium">20 min • 3 lessons</p>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </div>

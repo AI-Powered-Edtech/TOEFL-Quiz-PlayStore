@@ -61,27 +61,27 @@ CRITICAL: Generate AUTHENTIC TOEFL Reading Comprehension questions based on acad
 - NO generic test-taking advice
 - NO meta-commentary about the exam
 
-=== EXAMPLE (Skill 4 - Implied Detail) ===
-{
-  "skill_id": 4,
-  "section": "reading",
-  "interaction": "multiple_choice",
-  "prompt": "It can be inferred from the passage that the development of photography",
-  "choices": [
-    "was initially met with skepticism by traditional artists",
-    "completely replaced painting as an art form",
-    "was invented simultaneously in multiple countries",
-    "had no impact on the art world until the 20th century"
-  ],
-  "correct_response": ["was initially met with skepticism by traditional artists"],
-  "stimulus": {
-    "text": "The invention of photography in the 19th century revolutionized the way people captured and preserved images. When Louis Daguerre introduced the daguerreotype process in 1839, it was hailed as a technological marvel. However, many painters and artists viewed this new medium with suspicion, fearing it would render their craft obsolete. Despite these concerns, photography and painting coexisted, with each medium developing its own unique aesthetic. Photographers like Ansel Adams and Henri Cartier-Bresson elevated photography to an art form, while painters such as the Impressionists actually drew inspiration from photographic techniques, using them to explore new ways of representing light and movement."
-  },
-  "metadata": {
-    "explanation": "The passage states that 'many painters and artists viewed this new medium with suspicion, fearing it would render their craft obsolete,' which implies skepticism from traditional artists.",
-    "referenced_text": "many painters and artists viewed this new medium with suspicion"
+=== OUTPUT FORMAT ===
+Return ONLY a JSON array of question objects. Do NOT use markdown code blocks or add conversational text.
+Each object MUST strictly follow this structure:
+
+[
+  {
+    "skill_id": 4,
+    "section": "reading",
+    "interaction": "multiple_choice",
+    "passage": "The specific sentence or paragraph this question refers to (if applicable).",
+    "prompt": "It can be inferred from the passage that the development of photography",
+    "choices": [
+      "was initially met with skepticism by traditional artists",
+      "completely replaced painting as an art form",
+      "was invented simultaneously in multiple countries",
+      "had no impact on the art world until the 20th century"
+    ],
+    "correct_response": ["was initially met with skepticism by traditional artists"],
+    "explanation": "The passage states that 'many painters and artists viewed this new medium with suspicion...' which implies skepticism."
   }
-}
+]
 
 === STRICTLY FORBIDDEN ===
 ❌ Questions about test-taking strategies

@@ -58,6 +58,11 @@ export const useGuestPolicy = (feature: string, customPolicy?: Partial<GuestPoli
     }, [isAuthenticated]);
 
     const checkPolicy = useCallback(async (): Promise<PolicyCheckResult> => {
+        // Bypass for Dev Mode
+        if (import.meta.env.DEV) {
+            return { allowed: true };
+        }
+
         const isGuest = !isAuthenticated;
         const featureLimit = FEATURE_GUEST_LIMITS[feature];
 
@@ -120,6 +125,9 @@ export const useGuestPolicy = (feature: string, customPolicy?: Partial<GuestPoli
     }, [checkPolicy]);
 
     const canGuestUse = useCallback((action: string): boolean => {
+        // Bypass for Dev Mode
+        if (import.meta.env.DEV) return true;
+
         if (isAuthenticated) return true;
         
         const limit = FEATURE_GUEST_LIMITS[action];
@@ -155,6 +163,11 @@ export const useGuestPolicy = (feature: string, customPolicy?: Partial<GuestPoli
 };
 
 export const checkFeatureAccess = async (feature: string, isAuthenticated: boolean): Promise<FeatureAccess> => {
+    // Bypass for Dev Mode
+    if (import.meta.env.DEV) {
+        return { allowed: true };
+    }
+
     if (!isAuthenticated) {
         const guestLimit = FEATURE_GUEST_LIMITS[feature];
         if (guestLimit?.requiresAuth) {

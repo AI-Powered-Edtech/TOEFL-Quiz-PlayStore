@@ -50,36 +50,8 @@ pub async fn generate(
     }
 
     // ── VIL LLM: OpenAI-compatible provider (Groq) ──
-    if state.config.groq_api_key.is_empty() || state.config.groq_api_key == "test" {
-        // Simple heuristic to return appropriate mock based on prompt
-        let prompt_text = req.messages.iter().map(|m| m.content.clone()).collect::<Vec<_>>().join(" ");
-        let mut mock_content = "[\n  {\n    \"skill_id\": 1,\n    \"section\": \"structure\",\n    \"interaction\": \"multiple_choice\",\n    \"stimulus\": {\n      \"type\": \"text\",\n      \"content\": \"The committee _____ reached a decision after hours of debate.\"\n    },\n    \"prompt\": \"Choose the correct answer:\",\n    \"choices\": [\"has\", \"have\", \"having\", \"is\"],\n    \"correct_response\": [\"has\"],\n    \"cefr_target\": \"B2\",\n    \"difficulty_score\": 65,\n    \"metadata\": { \"source\": \"ai\", \"explanation\": \"'Committee' is a collective noun functioning as a single unit, so it takes a singular verb 'has'.\" }\n  }\n]".to_string();
-
-        if prompt_text.contains("Logic Weaver") {
-            mock_content = "{\n  \"clauses\": {\n    \"main\": \"The development of renewable energy sources is crucial\",\n    \"subordinate\": \"The cost remains relatively high\"\n  },\n  \"options\": [\"furthermore\", \"in addition\", \"however\", \"therefore\"],\n  \"correct_answer\": \"however\",\n  \"relationship_type\": \"contrast\",\n  \"explanation\": \"These clauses present opposing ideas\",\n  \"translation\": \"Pengembangan sumber energi terbarukan sangat penting, namun biaya masih relatif tinggi.\",\n  \"topic_category\": \"Climate Science\"\n}".to_string();
-        } else if prompt_text.contains("Mason Level") {
-            mock_content = "{\n  \"target_sentence\": \"The professor claims that the theory is invalid.\",\n  \"fragments\": [\"The professor\", \"claims that\", \"the theory\", \"is invalid\", \".\"],\n  \"translation\": \"Profesor tersebut mengklaim bahwa teori itu tidak valid.\",\n  \"explanation\": \"Noun clause as object.\",\n  \"hints\": [\"Start with the subject\"],\n  \"difficulty_level\": \"intermediate\"\n}".to_string();
-        } else if prompt_text.contains("Paragraph Builder") {
-            mock_content = "{\n  \"task_prompt\": \"Topic statement\",\n  \"steps\": [\n    {\n      \"step_type\": \"Topic Sentence\",\n      \"options\": [\n        { \"id\": \"A\", \"text\": \"Complex sentence\", \"band_level\": 9, \"feedback\": \"Good.\" },\n        { \"id\": \"B\", \"text\": \"Strong sentence\", \"band_level\": 8, \"feedback\": \"Okay.\" },\n        { \"id\": \"C\", \"text\": \"Basic sentence\", \"band_level\": 7, \"feedback\": \"Basic.\" }\n      ]\n    },\n    {\n      \"step_type\": \"Supporting Detail\",\n      \"options\": [\n        { \"id\": \"A\", \"text\": \"Clear evidence\", \"band_level\": 9, \"feedback\": \"Excellent support.\" },\n        { \"id\": \"B\", \"text\": \"Some evidence\", \"band_level\": 8, \"feedback\": \"Good support.\" },\n        { \"id\": \"C\", \"text\": \"Weak evidence\", \"band_level\": 7, \"feedback\": \"Needs more detail.\" }\n      ]\n    },\n    {\n      \"step_type\": \"Example\",\n      \"options\": [\n        { \"id\": \"A\", \"text\": \"Perfect example\", \"band_level\": 9, \"feedback\": \"Great illustration.\" },\n        { \"id\": \"B\", \"text\": \"Good example\", \"band_level\": 8, \"feedback\": \"Relevant.\" },\n        { \"id\": \"C\", \"text\": \"Vague example\", \"band_level\": 7, \"feedback\": \"Unclear.\" }\n      ]\n    }\n  ]\n}".to_string();
-        } else if prompt_text.contains("Devil's Advocate") {
-            mock_content = "{\n  \"detected_claim\": \"Test claim\",\n  \"counter_point\": \"Test counter point\",\n  \"logical_fallacy_check\": \"None\",\n  \"suggested_starters\": [\"While it's true...\", \"I acknowledge...\", \"That's a valid point...\"]\n}".to_string();
-        } else if prompt_text.contains("IELTS Examiner") {
-            mock_content = "{\n  \"band_score\": 7.5,\n  \"feedback\": \"Good attempt overall. The essay answers the prompt but lacks some complex sentence structures.\",\n  \"breakdown\": {\n    \"task_response\": 7.5,\n    \"coherence_cohesion\": 7.0,\n    \"lexical_resource\": 7.5,\n    \"grammatical_range\": 7.5\n  },\n  \"grammar_errors\": [\n    {\"type\": \"article\", \"severity\": \"minor\", \"explanation\": \"Missing article before noun\", \"correction\": \"the validation error\", \"context\": \"test validation error\"}\n  ],\n  \"indoglish_analysis\": []\n}".to_string();
-        } else if prompt_text.contains("CEFR English examiner") {
-            mock_content = "{\n  \"writingAnalysis\": {\n    \"grammar_vocabulary\": 85,\n    \"coherence_cohesion\": 80,\n    \"task_response\": 90\n  },\n  \"speakingAnalysis\": {\n    \"grammar_vocabulary\": 75,\n    \"coherence_cohesion\": 80,\n    \"task_response\": 85\n  },\n  \"writingScore\": 85,\n  \"speakingScore\": 80,\n  \"feedback\": {\n    \"reading\": \"Great job on the reading section!\",\n    \"listening\": \"Your listening skills are solid.\",\n    \"writing\": \"Your writing shows good vocabulary but could improve in cohesion.\",\n    \"speaking\": \"You spoke fluently with minor grammatical errors.\"\n  }\n}".to_string();
-        }
-
-        return Ok(VilResponse::ok(AiChatResponse {
-            choices: vec![AiChoice {
-                message: AiMessage {
-                    role: "assistant".into(),
-                    content: mock_content,
-                },
-            }],
-            model: model.to_string(),
-            usage: None,
-        }));
-    }
+    // MOCK LOGIC DISABLED FOR TASK 1.1
+    // if state.config.groq_api_key.is_empty() || state.config.groq_api_key == "test" { ... }
 
     let provider = vil_llm::OpenAiProvider::new(
         vil_llm::OpenAiConfig::new(&state.config.groq_api_key, model)
