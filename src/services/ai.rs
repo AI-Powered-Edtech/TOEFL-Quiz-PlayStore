@@ -65,6 +65,8 @@ pub async fn generate(
             mock_content = "{\n  \"detected_claim\": \"Test claim\",\n  \"counter_point\": \"Test counter point\",\n  \"logical_fallacy_check\": \"None\",\n  \"suggested_starters\": [\"While it's true...\", \"I acknowledge...\", \"That's a valid point...\"]\n}".to_string();
         } else if prompt_text.contains("IELTS Examiner") {
             mock_content = "{\n  \"band_score\": 7.5,\n  \"feedback\": \"Good attempt overall. The essay answers the prompt but lacks some complex sentence structures.\",\n  \"breakdown\": {\n    \"task_response\": 7.5,\n    \"coherence_cohesion\": 7.0,\n    \"lexical_resource\": 7.5,\n    \"grammatical_range\": 7.5\n  },\n  \"grammar_errors\": [\n    {\"type\": \"article\", \"severity\": \"minor\", \"explanation\": \"Missing article before noun\", \"correction\": \"the validation error\", \"context\": \"test validation error\"}\n  ],\n  \"indoglish_analysis\": []\n}".to_string();
+        } else if prompt_text.contains("CEFR English examiner") {
+            mock_content = "{\n  \"writingAnalysis\": {\n    \"grammar_vocabulary\": 85,\n    \"coherence_cohesion\": 80,\n    \"task_response\": 90\n  },\n  \"speakingAnalysis\": {\n    \"grammar_vocabulary\": 75,\n    \"coherence_cohesion\": 80,\n    \"task_response\": 85\n  },\n  \"writingScore\": 85,\n  \"speakingScore\": 80,\n  \"feedback\": {\n    \"reading\": \"Great job on the reading section!\",\n    \"listening\": \"Your listening skills are solid.\",\n    \"writing\": \"Your writing shows good vocabulary but could improve in cohesion.\",\n    \"speaking\": \"You spoke fluently with minor grammatical errors.\"\n  }\n}".to_string();
         }
 
         return Ok(VilResponse::ok(AiChatResponse {

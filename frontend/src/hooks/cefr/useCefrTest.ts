@@ -137,31 +137,60 @@ export const useCefrTest = (isPaid: boolean, startTimer: (seconds: number) => vo
     };
 
     const getLocalTestSet = (): any => {
-        // Return a basic local test set as fallback
-        const localData = localStorage.getItem('local_cefr_test_set');
-        if (localData) {
-            return JSON.parse(localData);
-        }
-        
+        // Force refresh for testing
+        // const localData = localStorage.getItem('local_cefr_test_set');
+        // if (localData) {
+        //     return JSON.parse(localData);
+        // }
+
         // Return default test set
         const defaultSet: any = {
             reading: {
-                passage: "The Impact of Technology on Education\n\nTechnology has revolutionized the way we learn and teach. In recent years, the integration of digital tools in classrooms has transformed traditional educational methods. Students now have access to a wealth of information at their fingertips, enabling them to explore subjects in greater depth than ever before.\n\nOne of the most significant changes has been the rise of online learning platforms. These platforms provide students with flexible learning options that can be accessed anytime, anywhere. This has been particularly beneficial for students in remote areas or those with busy schedules.\n\nHowever, the integration of technology in education also presents challenges. Teachers must adapt their teaching methods to incorporate new technologies effectively. Additionally, there are concerns about the digital divide, where students from lower-income families may not have equal access to technology.\n\nDespite these challenges, the benefits of technology in education far outweigh the drawbacks. As we continue to embrace digital innovation, we can expect to see further improvements in student outcomes and engagement.",
-                questions: [
-                    { id: 1, question: "What is the main topic of the passage?", options: ["Online learning", "Technology in education", "Digital divide", "Teacher training"], correct: 1 },
-                    { id: 2, question: "According to the passage, what is one benefit of online learning platforms?", options: ["They are only available to rich students", "They provide flexible learning options", "They replace teachers entirely", "They require expensive equipment"], correct: 1 },
-                    { id: 3, question: "What is mentioned as a challenge of technology in education?", options: ["Students learn too quickly", "Teachers refuse to use technology", "Digital divide", "Technology is too cheap"], correct: 2 },
-                ]
+                part1: [
+                    { id: "r1_1", text: "What is the capital of France?", options: ["Paris", "London", "Berlin", "Madrid"], correctAnswer: "Paris" },
+                    { id: "r1_2", text: "Which language is primarily spoken in Brazil?", options: ["English", "Spanish", "Portuguese", "French"], correctAnswer: "Portuguese" },
+                ],
+                part2: {
+                    passage: "The Impact of Technology on Education\n\nTechnology has revolutionized the way we learn and teach. In recent years, the integration of digital tools in classrooms has transformed traditional educational methods. Students now have access to a wealth of information at their fingertips, enabling them to explore subjects in greater depth than ever before.",
+                    questions: [
+                        { id: "r2_1", text: "What has technology revolutionized?", options: ["Transportation", "Education", "Medicine", "Agriculture"], correctAnswer: "Education" },
+                        { id: "r2_2", text: "What do students have access to at their fingertips?", options: ["Food", "Wealth of information", "Sports equipment", "Musical instruments"], correctAnswer: "Wealth of information" },
+                    ]
+                },
+                part3: {
+                    passage: "One of the most significant changes has been the rise of online learning platforms. These platforms provide students with flexible learning options that can be accessed anytime, anywhere. This has been particularly beneficial for students in remote areas or those with busy schedules.",
+                    questions: [
+                        { id: "r3_1", text: "What is a significant change mentioned?", options: ["Rise of online learning", "Decline of reading", "More school buses", "Longer school days"], correctAnswer: "Rise of online learning" },
+                        { id: "r3_2", text: "Who benefits from online learning?", options: ["Only teachers", "Students in remote areas", "Only young children", "No one"], correctAnswer: "Students in remote areas" },
+                    ]
+                }
             },
-            listening: [],
-            writing: [
-                { id: 1, type: 'long', topic: "Describe a technological innovation that has changed education.", minWords: 150, maxWords: 300, rubric: {} }
+            listening: [
+                {
+                    id: "l1",
+                    difficulty: "A2",
+                    context: "A short announcement at a train station.",
+                    audioScript: "Attention passengers, the train to London will depart from platform 3 in 5 minutes.",
+                    questions: [
+                        { id: "l1_q1", text: "Where is the train going?", options: ["Paris", "London", "Manchester", "Edinburgh"], correctAnswer: "London" },
+                        { id: "l1_q2", text: "Which platform is the train departing from?", options: ["1", "2", "3", "4"], correctAnswer: "3" }
+                    ]
+                }
             ],
-            speaking: [
-                { id: 1, type: 'Cue Card', topic: "Talk about a time you used technology for learning.", prepTime: 30, responseTime: 60 }
-            ]
+            writing: {
+                part1: "Write a short email (50 words) to a friend inviting them to dinner.",
+                part2: "Describe your favorite holiday destination (100 words).",
+                part3: "Write an essay discussing the advantages and disadvantages of remote work (200 words).",
+                part4: "Write a formal letter of complaint to a store manager about a faulty product (150 words)."
+            },
+            speaking: {
+                part1: { prompt: "Please repeat the following sentence: 'I am going to the store.'", type: "shadowing" },
+                part2: { prompt: "Please repeat: 'The weather is very nice today.'", type: "shadowing" },
+                part3: { prompt: "Describe a memorable event from your childhood. You have 1 minute to speak.", type: "free_response" },
+                part4: { prompt: "Do you think technology makes our lives easier or more complicated? Explain your opinion.", type: "free_response" }
+            }
         };
-        
+
         localStorage.setItem('local_cefr_test_set', JSON.stringify(defaultSet));
         return defaultSet;
     };

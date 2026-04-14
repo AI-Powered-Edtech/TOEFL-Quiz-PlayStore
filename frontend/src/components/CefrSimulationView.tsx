@@ -48,7 +48,34 @@ async function callGroqWithRetry(
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const CefrSimulationView: React.FC<CefrSimulationViewProps> = ({ onNavigate }) => {
+    try {
+        useEffect(() => {
+            const hasCleared = sessionStorage.getItem('cefr_cleared_once');
+            if (!hasCleared) {
+                const keys = [
+                    'local_cefr_test_set',
+                    'cefr_phase',
+                    'cefr_reading_data',
+                    'cefr_listening_data',
+                    'cefr_writing_data',
+                    'cefr_speaking_data',
+                    'cefr_reading_ans',
+                    'cefr_listening_ans',
+                    'cefr_writing_ans',
+                    'cefr_speaking_trans',
+                    'cefr_current_part',
+                    'cefr_free_mode',
+                    'cefr_test_set_id',
+                    'cefr_timer_end_ts'
+                ];
+                keys.forEach(k => localStorage.removeItem(k));
+                sessionStorage.setItem('cefr_cleared_once', 'true');
+                window.location.reload();
+            }
+        }, []);
+
     const { tier, isPaid } = useSubscription();
+    console.log("useSubscription done:", isPaid);
 
     // Core Test State Hook
     const {
@@ -70,6 +97,8 @@ export const CefrSimulationView: React.FC<CefrSimulationViewProps> = ({ onNaviga
         finishSection, saveResultsToDb, saveTestSetToDb,
         clearSession,
     } = useCefrTest(isPaid, (s) => startTimer(s));
+    console.log("useCefrTest done. Phase:", phase);
+    console.log("readingData:", readingData);
 
     // Speech Recognition Hook — wired to persisted transcript state
     const {
@@ -83,9 +112,14 @@ export const CefrSimulationView: React.FC<CefrSimulationViewProps> = ({ onNaviga
     } = useSpeechRecognition({
         initialTranscripts: speakingTranscripts,
         onTranscriptChange: (partId, transcript) => {
-            setPersistedSpeakingTranscripts(prev => ({ ...prev, [partId]: transcript }));
+            const key = partId as keyof SpeakingData;
+            setPersistedSpeakingTranscripts(prev => ({
+                ...prev,
+                [key]: transcript
+            }));
         },
     });
+    console.log("useSpeechRecognition done.");
 
     const handleTimeUp = useCallback(() => {
         if (phase === 'reading') {
@@ -103,6 +137,7 @@ export const CefrSimulationView: React.FC<CefrSimulationViewProps> = ({ onNaviga
 
     // Timer Hook
     const { timeLeft, startTimer, formatTime } = useTestTimer(handleTimeUp);
+    console.log("useTestTimer done. timeLeft:", timeLeft);
 
     // ─── Grading Logic ─────────────────────────────────────────────────────────
     const performGrading = useCallback(async () => {
@@ -636,4 +671,8 @@ export const CefrSimulationView: React.FC<CefrSimulationViewProps> = ({ onNaviga
             <Button onClick={() => onNavigate(AppView.PRACTICE_HUB)}>Go Back</Button>
         </div>
     );
+    } catch (e) {
+        console.error("Caught in CefrSimulationView:", e);
+        return <div className="p-8 text-red-500 font-bold">Error rendering: {e instanceof Error ? e.message : JSON.stringify(e)}</div>;
+    }
 };
