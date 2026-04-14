@@ -1,9 +1,4 @@
--- ============================================
--- TOEFL Quiz Backend — Initial Schema
--- 35 optimized tables (from 69 Supabase tables)
--- ============================================
 
--- ── AUTH & ADMIN ──
 
 CREATE TABLE IF NOT EXISTS profiles (
     id TEXT PRIMARY KEY,
@@ -40,7 +35,6 @@ CREATE TABLE IF NOT EXISTS admin_audit_logs (
     created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- ── QUIZ & QUESTIONS ──
 
 CREATE TABLE IF NOT EXISTS passages (
     id TEXT PRIMARY KEY,
@@ -104,7 +98,6 @@ CREATE TABLE IF NOT EXISTS cefr_results (
     created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- ── AI & TOKEN ──
 
 CREATE TABLE IF NOT EXISTS ai_token_usage (
     id TEXT PRIMARY KEY,
@@ -134,7 +127,6 @@ CREATE TABLE IF NOT EXISTS feature_usage (
     used_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- ── WRITING & ESSAY (merged) ──
 
 CREATE TABLE IF NOT EXISTS exercise_pool (
     id TEXT PRIMARY KEY,
@@ -247,7 +239,6 @@ CREATE TABLE IF NOT EXISTS devils_advocate_sessions (
     created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- ── PEER REVIEW (merged) ──
 
 CREATE TABLE IF NOT EXISTS peer_review_submissions (
     id TEXT PRIMARY KEY,
@@ -298,7 +289,6 @@ CREATE TABLE IF NOT EXISTS reviewer_profiles (
     updated_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- ── SOCIAL (merged) ──
 
 CREATE TABLE IF NOT EXISTS friends (
     id TEXT PRIMARY KEY,
@@ -368,7 +358,6 @@ CREATE TABLE IF NOT EXISTS user_achievements (
     UNIQUE(user_id, achievement_id)
 );
 
--- ── CREATOR ECONOMY (merged) ──
 
 CREATE TABLE IF NOT EXISTS creators (
     id TEXT PRIMARY KEY,
@@ -440,7 +429,6 @@ CREATE TABLE IF NOT EXISTS creator_earnings (
     created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- ── MONITORING (merged) ──
 
 CREATE TABLE IF NOT EXISTS app_logs (
     id TEXT PRIMARY KEY,
@@ -522,7 +510,6 @@ CREATE TABLE IF NOT EXISTS blog_posts (
     created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- ── INDEXES ──
 
 CREATE INDEX IF NOT EXISTS idx_quiz_results_user_date ON quiz_results(user_id, date DESC);
 CREATE INDEX IF NOT EXISTS idx_question_bank_section ON question_bank(section, skill_id);
