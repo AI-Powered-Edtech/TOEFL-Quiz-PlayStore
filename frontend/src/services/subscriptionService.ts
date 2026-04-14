@@ -40,16 +40,37 @@ let cachedTier: SubscriptionTier = 'free';
 let cachedUsage: TokenUsage | null = null;
 
 export const getUserTier = async (): Promise<SubscriptionTier> => {
-    return 'c2';
+  try {
+    const res = await api.get<any>('/api/ai/token-usage');
+    if (res.data && res.data.tier) {
+      return res.data.tier as SubscriptionTier;
+    }
+  } catch (err) {
+    console.warn('[subscriptionService] Failed to fetch tier:', err);
+  }
+  return 'free';
 };
 
 export const getTokenUsage = async (): Promise<TokenUsage> => {
-    return {
-        tokens_used: 0,
-        tokens_limit: 5000,
-        remaining: 5000,
-        percentage: 0
-    };
+  try {
+    const res = await api.get<any>('/api/ai/token-usage');
+    if (res.data) {
+      return {
+        tokens_used: res.data.used || 0,
+        tokens_limit: res.data.limit || 15,
+        remaining: res.data.remaining || 15,
+        percentage: res.data.limit > 0 ? (res.data.used / res.data.limit) * 100 : 0
+      };
+    }
+  } catch (err) {
+    console.warn('[subscriptionService] Failed to fetch token usage:', err);
+  }
+  return {
+    tokens_used: 0,
+    tokens_limit: 15,
+    remaining: 15,
+    percentage: 0
+  };
 };
 
 export const canAccessFeature = async (feature: GatedFeature): Promise<FeatureAccess> => {

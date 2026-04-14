@@ -25,11 +25,26 @@ pub async fn generate(
 
     let user_id = claims.map(|c| c.sub).unwrap_or_else(|| "guest".to_string());
     
-    // Token budget enforcement (server-side)
     let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
-    let limit = 5000; // bypass for guest/dev
+    let mut limit = 15;
+    let mut tier = "free".to_string();
+
+    if user_id != "guest" {
+        if let Ok(Some(profile)) = Profile::find_by_id(state.pool.inner(), &user_id).await {
+            tier = profile.subscription_tier.clone();
+            if tier != "free" {
+                limit = 5000;
+            }
+        }
+    }
+
     let today_c = today.clone();
-    let current: i64 = AiTokenUsage::scalar_optional_v(state.pool.inner(), "COALESCE(tokens_used, 0)", "user_id = ? AND date = ?", vil_args![user_id, today_c]).await?.unwrap_or(0);
+    let user_id_c = user_id.clone();
+    let current: i64 = if user_id == "guest" {
+        0
+    } else {
+        AiTokenUsage::scalar_optional_v(state.pool.inner(), "COALESCE(tokens_used, 0)", "user_id = ? AND date = ?", vil_args![user_id_c, today_c]).await?.unwrap_or(0)
+    };
 
     if current >= limit {
         return Err(AppError::TokenLimitReached);
@@ -154,14 +169,25 @@ pub async fn token_usage(
     let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
     
     let user_id = claims.map(|c| c.sub).unwrap_or_else(|| "guest".to_string());
-    let limit = 5000;
-    let tier = "c2".to_string();
+    
+    let mut limit = 15;
+    let mut tier = "free".to_string();
+
+    if user_id != "guest" {
+        if let Ok(Some(profile)) = Profile::find_by_id(state.pool.inner(), &user_id).await {
+            tier = profile.subscription_tier.clone();
+            if tier != "free" {
+                limit = 5000;
+            }
+        }
+    }
 
     let today_c = today.clone();
+    let user_id_c = user_id.clone();
     let used: i64 = if user_id == "guest" {
         0
     } else {
-        AiTokenUsage::scalar_optional_v(state.pool.inner(), "COALESCE(tokens_used, 0)", "user_id = ? AND date = ?", vil_args![user_id, today_c]).await?.unwrap_or(0)
+        AiTokenUsage::scalar_optional_v(state.pool.inner(), "COALESCE(tokens_used, 0)", "user_id = ? AND date = ?", vil_args![user_id_c, today_c]).await?.unwrap_or(0)
     };
 
     Ok(VilResponse::ok(TokenUsageResponse {

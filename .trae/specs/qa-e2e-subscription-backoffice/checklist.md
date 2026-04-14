@@ -1,0 +1,6 @@
+- [x] Hardcode *subscription tier* di frontend dan backend telah dihapus.
+- [x] Akun Dev Free dan Dev Premium berhasil dibuat dan dapat digunakan untuk login.
+- [x] UI Backoffice dapat menampilkan daftar pengguna dari database.
+- [x] Browser agent berhasil memverifikasi *paywall* muncul untuk akun Free yang kehabisan token.
+- [x] Browser agent berhasil memverifikasi akun Premium dapat mengakses fitur eksklusif dan token terpotong dengan benar.
+- [x] Browser agent berhasil memverifikasi fungsi admin di Backoffice (E2E).

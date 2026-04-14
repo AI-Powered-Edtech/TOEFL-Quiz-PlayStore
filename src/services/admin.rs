@@ -6,17 +6,76 @@ use crate::models::responses::*;
 use vil_orm::vil_args;
 use vil_server::prelude::*;
 use vil_server_auth::VilPassword;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct UserWithRole {
+    pub id: String,
+    pub username: Option<String>,
+    pub email: Option<String>,
+    pub role: String,
+    pub subscription_tier: String,
+}
 
 #[vil_handler]
 pub async fn list_admins(
     ctx: ServiceCtx,
     claims: Claims,
-) -> Result<VilResponse<Vec<AdminUser>>, AppError> {
+) -> Result<VilResponse<Vec<UserWithRole>>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
     require_admin(&claims)?;
-    let admins = AdminUser::find_all(state.pool.inner()).await?;
-    Ok(VilResponse::ok(admins))
+    
+    let users = sqlx::query_as::<_, UserWithRole>(r#"
+        SELECT 
+            p.id,
+            p.username,
+            a.email,
+            COALESCE(a.role, 'user') as role,
+            p.subscription_tier
+        FROM profiles p
+        LEFT JOIN admin_users a ON p.id = a.user_id
+    "#)
+    .fetch_all(state.pool.inner())
+    .await?;
+
+    Ok(VilResponse::ok(users))
 }
+
+#[derive(Debug, Deserialize)]
+pub struct ChangeTierRequest {
+    pub tier: String,
+}
+
+#[vil_handler]
+pub async fn change_tier(
+    ctx: ServiceCtx,
+    claims: Claims,
+    Path(user_id): Path<String>,
+    body: ShmSlice,
+) -> Result<VilResponse<OkResponse>, AppError> {
+    let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    require_super_admin(&claims)?;
+    let req: ChangeTierRequest = body.json().map_err(|_| AppError::Validation("Invalid body".into()))?;
+
+    crate::models::profile::Profile::q()
+        .update()
+        .set("subscription_tier", req.tier)
+        .where_eq("id", &user_id)
+        .execute(state.pool.inner())
+        .await?;
+
+    // Audit log
+    let audit_id = uuid::Uuid::new_v4().to_string();
+    AuditLog::insert(
+        state.pool.inner(),
+        &["id", "admin_id", "action", "target_type", "target_id"],
+        vil_args![audit_id, claims.sub, "change_tier", "user", user_id],
+    )
+    .await?;
+
+    Ok(VilResponse::ok(OkResponse { ok: true }))
+}
+
 
 #[vil_handler]
 pub async fn assign_role(

@@ -54,6 +54,7 @@ async fn main() {
 
     let admin_svc = ServiceProcess::new("admin")
         .endpoint(Method::GET, "/users", get(admin::list_admins))
+        .endpoint(Method::PATCH, "/users/:user_id/tier", patch(admin::change_tier))
         .endpoint(Method::POST, "/roles", post(admin::assign_role))
         .endpoint(Method::DELETE, "/roles/:user_id", delete(admin::remove_role))
         .endpoint(Method::POST, "/verify-pin", post(admin::verify_pin))
