@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 
 import { useAuth } from '../hooks/useAuth';
 import { useGuestPolicy } from '../hooks/useGuestPolicy';
-import { getIncorrectQuestions, getJailStats, clearJail } from '../services/errorJailService';
+import { getIncorrectQuestions, getJailStats, clearErrorJail } from '../services/errorJailService';
 import { QuizData, AppView } from '../types';
 
 import { Button } from './Button';
@@ -25,17 +25,12 @@ export const ErrorJailView: React.FC<ErrorJailViewProps> = ({ onNavigate, onStar
     // Fetch jailed questions when user or section changes
     useEffect(() => {
         const fetchJail = async () => {
-            if (!user?.id) {
-                setJailedQuestions([]);
-                setStats({});
-                return;
-            }
-
+            const currentUserId = user?.id || 'guest';
             setIsLoading(true);
             try {
                 const [questions, jailStats] = await Promise.all([
-                    getIncorrectQuestions(user.id, selectedSection),
-                    getJailStats(user.id)
+                    getIncorrectQuestions(currentUserId, selectedSection),
+                    getJailStats(currentUserId)
                 ]);
                 setJailedQuestions(questions);
                 setStats(jailStats.bySection);
@@ -50,14 +45,14 @@ export const ErrorJailView: React.FC<ErrorJailViewProps> = ({ onNavigate, onStar
     }, [user, selectedSection]);
 
     const handleClear = async () => {
-        if (!user?.id) return;
+        const currentUserId = user?.id || 'guest';
 
         if (confirm("Are you sure you want to release all questions without reviewing them?")) {
             try {
-                await clearJail(user.id, selectedSection);
+                await clearErrorJail(currentUserId, selectedSection);
                 setJailedQuestions([]);
                 // Refresh stats
-                const newStats = await getJailStats(user.id);
+                const newStats = await getJailStats(currentUserId);
                 setStats(newStats.bySection);
             } catch (error) {
                 console.error('[ErrorJailView] Failed to clear:', error);

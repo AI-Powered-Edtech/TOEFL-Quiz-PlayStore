@@ -199,7 +199,11 @@ const App: React.FC = () => {
 
             try {
                 const { default: questionBank } = await import('./services/questionBankService');
-                await questionBank.saveQuestions(questions);
+                const questionsWithIds = questions.map(q => ({
+                    ...q,
+                    id: q.id || crypto.randomUUID()
+                }));
+                await questionBank.saveQuestions(questionsWithIds);
             } catch (err) {
                 console.warn('[App] Failed to save questions to Question Bank:', err);
             }

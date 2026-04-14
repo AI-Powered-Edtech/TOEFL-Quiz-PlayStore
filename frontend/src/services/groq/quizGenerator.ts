@@ -61,8 +61,15 @@ export const generateQuizBatch = async (
 
         console.log(`[Generator] 🎯 Routing to engine for section=${section}, Skill ID=${numericSkillId}`);
 
-        // Route to Reading engine
-        if (section === 'READING') {
+        // Detect Reading
+        const isReading =
+            section === 'READING' ||
+            topic.toLowerCase().includes('reading') ||
+            topic.toLowerCase().includes('main idea') ||
+            topic.toLowerCase().includes('detail question') ||
+            topic.toLowerCase().includes('vocabulary in context');
+
+        if (isReading) {
             return await generateReadingBatch(topic, count, numericSkillId);
         }
 
