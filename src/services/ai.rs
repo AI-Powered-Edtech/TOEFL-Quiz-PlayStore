@@ -61,7 +61,7 @@ pub async fn generate(
         } else if prompt_text.contains("Mason Level") {
             mock_content = "{\n  \"target_sentence\": \"The professor claims that the theory is invalid.\",\n  \"fragments\": [\"The professor\", \"claims that\", \"the theory\", \"is invalid\", \".\"],\n  \"translation\": \"Profesor tersebut mengklaim bahwa teori itu tidak valid.\",\n  \"explanation\": \"Noun clause as object.\",\n  \"hints\": [\"Start with the subject\"],\n  \"difficulty_level\": \"intermediate\"\n}".to_string();
         } else if prompt_text.contains("Paragraph Builder") {
-            mock_content = "{\n  \"task_prompt\": \"Topic statement\",\n  \"steps\": [\n    {\n      \"step_type\": \"Topic Sentence\",\n      \"options\": [\n        { \"id\": \"A\", \"text\": \"Complex sentence\", \"band_level\": 9, \"feedback\": \"Good.\" },\n        { \"id\": \"B\", \"text\": \"Strong sentence\", \"band_level\": 8, \"feedback\": \"Okay.\" },\n        { \"id\": \"C\", \"text\": \"Basic sentence\", \"band_level\": 7, \"feedback\": \"Basic.\" }\n      ]\n    }\n  ]\n}".to_string();
+            mock_content = "{\n  \"task_prompt\": \"Topic statement\",\n  \"steps\": [\n    {\n      \"step_type\": \"Topic Sentence\",\n      \"options\": [\n        { \"id\": \"A\", \"text\": \"Complex sentence\", \"band_level\": 9, \"feedback\": \"Good.\" },\n        { \"id\": \"B\", \"text\": \"Strong sentence\", \"band_level\": 8, \"feedback\": \"Okay.\" },\n        { \"id\": \"C\", \"text\": \"Basic sentence\", \"band_level\": 7, \"feedback\": \"Basic.\" }\n      ]\n    },\n    {\n      \"step_type\": \"Supporting Detail\",\n      \"options\": [\n        { \"id\": \"A\", \"text\": \"Clear evidence\", \"band_level\": 9, \"feedback\": \"Excellent support.\" },\n        { \"id\": \"B\", \"text\": \"Some evidence\", \"band_level\": 8, \"feedback\": \"Good support.\" },\n        { \"id\": \"C\", \"text\": \"Weak evidence\", \"band_level\": 7, \"feedback\": \"Needs more detail.\" }\n      ]\n    },\n    {\n      \"step_type\": \"Example\",\n      \"options\": [\n        { \"id\": \"A\", \"text\": \"Perfect example\", \"band_level\": 9, \"feedback\": \"Great illustration.\" },\n        { \"id\": \"B\", \"text\": \"Good example\", \"band_level\": 8, \"feedback\": \"Relevant.\" },\n        { \"id\": \"C\", \"text\": \"Vague example\", \"band_level\": 7, \"feedback\": \"Unclear.\" }\n      ]\n    }\n  ]\n}".to_string();
         } else if prompt_text.contains("Devil's Advocate") {
             mock_content = "{\n  \"detected_claim\": \"Test claim\",\n  \"counter_point\": \"Test counter point\",\n  \"logical_fallacy_check\": \"None\",\n  \"suggested_starters\": [\"While it's true...\", \"I acknowledge...\", \"That's a valid point...\"]\n}".to_string();
         }
@@ -82,7 +82,8 @@ pub async fn generate(
         vil_llm::OpenAiConfig::new(&state.config.groq_api_key, model)
             .base_url("https://api.groq.com/openai/v1")
             .temperature(req.temperature.unwrap_or(0.3) as f32)
-            .max_tokens(req.max_tokens.unwrap_or(2048)),
+            .max_tokens(req.max_tokens.unwrap_or(2048))
+            .response_format("json_object"),
     );
 
     let messages: Vec<vil_llm::ChatMessage> = req.messages.iter().map(|m| match m.role.as_str() {

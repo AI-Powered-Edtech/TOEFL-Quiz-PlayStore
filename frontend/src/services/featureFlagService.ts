@@ -63,6 +63,26 @@ const DEFAULT_FLAGS: Record<string, FeatureFlag> = {
         allowed_users: [],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
+    },
+    'error_jail_enabled': {
+        id: 'error_jail_enabled',
+        name: 'Error Jail',
+        description: 'Enable Error Jail practice mode',
+        enabled: true,
+        rollout_percent: 100,
+        allowed_users: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    'ielts_paragraph_enabled': {
+        id: 'ielts_paragraph_enabled',
+        name: 'IELTS Paragraph',
+        description: 'Enable IELTS Paragraph Builder',
+        enabled: true,
+        rollout_percent: 100,
+        allowed_users: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
     }
 };
 

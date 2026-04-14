@@ -48,7 +48,9 @@ export const AI_MODELS = {
 
 export const aiService = {
   async generate(request: GenerateRequest): Promise<{ content?: string; error?: string }> {
-    const response = await api.post<AiChatResponse>('/api/ai/generate', request);
+    const response = await api.post<AiChatResponse>('/api/ai/generate', request, {
+      timeout: 60000 // 60 seconds for heavy AI tasks like essay grading
+    });
 
     if (response.error) {
       return { error: response.error.error };

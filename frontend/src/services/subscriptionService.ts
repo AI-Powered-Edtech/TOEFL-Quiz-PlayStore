@@ -40,40 +40,16 @@ let cachedTier: SubscriptionTier = 'free';
 let cachedUsage: TokenUsage | null = null;
 
 export const getUserTier = async (): Promise<SubscriptionTier> => {
-  try {
-    const profile = await api.get<{ subscription_tier: string }>('/api/auth/profile');
-    if (profile.data?.subscription_tier) {
-      cachedTier = profile.data.subscription_tier as SubscriptionTier;
-    }
-  } catch {
-    // Keep default
-  }
-  return cachedTier;
+    return 'c2';
 };
 
 export const getTokenUsage = async (): Promise<TokenUsage> => {
-  try {
-    const response = await api.get<{ used: number; limit: number; remaining: number; tier: string }>('/api/ai/token-usage');
-    if (response.data) {
-      cachedUsage = {
-        tokens_used: response.data.used,
-        tokens_limit: response.data.limit,
-        remaining: response.data.remaining,
-        percentage: response.data.limit > 0
-          ? Math.round((response.data.used / response.data.limit) * 100)
-          : 0,
-      };
-      return cachedUsage;
-    }
-  } catch {
-    // Keep cached
-  }
-  return cachedUsage || {
-    tokens_used: 0,
-    tokens_limit: 15,
-    remaining: 15,
-    percentage: 0,
-  };
+    return {
+        tokens_used: 0,
+        tokens_limit: 5000,
+        remaining: 5000,
+        percentage: 0
+    };
 };
 
 export const canAccessFeature = async (feature: GatedFeature): Promise<FeatureAccess> => {

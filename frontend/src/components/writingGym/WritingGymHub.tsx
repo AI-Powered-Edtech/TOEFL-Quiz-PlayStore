@@ -60,6 +60,9 @@ export const WritingGymHub: React.FC<WritingGymHubProps> = ({ onNavigate, onBack
     const [showHistory, setShowHistory] = useState(false);
 
     useEffect(() => {
+        // Automatically unlock all levels for testing/demo purposes
+        setUnlockedLevels(['mason', 'logic_weaver', 'ielts_paragraph', 'complexity_ladder']);
+        
         if (isAuthenticated) {
             loadProgress();
         } else {
@@ -73,13 +76,8 @@ export const WritingGymHub: React.FC<WritingGymHubProps> = ({ onNavigate, onBack
             const data = await writingGymService.getProgress(userId);
             setProgress(data);
 
-            // Use progression rules from service
-            const unlocked = writingGymService.getUnlockedLevels(data);
-            // Temporarily always unlock IELTS for testing if needed, or rely on service.
-            // Service unlocks complexity_ladder based on logic_weaver rules. Let's make sure 'ielts_paragraph' is unlocked alongside it.
-            if (unlocked.includes('complexity_ladder') && !unlocked.includes('ielts_paragraph')) {
-                unlocked.push('ielts_paragraph');
-            }
+            // Unlock all levels for now
+            const unlocked: WritingGymLevel[] = ['mason', 'logic_weaver', 'ielts_paragraph', 'complexity_ladder'];
             setUnlockedLevels(unlocked);
 
             const [totalStars, nextSkill] = await Promise.all([
@@ -299,31 +297,16 @@ export const WritingGymHub: React.FC<WritingGymHubProps> = ({ onNavigate, onBack
                                     locked={!isPaid && !unlockedLevels.includes('logic_weaver')}
                                 />
 
-                                <FeatureFlagGuard
-                                    flagName="ielts_paragraph_enabled"
-                                    fallback={
-                                        <div className="bg-white dark:bg-[#1E1E1E]/50 rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-slate-100 dark:border-slate-800 opacity-60">
-                                            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
-                                                <Lock className="w-6 h-6 text-slate-400" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="font-bold text-slate-400 dark:text-slate-500 truncate">IELTS Paragraph Builder</h3>
-                                                <p className="text-xs text-slate-400 dark:text-slate-500 line-clamp-1">Coming soon - Master academic structure.</p>
-                                            </div>
-                                        </div>
-                                    }
-                                >
-                                    <TrainingProgramItem
-                                        title="IELTS Paragraph Builder"
-                                        description="Master academic structure."
-                                        icon={DraftingCompass}
-                                        stars={esTotalStars}
-                                        bgClass="bg-emerald-50 dark:bg-emerald-900/20"
-                                        colorClass="text-emerald-600 dark:text-emerald-400"
-                                        onClick={() => onNavigate(AppView.WRITING_GYM_LEVEL_3)}
-                                        locked={!unlockedLevels.includes('ielts_paragraph')}
-                                    />
-                                </FeatureFlagGuard>
+                                <TrainingProgramItem
+                                    title="IELTS Paragraph Builder"
+                                    description="Master academic structure."
+                                    icon={DraftingCompass}
+                                    stars={esTotalStars}
+                                    bgClass="bg-emerald-50 dark:bg-emerald-900/20"
+                                    colorClass="text-emerald-600 dark:text-emerald-400"
+                                    onClick={() => onNavigate(AppView.WRITING_GYM_LEVEL_3)}
+                                    locked={!unlockedLevels.includes('ielts_paragraph')}
+                                />
 
                                 <TrainingProgramItem
                                     title="Complexity Ladder"

@@ -26,7 +26,9 @@ export function validateEssayStructure(
     // Standard IELTS minimums
     const minWords = taskType === 'Task 1' ? 150 : 250;
 
-    if (wordCount < minWords) {
+    if (wordCount < 10) {
+        errors.push(`Essay is too short to be evaluated (${wordCount} words). Minimum required is 10 words.`);
+    } else if (wordCount < minWords) {
         warnings.push(`Essay is under length: ${wordCount} words (minimum: ${minWords}). This will reduce your score.`);
     }
 
