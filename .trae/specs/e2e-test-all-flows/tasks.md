@@ -1,36 +1,36 @@
 # Tasks: End-to-End Testing Semua Flow
 
-- [ ] **Task 1: Setup Lingkungan E2E**
+- [x] **Task 1: Setup Lingkungan E2E**
   - Pastikan database dalam keadaan bersih (seeded/reset) sebelum tes.
   - Jalankan server backend (`vil run` atau `cargo run`) dan frontend secara paralel.
 
-- [ ] **Task 2: Tes Flow Authentication & User**
+- [x] **Task 2: Tes Flow Authentication & User**
   - Registrasi user baru dari UI, login, dan validasi penyimpanan JWT token.
   - Update profile dan akses data profil terbaru.
   - Validasi integrasi OAuth (jika tersedia di UI).
 
-- [ ] **Task 3: Tes Flow Quiz & Bank Soal**
+- [x] **Task 3: Tes Flow Quiz & Bank Soal**
   - User memulai simulasi quiz, menjawab soal, submit jawaban, dan melihat skor (History & Progress).
   - Admin/Creator dapat menambah, mengubah, atau menghapus soal di Bank Soal melalui UI.
 
-- [ ] **Task 4: Tes Flow Writing & AI**
+- [x] **Task 4: Tes Flow Writing & AI**
   - User menggunakan AI Generator (memastikan proxy Groq berjalan mulus via `vil::ai`).
   - User men-submit essay, menerima evaluasi/scoring AI, lalu masuk ke queue Peer Review.
   - User mengujicoba TTS dan Devils Advocate.
 
-- [ ] **Task 5: Tes Flow Social & Gamification**
+- [x] **Task 5: Tes Flow Social & Gamification**
   - User membuat/bergabung dengan Circle, lalu mengirim pesan di Circle.
   - User menambah teman, mengecek leaderboard, membuat prediksi, dan melihat notifikasi (serta tandai sudah dibaca).
 
-- [ ] **Task 6: Tes Flow Creator & Blog**
+- [x] **Task 6: Tes Flow Creator & Blog**
   - Creator dapat login/register sebagai creator, lalu mengecek statistik dashboard (Daily Bites, Earnings).
   - User melihat daftar Blog/Materi dan membuka halaman detailnya tanpa error.
 
-- [ ] **Task 7: Tes Flow Admin Monitoring**
+- [x] **Task 7: Tes Flow Admin Monitoring**
   - Admin login dan mengecek system health, audit logs, recent errors, dan list user.
   - Admin dapat mengatur Feature Flags (toggle enable/disable).
   - Menyelesaikan *content report* dari user.
 
-- [ ] **Task 8: Perbaikan Bug (Bila Ada)**
+- [x] **Task 8: Perbaikan Bug (Bila Ada)**
   - Identifikasi kegagalan *wiring* antara frontend & backend selama E2E testing.
   - Lakukan perbaikan pada kode frontend (fetch/axios mapping) atau backend (response model format) jika ada ketidaksesuaian kontrak data.
