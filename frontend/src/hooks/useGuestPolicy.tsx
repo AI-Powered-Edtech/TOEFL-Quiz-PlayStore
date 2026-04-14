@@ -144,7 +144,8 @@ export const useGuestPolicy = (feature: string, customPolicy?: Partial<GuestPoli
         isGuest: !isAuthenticated,
         guestStats,
         renderGuestFallback: () => {
-            if (isAuthenticated) return null;
+            // Bypass for Dev Mode fallback
+            if (import.meta.env.DEV || isAuthenticated) return null;
             return (
                 <div className="flex flex-col items-center justify-center p-8 text-center">
                     <AlertCircle className="w-12 h-12 text-yellow-500 mb-4" />
