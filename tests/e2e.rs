@@ -658,6 +658,12 @@ async fn e2e_full_suite() {
     println!("[*] Social tests");
     test_social(&ctx).await;
 
+    println!("[*] New endpoints tests");
+    test_reports(&ctx).await;
+    test_profile(&ctx).await;
+    test_friends(&ctx).await;
+    test_notifications(&ctx).await;
+
     println!("[*] Creator tests");
     test_creator(&ctx).await;
 
@@ -673,4 +679,141 @@ async fn e2e_full_suite() {
     println!("\n╔══════════════════════════════════════════╗");
     println!("║  ALL E2E TESTS PASSED ✓                  ║");
     println!("╚══════════════════════════════════════════╝\n");
+}
+
+// ══════════════════════════════════════════
+// QUIZ REPORTS TESTS
+// ══════════════════════════════════════════
+
+async fn test_reports(ctx: &TestCtx) {
+    println!("  [reports] save report");
+    let resp = ctx.client.post(format!("{BASE}/api/quiz/reports"))
+        .header("Authorization", ctx.auth_header())
+        .json(&json!({
+            "section": "structure",
+            "student_name": "E2E User",
+            "quiz_topic": "Grammar",
+            "score": 80,
+            "total_questions": 10,
+            "correct_count": 8,
+            "answers_snapshot": []
+        }))
+        .send().await.unwrap();
+    assert_eq!(resp.status(), 201);
+    let body: Value = resp.json().await.unwrap();
+    let report_id = body["id"].as_str().unwrap().to_string();
+    assert!(!report_id.is_empty());
+
+    println!("  [reports] get report by id");
+    let resp = ctx.client.get(format!("{BASE}/api/quiz/reports/{report_id}"))
+        .send().await.unwrap();
+    assert_eq!(resp.status(), 200);
+    let body: Value = resp.json().await.unwrap();
+    assert_eq!(body["score"], 80);
+    assert_eq!(body["quiz_topic"], "Grammar");
+
+    println!("  [reports] get nonexistent report → 404");
+    let resp = ctx.client.get(format!("{BASE}/api/quiz/reports/nonexistent-id"))
+        .send().await.unwrap();
+    assert_eq!(resp.status(), 404);
+}
+
+// ══════════════════════════════════════════
+// PROFILE TESTS
+// ══════════════════════════════════════════
+
+async fn test_profile(ctx: &TestCtx) {
+    println!("  [profile] get public profile");
+    let resp = ctx.client.get(format!("{BASE}/api/profile/{}", ctx.user_id))
+        .send().await.unwrap();
+    assert_eq!(resp.status(), 200);
+    let body: Value = resp.json().await.unwrap();
+    assert_eq!(body["id"], ctx.user_id.as_str());
+    assert!(body.get("friend_code").is_none(), "friend_code must not be in public profile");
+
+    println!("  [profile] update own profile");
+    let resp = ctx.client.patch(format!("{BASE}/api/profile/{}", ctx.user_id))
+        .header("Authorization", ctx.auth_header())
+        .json(&json!({"full_name": "E2E Updated Name"}))
+        .send().await.unwrap();
+    assert_eq!(resp.status(), 200);
+
+    println!("  [profile] update other user profile → 403");
+    let resp = ctx.client.patch(format!("{BASE}/api/profile/other-user-id"))
+        .header("Authorization", ctx.auth_header())
+        .json(&json!({"full_name": "Hacker"}))
+        .send().await.unwrap();
+    assert_eq!(resp.status(), 403);
+}
+
+// ══════════════════════════════════════════
+// FRIENDS TESTS
+// ══════════════════════════════════════════
+
+async fn test_friends(ctx: &TestCtx) {
+    println!("  [friends] list friends (empty)");
+    let resp = ctx.client.get(format!("{BASE}/api/social/friends"))
+        .header("Authorization", ctx.auth_header())
+        .send().await.unwrap();
+    assert_eq!(resp.status(), 200);
+    let body: Value = resp.json().await.unwrap();
+    assert!(body.as_array().unwrap().is_empty());
+
+    println!("  [friends] add friend with invalid code → 404");
+    let resp = ctx.client.post(format!("{BASE}/api/social/friends/add"))
+        .header("Authorization", ctx.auth_header())
+        .json(&json!({"friend_code": "INVALID-CODE"}))
+        .send().await.unwrap();
+    assert_eq!(resp.status(), 404);
+
+    println!("  [friends] respond to nonexistent request → 404");
+    let resp = ctx.client.post(format!("{BASE}/api/social/friends/respond"))
+        .header("Authorization", ctx.auth_header())
+        .json(&json!({"requester_id": "nonexistent", "accept": true}))
+        .send().await.unwrap();
+    assert_eq!(resp.status(), 404);
+
+    println!("  [friends] remove nonexistent friend → 200 (idempotent)");
+    let resp = ctx.client.delete(format!("{BASE}/api/social/friends/nonexistent"))
+        .header("Authorization", ctx.auth_header())
+        .send().await.unwrap();
+    assert_eq!(resp.status(), 200);
+}
+
+// ══════════════════════════════════════════
+// NOTIFICATIONS TESTS
+// ══════════════════════════════════════════
+
+async fn test_notifications(ctx: &TestCtx) {
+    println!("  [notifications] create self notification");
+    let resp = ctx.client.post(format!("{BASE}/api/social/notifications"))
+        .header("Authorization", ctx.auth_header())
+        .json(&json!({"type": "system", "message": "E2E test notification"}))
+        .send().await.unwrap();
+    assert_eq!(resp.status(), 201);
+    let body: Value = resp.json().await.unwrap();
+    let notif_id = body["id"].as_str().unwrap().to_string();
+
+    println!("  [notifications] list notifications");
+    let resp = ctx.client.get(format!("{BASE}/api/social/notifications"))
+        .header("Authorization", ctx.auth_header())
+        .send().await.unwrap();
+    assert_eq!(resp.status(), 200);
+    let body: Value = resp.json().await.unwrap();
+    let notifs = body.as_array().unwrap();
+    assert_eq!(notifs.len(), 1);
+    assert_eq!(notifs[0]["is_read"], false);
+    assert!(notifs[0].get("message").is_some());
+
+    println!("  [notifications] mark as read");
+    let resp = ctx.client.patch(format!("{BASE}/api/social/notifications/{notif_id}/read"))
+        .header("Authorization", ctx.auth_header())
+        .send().await.unwrap();
+    assert_eq!(resp.status(), 200);
+
+    println!("  [notifications] create without auth → 401");
+    let resp = ctx.client.post(format!("{BASE}/api/social/notifications"))
+        .json(&json!({"type": "system", "message": "spam"}))
+        .send().await.unwrap();
+    assert_eq!(resp.status(), 401);
 }

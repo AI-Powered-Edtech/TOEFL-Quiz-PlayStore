@@ -59,7 +59,6 @@ export const AppRouter: React.FC<AppRouterProps> = ({
     } = useQuizStore();
 
     const currentData = queue[index];
-    const genLog: string[] = [];
 
     // Helper to group reading questions (logic moved from App.tsx can be utility, but keeping here for now or passing down)
     const groupReadingQuestionsByPassage = (questions: CanonicalQuestionV1[]): CanonicalQuestionV1[] => {
@@ -139,31 +138,6 @@ export const AppRouter: React.FC<AppRouterProps> = ({
                                 {/* Status text */}
                                 <h3 className="text-lg font-bold text-slate-800 mb-2">Building Your Quiz</h3>
                                 <p className="text-sm text-slate-400 mb-6 text-center max-w-xs">AI is crafting personalized questions just for you</p>
-
-                                {/* Progress messages */}
-                                <div className="w-full max-w-xs space-y-2">
-                                    {genLog.slice(-3).map((log, i, arr) => (
-                                        <div
-                                            key={i}
-                                            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 ${i === arr.length - 1
-                                                ? 'bg-blue-50 border border-blue-100'
-                                                : 'bg-slate-50 opacity-50'
-                                                }`}
-                                        >
-                                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${i === arr.length - 1
-                                                ? 'bg-blue-500 animate-pulse'
-                                                : 'bg-green-400'
-                                                }`} />
-                                            <span className={`text-xs font-medium truncate ${i === arr.length - 1 ? 'text-blue-700' : 'text-slate-500'
-                                                }`}>
-                                                {i === arr.length - 1 ? (
-                                                    <Typewriter text={log} speed={15} showCursor={false} className="text-blue-700 font-medium" />
-                                                ) : log}
-                                            </span>
-                                        </div>
-                                    ))}
-                                    <div ref={logsEndRef} />
-                                </div>
                             </div>
                         )}
 

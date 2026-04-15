@@ -149,26 +149,7 @@ export const quizService = {
       if (response.data?.id) {
         return response.data.id;
       }
-    } catch {
-    }
-    try {
-      const id = crypto.randomUUID();
-      const report = {
-        id,
-        student_name: data.studentName,
-        quiz_topic: data.topic,
-        score: data.score,
-        total_questions: data.total,
-        correct_count: data.correct,
-        answers_snapshot: data.answers,
-        created_at: new Date().toISOString(),
-      };
-      const stored = localStorage.getItem('quiz_reports');
-      const reports = stored ? JSON.parse(stored) : [];
-      reports.unshift(report);
-      if (reports.length > 100) reports.splice(100);
-      localStorage.setItem('quiz_reports', JSON.stringify(reports));
-      return id;
+      return null;
     } catch {
       return null;
     }

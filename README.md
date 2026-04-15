@@ -88,7 +88,7 @@ cargo test --test e2e -- --test-threads=1
 └──────────────────────────────────────────────────┘
 ```
 
-## Services (12)
+## Services (13)
 
 | Service | Prefix | Endpoints | Description |
 |---------|--------|-----------|-------------|
@@ -222,7 +222,7 @@ Coverage: ~50 assertions across auth, admin, quiz, AI, writing, social, creator,
 
 ```
 src/
-├── main.rs                    # VilApp + 11 ServiceProcess assembly
+├── main.rs                    # VilApp + 13 ServiceProcess assembly
 ├── config.rs                  # AppConfig (env vars, Infisical-ready)
 ├── error.rs                   # AppError → sanitized JSON response
 ├── db.rs                      # SQLite migration + VIL SqlxPool

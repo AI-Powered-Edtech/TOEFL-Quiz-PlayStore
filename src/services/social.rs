@@ -413,7 +413,6 @@ pub struct NotificationApiRow {
 
 #[derive(Debug, Deserialize)]
 pub struct CreateNotificationRequest {
-    pub user_id: String,
     #[serde(rename = "type")]
     pub notif_type: String,
     pub message: String,
@@ -422,7 +421,7 @@ pub struct CreateNotificationRequest {
 #[vil_handler]
 pub async fn create_notification(
     ctx: ServiceCtx,
-    _claims: Claims,
+    claims: Claims,
     body: ShmSlice,
 ) -> Result<VilResponse<OkWithIdResponse>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
@@ -431,7 +430,7 @@ pub async fn create_notification(
     let id = uuid::Uuid::new_v4().to_string();
     sqlx::query("INSERT INTO notifications (id, user_id, type, message, read, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))")
         .bind(&id)
-        .bind(&req.user_id)
+        .bind(&claims.sub)
         .bind(&req.notif_type)
         .bind(&req.message)
         .bind(0_i64)

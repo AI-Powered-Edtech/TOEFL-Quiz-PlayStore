@@ -163,14 +163,14 @@ export const socialService = {
     return { ok: true };
   },
 
-  async getOrCreateFriendCode(userId: string): Promise<string | null> {
+  async getOrCreateFriendCode(_userId: string): Promise<string | null> {
     try {
-      const response = await api.get<{ friend_code: string | null }>(`/api/profile/${userId}`);
+      const response = await api.get<{ friend_code: string | null }>('/api/auth/profile');
       if (response.data?.friend_code) {
         return response.data.friend_code;
       }
       const code = 'TOEFL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-      const updateResponse = await api.patch(`/api/profile/${userId}`, { friend_code: code });
+      const updateResponse = await api.patch('/api/auth/profile', { friend_code: code });
       return updateResponse.error ? null : code;
     } catch {
       return null;

@@ -60,6 +60,8 @@ export interface CanonicalQuestionV1 {
 
   // Deprecated fields kept optional for UI backward compatibility during migration
   skill_type?: string;
+  passage_id?: string;
+  created_at?: string;
 }
 
 export interface IELTSWritingTask {

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const CanonicalQuestionV1Schema = z.object({
   id: z.string(),
-  skill_id: z.string(),
+  skill_id: z.number(),
   section: z.string(),
   interaction: z.string(),
   stimulus: z.record(z.any()),

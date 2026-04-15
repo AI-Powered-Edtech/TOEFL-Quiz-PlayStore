@@ -235,7 +235,7 @@ class QuestionBankService {
         if (difficulty !== undefined) {
             const filtered = available.filter(q => {
                 const diff = q.difficulty_score;
-                return diff !== undefined && Math.abs(diff - difficulty) <= 0.2;
+                return diff !== undefined && Math.abs(diff - difficulty) <= 20;
             });
             if (filtered.length > 0) {
                 return this.shuffleArray(filtered).slice(0, count);

@@ -10,7 +10,6 @@ pub struct PublicProfile {
     pub full_name: Option<String>,
     pub avatar_url: Option<String>,
     pub xp: i64,
-    pub friend_code: Option<String>,
 }
 
 #[vil_handler]
@@ -29,7 +28,6 @@ pub async fn get_profile_by_id(
         full_name: profile.full_name,
         avatar_url: profile.avatar_url,
         xp: profile.xp,
-        friend_code: profile.friend_code,
     }))
 }
 
