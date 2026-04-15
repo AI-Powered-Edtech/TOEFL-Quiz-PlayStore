@@ -1,5 +1,5 @@
 
-import { BookOpen, Trophy, Flame, Target, Award, Star, ArrowLeft, LogOut, LogIn, Eye, EyeOff, Activity, Upload, Check, Copy, User, ChevronRight, Moon, Sun } from 'lucide-react';
+import { BookOpen, Trophy, Flame, Target, Award, Star, ArrowLeft, LogOut, LogIn, Eye, EyeOff, Activity, Upload, Check, Copy, User, ChevronRight, Moon, Sun, X } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../hooks/useTheme';
 
@@ -9,6 +9,7 @@ import { leaderboardService } from '../services/leaderboardService';
 import { oracleDataService } from '../services/oracleDataService';
 import { oracleService } from '../services/oracleService';
 import { uploadAvatar } from '../services/avatarService';
+import { useAuthStore } from '../stores/useAuthStore';
 import { UserProgress, AppView, ScorePrediction } from '../types';
 
 import { Button } from './Button';
@@ -36,6 +37,13 @@ export const Profile: React.FC<ProfileProps> = ({ user, progress, onNavigate, on
     const [friendCode, setFriendCode] = useState<string | null>(null);
     const [codeCopied, setCodeCopied] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [showPasswordAuth, setShowPasswordAuth] = useState(false);
+    const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+    const [authUsername, setAuthUsername] = useState('');
+    const [authPassword, setAuthPassword] = useState('');
+    const [authFullName, setAuthFullName] = useState('');
+    const [authError, setAuthError] = useState<string | null>(null);
+    const [authSubmitting, setAuthSubmitting] = useState(false);
 
     useEffect(() => {
         setBioText(progress.bio || '');
@@ -328,6 +336,16 @@ export const Profile: React.FC<ProfileProps> = ({ user, progress, onNavigate, on
                                             <LogIn className="w-4 h-4 mr-2" />
                                             Login with Google
                                         </Button>
+                                        <Button
+                                            onClick={() => {
+                                                setAuthMode('login');
+                                                setAuthError(null);
+                                                setShowPasswordAuth(true);
+                                            }}
+                                            className="w-full bg-white text-slate-900 hover:bg-slate-50 border border-slate-200 shadow-sm"
+                                        >
+                                            Login / Register (Username)
+                                        </Button>
                                     </div>
                                 ) : (
                                     <div className="w-full bg-slate-50 rounded-xl p-4 border border-slate-200">
@@ -461,6 +479,141 @@ export const Profile: React.FC<ProfileProps> = ({ user, progress, onNavigate, on
                     </div>
                 </div>
             </div>
+
+            {showPasswordAuth && (
+                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+                        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                            <div className="font-bold text-slate-800 dark:text-white">
+                                {authMode === 'login' ? 'Login' : 'Register'}
+                            </div>
+                            <button
+                                onClick={() => setShowPasswordAuth(false)}
+                                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                aria-label="Close"
+                            >
+                                <X className="w-4 h-4 text-slate-500" />
+                            </button>
+                        </div>
+
+                        <div className="p-4 space-y-3">
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => {
+                                        setAuthMode('login');
+                                        setAuthError(null);
+                                    }}
+                                    className={`flex-1 text-sm font-bold py-2 rounded-xl border transition-colors ${
+                                        authMode === 'login'
+                                            ? 'bg-slate-900 text-white border-slate-900'
+                                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    Login
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setAuthMode('register');
+                                        setAuthError(null);
+                                    }}
+                                    className={`flex-1 text-sm font-bold py-2 rounded-xl border transition-colors ${
+                                        authMode === 'register'
+                                            ? 'bg-slate-900 text-white border-slate-900'
+                                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    Register
+                                </button>
+                            </div>
+
+                            {authMode === 'register' && (
+                                <div className="space-y-1">
+                                    <div className="text-xs font-bold text-slate-500">Full Name</div>
+                                    <input
+                                        value={authFullName}
+                                        onChange={(e) => setAuthFullName(e.target.value)}
+                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        placeholder="QA Tester"
+                                    />
+                                </div>
+                            )}
+
+                            <div className="space-y-1">
+                                <div className="text-xs font-bold text-slate-500">Username</div>
+                                <input
+                                    value={authUsername}
+                                    onChange={(e) => setAuthUsername(e.target.value)}
+                                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="qa_tester"
+                                    autoCapitalize="none"
+                                    autoCorrect="off"
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <div className="text-xs font-bold text-slate-500">Password</div>
+                                <input
+                                    value={authPassword}
+                                    onChange={(e) => setAuthPassword(e.target.value)}
+                                    type="password"
+                                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="qatest123"
+                                />
+                            </div>
+
+                            {authError && (
+                                <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl p-2">
+                                    {authError}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowPasswordAuth(false)}
+                                className="flex-1"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="primary"
+                                onClick={async () => {
+                                    if (!authUsername.trim() || !authPassword.trim()) {
+                                        setAuthError('Username dan password wajib diisi.');
+                                        return;
+                                    }
+                                    if (authMode === 'register' && !authFullName.trim()) {
+                                        setAuthError('Full name wajib diisi untuk register.');
+                                        return;
+                                    }
+                                    setAuthSubmitting(true);
+                                    setAuthError(null);
+                                    try {
+                                        const store = useAuthStore.getState();
+                                        const result = authMode === 'login'
+                                            ? await store.login(authUsername.trim(), authPassword)
+                                            : await store.register(authUsername.trim(), authPassword, authFullName.trim());
+                                        if (!result.ok) {
+                                            setAuthError(result.error || 'Auth gagal.');
+                                            return;
+                                        }
+                                        setShowPasswordAuth(false);
+                                    } catch (e) {
+                                        setAuthError('Network error');
+                                    } finally {
+                                        setAuthSubmitting(false);
+                                    }
+                                }}
+                                className="flex-1"
+                                disabled={authSubmitting}
+                            >
+                                {authSubmitting ? 'Loading...' : (authMode === 'login' ? 'Login' : 'Register')}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

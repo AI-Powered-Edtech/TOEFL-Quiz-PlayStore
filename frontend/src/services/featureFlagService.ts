@@ -123,7 +123,7 @@ class FeatureFlagService {
 
             return Math.random() * 100 < flag.rollout_percent;
         } catch (error) {
-            console.error(`[FeatureFlags] Error checking flag ${flagName}:`, error);
+            console.warn(`[FeatureFlags] Error checking flag ${flagName}:`, error);
             return false;
         }
     }
@@ -150,7 +150,7 @@ class FeatureFlagService {
                 
                 return flags;
             } catch (err) {
-                console.error('[FeatureFlags] Error fetching flags:', err);
+                console.warn('[FeatureFlags] Error fetching flags:', err);
                 return [];
             } finally {
                 this.fetchPromise = null;
@@ -226,7 +226,7 @@ class FeatureFlagService {
                 this.cache.set(flagName, updated);
                 this.cacheExpiry.set(flagName, Date.now() + this.cacheTTL);
             } catch (err) {
-                console.error(`[FeatureFlags] Error updating flag ${flagName}:`, err);
+                console.warn(`[FeatureFlags] Error updating flag ${flagName}:`, err);
                 throw err;
             }
         }

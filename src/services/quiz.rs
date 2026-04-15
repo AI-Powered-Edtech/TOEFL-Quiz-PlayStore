@@ -609,6 +609,37 @@ pub async fn generate_quiz(
 
     let count = req.count.unwrap_or(5);
     let skill_id = req.skill_id_override.unwrap_or(1);
+    let section = req.section.to_lowercase();
+
+    let offline_questions = || -> Vec<GeneratedQuestion> {
+        let now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
+        (0..count)
+            .map(|i| GeneratedQuestion {
+                id: uuid::Uuid::new_v4().to_string(),
+                skill_id,
+                section: section.clone(),
+                interaction: "multiple_choice".to_string(),
+                stimulus: None,
+                prompt: format!("({}) {} — Practice question {}", section.to_uppercase(), req.topic, i + 1),
+                choices: Some(vec![
+                    "Option A".to_string(),
+                    "Option B".to_string(),
+                    "Option C".to_string(),
+                    "Option D".to_string(),
+                ]),
+                correct_response: Some(vec!["Option A".to_string()]),
+                cefr_target: Some("B2".to_string()),
+                difficulty_score: Some(50),
+                passage_id: None,
+                metadata: Some(serde_json::json!({ "source": "offline" })),
+                created_at: now.clone(),
+            })
+            .collect()
+    };
+
+    if state.config.groq_api_key.is_empty() {
+        return Ok(VilResponse::ok(QuizGenerateResponse { questions: offline_questions() }));
+    }
     let system_prompt = get_system_prompt(&req.section);
     let user_prompt = format!("Generate {} UNIQUE questions for Skill ID {}. Topic: {}.", count, skill_id, req.topic);
 
@@ -624,9 +655,12 @@ pub async fn generate_quiz(
         VilChat::user(&user_prompt),
     ];
 
-    let response = provider.chat(&messages).await.map_err(|e| {
-        AppError::AiUnavailable(e.to_string())
-    })?;
+    let response = match provider.chat(&messages).await {
+        Ok(r) => r,
+        Err(_) => {
+            return Ok(VilResponse::ok(QuizGenerateResponse { questions: offline_questions() }));
+        }
+    };
 
     let content = response.content;
     // Extract JSON from possible markdown response

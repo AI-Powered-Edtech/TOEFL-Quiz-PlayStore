@@ -95,14 +95,18 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
             const data = await socialService.listFriends();
             setFriends(data);
         } catch (e) {
-            console.error(e);
+            console.warn(e);
         } finally {
             setLoadingFriends(false);
         }
     };
 
     const handleAddFriend = async () => {
-        if (!addFriendCode.trim() || !currentUserId) return;
+        if (!addFriendCode.trim()) return;
+        if (!currentUserId) {
+            setFriendError('Sign in required to add friends.');
+            return;
+        }
         setAddingFriend(true);
         setFriendError(null);
         try {
@@ -134,7 +138,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                     setMyRank(me || null);
                 }
             } catch (error) {
-                console.error('Failed to fetch leaderboard:', error);
+                console.warn('Failed to fetch leaderboard:', error);
             } finally {
                 setLoading(false);
             }
@@ -154,7 +158,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
             const data = await circleService.getUserCircles();
             setCircles(data);
         } catch (error) {
-            console.error('Failed to fetch circles', error);
+            console.warn('Failed to fetch circles', error);
         } finally {
             setLoadingCircles(false);
         }
@@ -170,7 +174,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
             setCircleName('');
             fetchUserCircles();
         } catch (error: any) {
-            console.error('Create circle failed:', error);
+            console.warn('Create circle failed:', error);
             setModalError(`Failed: ${error.message || error.details || 'Unknown error'}`);
         } finally {
             setActing(false);
@@ -187,7 +191,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
             setJoinCode('');
             fetchUserCircles();
         } catch (error: any) {
-            console.error('Join circle failed:', error);
+            console.warn('Join circle failed:', error);
             setModalError(`Failed: ${error.message || error.details || 'Unknown error'}`);
         } finally {
             setActing(false);
@@ -463,7 +467,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                                         </div>
                                         <button
                                             onClick={handleAddFriend}
-                                            disabled={!addFriendCode.trim() || addingFriend}
+                                            disabled={!addFriendCode.trim() || addingFriend || !currentUserId}
                                             className="px-4 py-2 bg-emerald-500 text-white text-xs font-bold rounded-lg hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm shadow-emerald-200 dark:shadow-none"
                                         >
                                             {addingFriend ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Add'}

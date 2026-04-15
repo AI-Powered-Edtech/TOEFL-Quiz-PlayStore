@@ -387,7 +387,10 @@ const App: React.FC = () => {
             <OfflineIndicator />
             <FeatureTourModal
                 isOpen={showFeatureTour}
-                onClose={() => setShowFeatureTour(false)}
+                onClose={() => {
+                    localStorage.setItem(FEATURE_TOUR_KEY, '1');
+                    setShowFeatureTour(false);
+                }}
                 onComplete={() => {
                     localStorage.setItem(FEATURE_TOUR_KEY, '1');
                     setShowFeatureTour(false);
