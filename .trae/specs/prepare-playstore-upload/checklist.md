@@ -1,0 +1,10 @@
+- [ ] Project `frontend/android/` ter-generate dan dapat dibuka di Android Studio tanpa error sync Gradle.
+- [ ] `npm run build` + `npx cap sync android` berjalan sukses.
+- [ ] `applicationId`, `versionName`, `versionCode`, `minSdk`, `targetSdk` sesuai dan konsisten.
+- [ ] Ikon (launcher + adaptive) dan splash tampil benar di device.
+- [ ] API base URL untuk release menunjuk ke backend production (HTTPS) dan CORS tidak memblokir.
+- [ ] Release signing keystore disiapkan dan tidak pernah tersimpan di git.
+- [ ] Build `bundleRelease` menghasilkan `.aab` signed yang valid.
+- [ ] Upload ke Play Console Internal Testing sukses dan app dapat di-install via Play.
+- [ ] Store Listing lengkap (privacy policy, screenshots, feature graphic, kategori).
+- [ ] Data Safety + Content Rating + Target Audience terisi tanpa policy blocker.
