@@ -49,3 +49,5 @@ uploads/
 # Logs
 *.log
 backend.log
+.claude/
+frontend/.claude/
