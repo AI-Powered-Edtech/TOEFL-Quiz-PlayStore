@@ -53,6 +53,16 @@ backend.log
 .claude/
 frontend/.claude/
 
+# QA screenshots and temp test scripts
+qa*.png
+*-screenshot.png
+app-screenshot.png
+test_*.js
+verify_qa.js
+patch_*.js
+clear*.js
+seed_*.js
+
 # Keystore files
 *.jks
 *.keystore
