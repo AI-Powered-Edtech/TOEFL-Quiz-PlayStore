@@ -3,7 +3,7 @@ use crate::middleware::auth::Claims;
 use crate::models::ai::*;
 use crate::models::profile::Profile;
 use crate::models::responses::*;
-use vil::ai::{ChatMessage as VilChat, LlmProvider, OpenAiConfig, OpenAiProvider};
+use vil::ai::LlmProvider;
 use vil_orm::vil_args;
 use vil_server::axum::response::Response as AxumResponse;
 use vil::prelude::*;

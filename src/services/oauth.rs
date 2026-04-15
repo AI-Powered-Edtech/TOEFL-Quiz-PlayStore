@@ -134,7 +134,7 @@ pub async fn oauth_callback(
     let google_id = user_info["id"]
         .as_str()
         .ok_or_else(|| AppError::Auth("Missing Google ID".into()))?;
-    let email = user_info["email"]
+    let _email = user_info["email"]
         .as_str()
         .ok_or_else(|| AppError::Auth("Missing email".into()))?;
     let name = user_info["name"].as_str().unwrap_or("Google User");
