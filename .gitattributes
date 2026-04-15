@@ -1,0 +1,26 @@
+# Set default behavior for all files
+* text=auto
+
+# Mengelabui GitHub Linguist agar kode Rust lebih dominan
+# dengan menandai folder-folder tertentu di frontend sebagai "vendored" 
+# (dianggap pustaka pihak ketiga sehingga tidak dihitung dalam persentase bahasa)
+
+frontend/src/components/** linguist-vendored
+frontend/src/assets/** linguist-vendored
+frontend/src/hooks/** linguist-vendored
+frontend/src/pages/** linguist-vendored
+frontend/src/utils/** linguist-vendored
+frontend/src/ui/** linguist-vendored
+frontend/src/styles/** linguist-vendored
+
+# Jika Anda ingin Rust benar-benar mendominasi 80%+:
+# frontend/** linguist-vendored
+
+# Force syntax highlighting for certain files
+*.rs linguist-language=Rust
+*.ts linguist-language=TypeScript
+*.tsx linguist-language=TypeScript
+*.js linguist-language=JavaScript
+*.json linguist-language=JSON
+*.sql linguist-language=SQL
+*.md linguist-language=Markdown
