@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/react';
 
-import { supabase } from '../services/supabase';
+import api from '../services/apiClient';
 
 interface LogContext {
     userId?: string;
@@ -18,9 +18,6 @@ enum LogLevel {
     CRITICAL = 'critical',
 }
 
-/**
- * Error Log Entry for Supabase
- */
 interface ErrorLogEntry {
     level: string;
     service: string;
@@ -68,7 +65,6 @@ export class Logger {
     }
 
     private log(level: LogLevel, message: string, context?: LogContext) {
-        // Save to Supabase (only for errors, warnings, and critical)
         const consoleMethod = level === LogLevel.ERROR || level === LogLevel.CRITICAL
             ? console.error
             : level === LogLevel.WARN
@@ -79,7 +75,6 @@ export class Logger {
             consoleMethod(`[${this.service}] ${message}`, context || '');
         }
 
-        // Save to Supabase (only for errors, warnings, and critical)
         if (this.isErrorLoggingEnabled && (level === LogLevel.ERROR || level === LogLevel.WARN || level === LogLevel.CRITICAL)) {
             // Send to Sentry
             if (level === LogLevel.ERROR || level === LogLevel.CRITICAL) {
@@ -122,28 +117,37 @@ export class Logger {
     private async flush() {
         if (this.logBuffer.length === 0) return;
 
-        // Don't flush to Supabase if not authenticated (prevents RLS 403)
-        const { data: authData } = await supabase.auth.getSession();
-        if (!authData.session) {
-            this.logBuffer = [];
-            return;
-        }
-
         const logsToSend = [...this.logBuffer];
         this.logBuffer = [];
 
         try {
-            const { error } = await supabase
-                .from('error_logs')
-                .insert(logsToSend);
+            const payload = logsToSend.map(l => ({
+                level: l.level,
+                component: l.service,
+                message: l.message,
+                user_id: l.user_id,
+                session_id: l.session_id,
+                metadata: {
+                    ...(l.context || {}),
+                    stack_trace: l.stack_trace,
+                    environment: l.environment,
+                    user_agent: l.user_agent,
+                    url: l.url,
+                },
+            }));
 
-            if (error) {
-                console.error('[Logger] Failed to save logs:', error);
-                // Put failed logs back in buffer
+            const res = await api.post<{ ok: boolean; count: number }>(
+                '/api/monitoring/logs/batch',
+                payload,
+                { timeout: 5000 }
+            );
+
+            if (res.error) {
                 this.logBuffer.push(...logsToSend);
             }
         } catch (err) {
             console.error('[Logger] Exception while flushing:', err);
+            this.logBuffer.push(...logsToSend);
         }
     }
 
@@ -169,8 +173,6 @@ export class Logger {
 
     /**
      * Log a metric (specifically for dashboard monitoring).
-     * Always writes to Supabase regardless of environment,
-     * since metrics are essential for the monitoring dashboard.
      * Does NOT ping Sentry.
      */
     metric(message: string, context?: LogContext) {
@@ -179,7 +181,6 @@ export class Logger {
             console.log(`[${this.service} METRIC] ${message}`, context || '');
         }
 
-        // Always save metrics to Supabase for the monitoring dashboard
         this.addToBuffer({
             level: LogLevel.INFO.toString(),
             service: this.service,
@@ -236,9 +237,9 @@ export function initializeMonitoring() {
     console.log('[Monitoring] DIY error logging initialized');
 
     if (import.meta.env.PROD || import.meta.env.VITE_ENABLE_ERROR_LOGGING === 'true') {
-        console.log('[Monitoring] Errors will be saved to Supabase');
+        console.log('[Monitoring] Error logging enabled');
     } else {
-        console.log('[Monitoring] Error logging to Supabase is disabled in development');
+        console.log('[Monitoring] Error logging disabled in development');
     }
 }
 

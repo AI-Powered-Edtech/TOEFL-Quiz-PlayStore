@@ -3,7 +3,6 @@ import { BookOpen, Headphones, Book, ChevronDown, ChevronRight, PlayCircle, Play
 import React, { useState, useEffect } from 'react';
 
 import { TOEFL_STRUCTURE_SKILLS, TOEFL_LISTENING_SKILLS, TOEFL_READING_SKILLS } from '../data/skills';
-import { supabase } from '../services/supabase';
 import { Skill, SectionType } from '../types';
 
 interface SkillSelectorProps {

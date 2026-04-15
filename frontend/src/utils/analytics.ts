@@ -1,5 +1,3 @@
-import { supabase } from '../services/supabase';
-
 /**
  * Analytics tracking utility for Peer Review system
  * 
@@ -25,32 +23,7 @@ export interface AnalyticsEvent {
  */
 export const trackEvent = async (event: AnalyticsEvent): Promise<void> => {
     try {
-        let userId = event.userId;
-        if (!userId) {
-            const { data: { user } } = await supabase.auth.getUser();
-            userId = user?.id;
-        }
-
-        if (!userId) {
-            // console.warn('[Analytics] Skipped event (no user):', event.eventType);
-            return;
-        }
-
-        const { error } = await supabase
-            .from('peer_review_analytics')
-            .insert({
-                event_type: event.eventType,
-                user_id: userId,
-                submission_id: event.submissionId || null,
-                review_id: event.reviewId || null,
-                metadata: event.metadata || {}
-            });
-        // ...
-
-        if (error) {
-            // Silently warn — table may not exist yet
-            console.warn('[Analytics] Track skipped (table may not exist):', error.code);
-        }
+        void event;
     } catch (error) {
         // Fail silently - analytics should never disrupt user experience
     }
@@ -142,31 +115,8 @@ export const getUserAnalytics = async (userId: string): Promise<{
     ratings: number;
 } | null> => {
     try {
-        const { data, error } = await supabase
-            .from('peer_review_analytics')
-            .select('event_type')
-            .eq('user_id', userId);
-
-        if (error) {
-            console.warn('[Analytics] Get user analytics skipped (table may not exist):', error.code);
-            return { submissions: 0, claims: 0, reviews: 0, ratings: 0 };
-        }
-
-        const summary = {
-            submissions: 0,
-            claims: 0,
-            reviews: 0,
-            ratings: 0
-        };
-
-        data?.forEach((event: { event_type: string }) => {
-            if (event.event_type === 'submission') summary.submissions++;
-            if (event.event_type === 'claim') summary.claims++;
-            if (event.event_type === 'review') summary.reviews++;
-            if (event.event_type === 'rating') summary.ratings++;
-        });
-
-        return summary;
+        void userId;
+        return { submissions: 0, claims: 0, reviews: 0, ratings: 0 };
     } catch (error) {
         console.error('[Analytics] Unexpected error:', error);
         return null;

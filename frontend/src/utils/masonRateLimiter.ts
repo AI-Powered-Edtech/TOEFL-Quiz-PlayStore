@@ -1,7 +1,6 @@
 // Rate Limiter Utility
 // Protects against exceeding Groq API rate limits (60 req/min)
 
-import { supabase } from '../services/supabase';
 import type { RateLimitConfig, RateLimitEntry, RateLimitResult } from '../types/mason';
 
 export class MasonRateLimiter {
@@ -116,11 +115,5 @@ export const groqRateLimiter = new MasonRateLimiter({
 
 // Helper to get current user ID
 export async function getCurrentUserId(): Promise<string> {
-    try {
-        const { data: { session } } = await supabase.auth.getSession();
-        return session?.user?.id || 'anonymous';
-    } catch (e) {
-        console.warn('[RateLimit] Failed to get user ID from session');
-        return 'anonymous';
-    }
+    return 'anonymous';
 }

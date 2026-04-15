@@ -2,7 +2,6 @@
  * Circuit Breaker Pattern Implementation
  * 
  * Prevents cascade failures when external services (like Groq API) are down.
- * State persists to Supabase for survival across restarts.
  * 
  * States:
  * - CLOSED: Normal operation, requests go through
@@ -18,8 +17,6 @@
  *   // Handle circuit breaker open or API error
  * }
  */
-
-import { supabase } from '../services/supabase';
 
 export enum CircuitState {
     CLOSED = 'CLOSED',
@@ -90,57 +87,34 @@ export class CircuitBreaker {
         this.halfOpenMaxAttempts = options.halfOpenMaxAttempts ?? 3;
         this.monitoringWindow = options.monitoringWindow ?? 60000; // 1 minute
 
-        // Load state from Supabase asynchronously
         this.loadState().catch(err => {
             console.warn(`[CircuitBreaker:${this.name}] Failed to load state:`, err);
         });
     }
 
-    /**
-     * Load state from Supabase
-     * @private
-     */
     private async loadState(): Promise<void> {
         try {
-            const { data, error } = await supabase
-                .from('circuit_breaker_state')
-                .select('*')
-                .eq('service_name', this.name)
-                .single();
+            const raw = localStorage.getItem(`circuit_breaker_state:${this.name}`);
+            if (!raw) return;
+            const data = JSON.parse(raw);
 
-            if (error) {
-                if (error.code !== 'PGRST116') { // Ignore "not found" errors
-                    console.warn(`[CircuitBreaker:${this.name}] Load error:`, error);
-                }
-                return;
-            }
+            this.state = data.state as CircuitState;
+            this.failureCount = data.failure_count ?? 0;
+            this.successCount = data.success_count ?? 0;
+            this.halfOpenAttempts = data.half_open_attempts ?? 0;
+            this.totalAttempts = data.total_attempts ?? 0;
+            this.totalFailures = data.total_failures ?? 0;
+            this.totalSuccesses = data.total_successes ?? 0;
 
-            if (data) {
-                // Restore state
-                this.state = data.state as CircuitState;
-                this.failureCount = data.failure_count ?? 0;
-                this.successCount = data.success_count ?? 0;
-                this.halfOpenAttempts = data.half_open_attempts ?? 0;
-                this.totalAttempts = data.total_attempts ?? 0;
-                this.totalFailures = data.total_failures ?? 0;
-                this.totalSuccesses = data.total_successes ?? 0;
+            this.lastFailureTime = data.last_failure_time ? new Date(data.last_failure_time).getTime() : undefined;
+            this.lastSuccessTime = data.last_success_time ? new Date(data.last_success_time).getTime() : undefined;
 
-                // Parse timestamps
-                this.lastFailureTime = data.last_failure_time ? new Date(data.last_failure_time).getTime() : undefined;
-                this.lastSuccessTime = data.last_success_time ? new Date(data.last_success_time).getTime() : undefined;
-
-                this.stateLoaded = true;
-                console.log(`[CircuitBreaker:${this.name}] State loaded from DB: ${this.state}`);
-            }
+            this.stateLoaded = true;
         } catch (err) {
             console.error(`[CircuitBreaker:${this.name}] Failed to load state:`, err);
         }
     }
 
-    /**
-     * Save current state to Supabase
-     * @private
-     */
     private async saveState(): Promise<void> {
         try {
             const stateData = {
@@ -159,16 +133,7 @@ export class CircuitBreaker {
                     : null,
                 updated_at: new Date().toISOString()
             };
-
-            const { error } = await supabase
-                .from('circuit_breaker_state')
-                .upsert(stateData, {
-                    onConflict: 'service_name'
-                });
-
-            if (error) {
-                console.warn(`[CircuitBreaker:${this.name}] Save error:`, error);
-            }
+            localStorage.setItem(`circuit_breaker_state:${this.name}`, JSON.stringify(stateData));
         } catch (err) {
             console.error(`[CircuitBreaker:${this.name}] Failed to save state:`, err);
         }
@@ -365,12 +330,6 @@ export const groqCircuitBreaker = new CircuitBreaker('GroqAPI', {
     failureThreshold: 5,
     resetTimeout: 60000,      // 1 minute
     halfOpenMaxAttempts: 3,
-});
-
-export const supabaseCircuitBreaker = new CircuitBreaker('Supabase', {
-    failureThreshold: 5,
-    resetTimeout: 30000,      // 30 seconds
-    halfOpenMaxAttempts: 2,
 });
 
 // Log state changes in development

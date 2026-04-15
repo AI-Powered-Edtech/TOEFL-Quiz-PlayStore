@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
-import { supabase } from '../../services/supabase';
 import { AppView } from '../../types';
 import { Button } from '../Button';
 
@@ -45,17 +44,9 @@ export const SampleResponseLibrary: React.FC<SampleResponseLibraryProps> = ({
     const fetchSamples = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
-                .from('integrated_writing_samples')
-                .select('*')
-                .eq('score', activeScore)
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-            setSamples(data || []);
+            setSamples(getMockSamples(activeScore));
         } catch (e) {
             console.error('Failed to fetch samples:', e);
-            // Load mock data as fallback
             setSamples(getMockSamples(activeScore));
         } finally {
             setLoading(false);

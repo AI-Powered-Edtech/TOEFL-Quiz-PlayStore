@@ -209,30 +209,7 @@ pub async fn evaluate_essay(
     });
 
     if !is_valid {
-        let feedback = serde_json::json!({
-            "band_score": 0,
-            "feedback": format!("Your essay could not be evaluated: {}", errors.join(". ")),
-            "breakdown": {
-                "task_response": 0,
-                "coherence_cohesion": 0,
-                "lexical_resource": 0,
-                "grammatical_range": 0
-            },
-            "confidence": 1.0,
-            "confidence_factors": [{"factor": "Pre-Validation", "score": 1.0, "impact": "positive"}],
-            "grammar_errors": [],
-            "grammar_summary": {"total_errors": 0, "by_category": {}, "by_severity": {}, "most_frequent_error": "N/A"},
-            "indoglish_analysis": [],
-            "validation_result": validation_result
-        });
-
-        return Ok(VilResponse::ok(EvaluateResponse {
-            id: uuid::Uuid::new_v4().to_string(),
-            word_count,
-            feedback: Some(feedback),
-            message: Some("Validation failed".into()),
-            validation_result: Some(validation_result)
-        }));
+        return Err(AppError::Validation(errors.join(" ")));
     }
 
     // VIL Guardrails — content safety on evaluation input

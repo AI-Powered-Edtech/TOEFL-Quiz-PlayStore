@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 
 import { TOEFL_STRUCTURE_SKILLS, TOEFL_LISTENING_SKILLS, TOEFL_READING_SKILLS } from '../../data/skills';
 import { useAuth } from '../../hooks/useAuth';
-import { supabase } from '../../services/supabase';
 import { AppView, SectionType, Skill } from '../../types';
 
 // Combine all skills for easy lookup

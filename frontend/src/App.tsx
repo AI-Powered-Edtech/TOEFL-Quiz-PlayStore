@@ -327,13 +327,17 @@ const App: React.FC = () => {
                 return choiceIdx !== undefined && q.correct_response.includes(q.choices[choiceIdx]) ? acc + 1 : acc;
             }, 0);
 
-            const answersArray = Object.entries(answers).map(([idxStr, choiceIdx]) => {
-                const idx = parseInt(idxStr);
-                const q = queue[idx];
+            const answersSnapshot = queue.map((q, idx) => {
+                const choiceIdx = answers[idx];
+                const userAnswer = choiceIdx !== undefined ? q.choices[choiceIdx] : '';
+                const isCorrect = choiceIdx !== undefined && q.correct_response.includes(userAnswer);
                 return {
-                    questionIndex: idx,
-                    selectedChoiceIndex: choiceIdx,
-                    isCorrect: q ? q.correct_response.includes(q.choices[choiceIdx]) : false
+                    question_number: idx + 1,
+                    prompt_snippet: q.prompt.length > 140 ? `${q.prompt.slice(0, 140)}...` : q.prompt,
+                    is_correct: isCorrect,
+                    correct_answer: q.correct_response[0] || '',
+                    user_answer: userAnswer,
+                    skill_type: q.section,
                 };
             });
 
@@ -342,9 +346,11 @@ const App: React.FC = () => {
                 score,
                 total: queue.length,
                 correct: correctCount,
-                answers: answersArray,
+                answers: answersSnapshot,
                 studentName: user?.full_name || 'Guest User',
-                userId: user?.id
+                userId: user?.id,
+                skillId: queue[0]?.skill_id,
+                section: queue[0]?.section
             });
 
             if (!reportId) throw new Error("Failed to save report");

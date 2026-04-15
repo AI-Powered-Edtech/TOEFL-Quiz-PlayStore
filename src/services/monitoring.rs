@@ -1,4 +1,5 @@
 use crate::error::AppError;
+use crate::middleware::auth::Claims;
 use crate::models::monitoring::*;
 use crate::models::responses::*;
 use vil::prelude::*;
@@ -71,4 +72,45 @@ pub async fn batch_metrics(
     }
 
     Ok(VilResponse::ok(BatchResponse { ok: true, count: entries.len() }))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateContentReportRequest {
+    pub reporter_id: Option<String>,
+    pub content_type: String,
+    pub content_id: String,
+    pub reason: Option<String>,
+    pub description: Option<String>,
+}
+
+#[vil_handler]
+pub async fn create_content_report(
+    ctx: ServiceCtx,
+    claims: Option<Claims>,
+    body: ShmSlice,
+) -> Result<VilResponse<OkWithIdResponse>, AppError> {
+    let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    let req: CreateContentReportRequest = body.json().map_err(|_| AppError::Validation("Invalid body".into()))?;
+
+    let id = uuid::Uuid::new_v4().to_string();
+    let reporter_id = claims.map(|c| c.sub).or(req.reporter_id).unwrap_or_else(|| "guest".to_string());
+    let content_type = req.content_type.clone();
+    let content_id = req.content_id.clone();
+    let reason = req.reason.clone();
+    let description = req.description.clone();
+    let status = "pending".to_string();
+
+    ContentReport::q()
+        .insert_columns(&["id", "reporter_id", "content_type", "content_id", "reason", "description", "status"])
+        .value(id.clone())
+        .value(reporter_id)
+        .value(content_type)
+        .value(content_id)
+        .value_opt_str(reason)
+        .value_opt_str(description)
+        .value(status)
+        .execute(state.pool.inner())
+        .await?;
+
+    Ok(VilResponse::created(OkWithIdResponse { ok: true, id }))
 }

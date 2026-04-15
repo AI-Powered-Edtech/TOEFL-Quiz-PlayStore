@@ -88,22 +88,23 @@ cargo test --test e2e -- --test-threads=1
 └──────────────────────────────────────────────────┘
 ```
 
-## Services (11)
+## Services (12)
 
 | Service | Prefix | Endpoints | Description |
 |---------|--------|-----------|-------------|
-| **auth** | `/api/auth` | 5 | Register, login, JWT refresh, profile CRUD |
+| **auth** | `/api/auth` | see `main.rs` | Register, login, JWT refresh, profile CRUD |
 | **admin** | `/api/admin` | 5 | Role management, audit logs, PIN verify |
-| **quiz** | `/api/quiz` | 5 | Questions, simulation, results, XP, progress |
+| **quiz** | `/api/quiz` | see `main.rs` | Questions, simulation, results, reports (share), XP, progress, question bank |
 | **ai** | `/api/ai` | 3 | Groq proxy, TTS, token budget enforcement |
 | **writing** | `/api/writing` | 13 | Gym progress, sessions, exercise pool, essay evaluation, vocabulary, devils advocate, peer review |
-| **social** | `/api/social` | 13 | Circles, messages, friends, leaderboard, predictions, achievements, notifications |
+| **social** | `/api/social` | see `main.rs` | Circles, messages, friends (add/respond/remove), leaderboard, predictions, achievements, notifications |
+| **profile** | `/api/profile` | 2 | Public profile lookup + self update by id |
 | **creator** | `/api/creator` | 8 | Creator registration, daily bites, view tracking (Rp10/view), tips (15% fee), payouts, stats |
-| **monitoring** | `/api/monitoring` | 2 | Batch log/metric ingestion |
+| **monitoring** | `/api/monitoring` | see `main.rs` | Batch log/metric ingestion + content report creation |
 | **storage** | `/api/storage` | 4 | Avatar/audio upload + serve (PNG/JPG/MP3 validation) |
 | **blog** | `/api/blog` | 4 | Published posts (public) + admin CRUD |
 | **admin-monitoring** | `/api/admin-monitoring` | 6 | System health, errors, feature flags, moderation reports |
-| | | **68** | |
+| | | | |
 
 ### VIL Built-in (gratis)
 

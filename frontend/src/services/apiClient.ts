@@ -120,8 +120,8 @@ function getAuthHeaders(): HeadersInit {
 
 async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
   if (response.status === 401) {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    secureStorage.removeItem('access_token');
+    secureStorage.removeItem('refresh_token');
     window.dispatchEvent(new CustomEvent('auth:session_expired'));
     return { error: { error: 'Session expired', code: 'SESSION_EXPIRED' } };
   }

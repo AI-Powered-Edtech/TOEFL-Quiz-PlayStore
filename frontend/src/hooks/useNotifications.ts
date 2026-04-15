@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import { socialService } from '../services/social';
-import { supabase } from '../services/supabase';
 import { Notification } from '../types';
 
 export const useNotifications = (userId?: string) => {
@@ -63,31 +62,12 @@ export const useNotifications = (userId?: string) => {
         }
 
         fetchNotifications();
-
-        // Subscribe to new notifications
-        const subscription = supabase
-            .channel(`notifications:${userId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'notifications',
-                    filter: `user_id=eq.${userId}`
-                },
-                (payload: any) => {
-                    const newNotification = payload.new as Notification;
-                    setNotifications(prev => [newNotification, ...prev]);
-                    setUnreadCount(prev => prev + 1);
-
-                    // Optional: Play a sound or show a toast here
-                    // if (Notification.permission === 'granted') { ... }
-                }
-            )
-            .subscribe();
+        const intervalId = window.setInterval(() => {
+            fetchNotifications();
+        }, 30000);
 
         return () => {
-            subscription.unsubscribe();
+            window.clearInterval(intervalId);
         };
     }, [userId, fetchNotifications]);
 

@@ -2,7 +2,6 @@ import { ArrowLeft, Search, Database, AlertCircle, Plus, Edit2, Trash2, Loader2,
 import React, { useState, useEffect } from 'react';
 
 import { getAllQuestions, getUnifiedQuestionsBySkill, updateQuestion, createQuestion, deleteQuestion } from '../services/questionBankService';
-import { supabase } from '../services/supabase';
 import { AppView, QuizData } from '../types';
 
 import { QuestionEditor } from './QuestionEditor';
@@ -562,4 +561,3 @@ export const BankView: React.FC<BankViewProps> = ({ onNavigate, onStartQuizWithQ
         </div>
     );
 };
-

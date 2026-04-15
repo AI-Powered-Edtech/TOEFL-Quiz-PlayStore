@@ -1,7 +1,9 @@
 import { X, AlertTriangle, Flag } from 'lucide-react';
 import React, { useState } from 'react';
 
+import api from '../../services/apiClient';
 import { ReportReason } from '../../types/moderation';
+import { getUserId } from '../../utils/guestId';
 import { Button } from '../Button';
 import { useToast } from '../ui/Toast';
 
@@ -70,32 +72,22 @@ export const ReportModal: React.FC<ReportModalProps> = ({
         setIsSubmitting(true);
 
         try {
-            const { supabase } = await import('../../services/supabase');
-            const { getUserId } = await import('../../utils/guestId');
-            
             const userId = getUserId();
-            
-            const { error } = await supabase
-                .from('content_reports')
-                .insert({
-                    reporter_id: userId,
-                    content_type: contentType,
-                    content_id: contentId,
-                    reason: selectedReason,
-                    description: description || null,
-                    status: 'pending'
-                });
 
-            if (error) {
-                if (error.code === '23505') {
-                    toast.error('You have already reported this content');
-                } else {
-                    throw error;
-                }
-            } else {
+            const res = await api.post<{ ok: boolean; id: string }>('/api/monitoring/moderation/reports', {
+                reporter_id: userId,
+                content_type: contentType,
+                content_id: contentId,
+                reason: selectedReason,
+                description: description || undefined,
+            });
+
+            if (res.data?.ok) {
                 toast.success('Report submitted successfully. Thank you for helping keep our community safe.');
                 onSubmitted();
                 onClose();
+            } else {
+                throw new Error(res.error?.error || 'Report submit failed');
             }
         } catch (error) {
             console.error('[ReportModal] Submit failed:', error);

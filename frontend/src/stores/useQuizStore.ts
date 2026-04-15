@@ -44,9 +44,10 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
     },
 
     answer: (optionIndex) => {
-        const { queue, index } = get();
+        const { queue, index, answers } = get();
         const currentQ = queue[index];
         if (!currentQ) return;
+        if (answers[index] !== undefined) return;
         const choiceText = currentQ.choices[optionIndex];
         const isCorrect = currentQ.correct_response.includes(choiceText);
         set(prev => ({

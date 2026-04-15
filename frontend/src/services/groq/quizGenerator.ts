@@ -16,6 +16,7 @@
 
 import { CanonicalQuestionV1, SectionType } from "../../types";
 import { validateCanonicalQuestion } from "../validationService";
+import { mapApiQuestionToCanonical } from "../mappers";
 
 import { callGroq, cleanJson } from './client';
 import { getTargetSkill, isLikelyQuestion } from './helpers';
@@ -67,7 +68,9 @@ export const generateQuizBatch = async (
             throw new Error(response.error?.error || 'Failed to generate quiz from backend');
         }
 
-        return response.data.questions.map((q: any) => sanitizeQuestion(q))
+        return response.data.questions
+            .map(mapApiQuestionToCanonical)
+            .map((q: any) => sanitizeQuestion(q))
             .filter((q: any) => {
                 const validation = validateGeneratedQuestion(q);
                 if (!validation.valid) {

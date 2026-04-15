@@ -5,7 +5,6 @@ import { useGuestPolicy } from '../../hooks/useGuestPolicy';
 import { useTutorialState } from '../../hooks/useTutorialState';
 import * as peerReviewService from '../../services/peerReviewService';
 import { getQualificationStatus, isQualifiedToReview } from '../../services/qualificationService';
-import { supabase } from '../../services/supabase';
 import { AppView, PeerReviewSubmission, PeerReview, ReviewerStats } from '../../types';
 import { estimateDifficulty, extractTopics } from '../../utils/contentModeration';
 import { getUserId } from '../../utils/guestId';
@@ -67,37 +66,18 @@ export const PeerReviewHub: React.FC<PeerReviewHubProps> = ({ onNavigate, userId
         toast.warning('Please sign in to use this feature');
     };
 
-    // Realtime Subscription
     useEffect(() => {
         if (!userId) return;
-
-        const subscription = supabase
-            .channel(`peer-reviews-${userId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'peer_review_submissions',
-                    filter: `user_id=eq.${userId}`
-                },
-                (payload: any) => {
-                    const newRecord = payload.new as PeerReviewSubmission;
-                    const oldRecord = payload.old as PeerReviewSubmission;
-
-                    // Only notify if status changed to completed
-                    if (newRecord.status === 'completed' && oldRecord.status !== 'completed') {
-                        toast.success('Your essay has been reviewed! 🎉');
-                        loadData();
-                    }
-                }
-            )
-            .subscribe();
+        const intervalId = window.setInterval(() => {
+            if (activeTab === 'my-submissions') {
+                loadData();
+            }
+        }, 30000);
 
         return () => {
-            subscription.unsubscribe();
+            window.clearInterval(intervalId);
         };
-    }, [userId]);
+    }, [userId, activeTab]);
 
     useEffect(() => {
         loadData();

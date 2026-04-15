@@ -3,7 +3,6 @@ import { Search, Sparkles, Star, ChevronRight, PenTool, BookOpen, Headphones, Bo
 import React, { useState, useEffect } from 'react';
 
 import { useAuth } from '../../hooks/useAuth';
-import { supabase } from '../../services/supabase';
 import { AppView, SectionType } from '../../types';
 import { fetchFeaturedPosts, fetchBlogPostsBySection } from '../../services/blogService';
 import { BlogPost } from '../../data/blogPosts';

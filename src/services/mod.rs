@@ -6,6 +6,7 @@ pub mod quiz_prompts;
 pub mod ai;
 pub mod writing;
 pub mod social;
+pub mod profile;
 pub mod creator;
 pub mod monitoring;
 pub mod storage;

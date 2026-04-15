@@ -6,7 +6,6 @@ import {
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 import { oracleService } from '../services/oracleService';
-import { supabase } from '../services/supabase';
 import { AppView, ScorePrediction, PredictionHistoryItem, OracleRecommendation, AggregatedOracleData } from '../types';
 
 // ================================================================
@@ -367,12 +366,6 @@ export const ScoreOracleView: React.FC<ScoreOracleViewProps> = ({ onNavigate, us
 
     const loadData = useCallback(async (retryCount = 0) => {
         try {
-            // Wait for auth initialization (token refresh + lock release) before querying
-            // Stub: Supabase removed - skip initialization
-            // if (userId !== 'guest' && /^[0-9a-f]{8}-/i.test(userId)) {
-            //     await supabase.auth.initialize();
-            // }
-
             const aggData = await oracleService.getAggregatedData(userId);
             setAggregated(aggData);
 

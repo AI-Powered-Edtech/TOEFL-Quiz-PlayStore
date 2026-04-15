@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use vil_orm_derive::VilEntity;
+use serde_json::Value;
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow, VilEntity)]
 #[vil_entity(table = "question_bank")]
@@ -73,9 +74,26 @@ pub struct QuizGenerateRequest {
     pub difficulty: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GeneratedQuestion {
+    pub id: String,
+    pub skill_id: i64,
+    pub section: String,
+    pub interaction: String,
+    pub stimulus: Option<Value>,
+    pub prompt: String,
+    pub choices: Option<Vec<String>>,
+    pub correct_response: Option<Vec<String>>,
+    pub cefr_target: Option<String>,
+    pub difficulty_score: Option<i64>,
+    pub passage_id: Option<String>,
+    pub metadata: Option<Value>,
+    pub created_at: String,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct QuizGenerateResponse {
-    pub questions: Vec<Question>,
+    pub questions: Vec<GeneratedQuestion>,
 }
 
 #[derive(Debug, Deserialize)]

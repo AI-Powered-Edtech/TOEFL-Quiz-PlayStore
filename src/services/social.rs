@@ -4,6 +4,7 @@ use crate::models::profile::Profile;
 use crate::models::responses::*;
 use crate::models::social::*;
 use crate::models::views::*;
+use serde::{Deserialize, Serialize};
 use vil_orm::vil_args;
 use vil::prelude::*;
 
@@ -119,16 +120,124 @@ pub async fn add_friend(
 pub async fn list_friends(
     ctx: ServiceCtx,
     claims: Claims,
-) -> Result<VilResponse<Vec<FriendRow>>, AppError> {
+) -> Result<VilResponse<Vec<FriendApiRow>>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
-    let friends = Profile::q()
-        .select(&["p.id", "p.full_name", "p.avatar_url", "p.xp"])
-        .alias("p")
-        .join("friends f", "f.friend_id = p.id")
-        .where_eq("f.user_id", &claims.sub)
-        .fetch_all::<FriendRow>(state.pool.inner()).await?;
+    let rows: Vec<FriendJoinRow> = sqlx::query_as(
+        "SELECT f.id, f.user_id, f.friend_id, f.created_at, p.full_name, p.avatar_url, p.xp \
+         FROM friends f \
+         JOIN profiles p ON p.id = f.friend_id \
+         WHERE f.user_id = ? \
+         ORDER BY f.created_at DESC",
+    )
+    .bind(&claims.sub)
+    .fetch_all(state.pool.inner())
+    .await
+    .map_err(|e| AppError::Internal(e.to_string()))?;
+
+    let friends = rows
+        .into_iter()
+        .map(|r| FriendApiRow {
+            id: r.id,
+            user_id: r.user_id,
+            friend_id: r.friend_id,
+            profile: Some(FriendProfile {
+                full_name: r.full_name,
+                avatar_url: r.avatar_url,
+                xp: Some(r.xp),
+            }),
+            created_at: r.created_at,
+        })
+        .collect();
 
     Ok(VilResponse::ok(friends))
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FriendProfile {
+    pub full_name: Option<String>,
+    pub avatar_url: Option<String>,
+    pub xp: Option<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FriendApiRow {
+    pub id: String,
+    pub user_id: String,
+    pub friend_id: String,
+    pub profile: Option<FriendProfile>,
+    pub created_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct FriendJoinRow {
+    pub id: String,
+    pub user_id: String,
+    pub friend_id: String,
+    pub created_at: Option<String>,
+    pub full_name: Option<String>,
+    pub avatar_url: Option<String>,
+    pub xp: i64,
+}
+
+#[vil_handler]
+pub async fn remove_friend(
+    ctx: ServiceCtx,
+    claims: Claims,
+    Path(friend_id): Path<String>,
+) -> Result<VilResponse<OkResponse>, AppError> {
+    let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    sqlx::query("DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)")
+        .bind(&claims.sub)
+        .bind(&friend_id)
+        .bind(&friend_id)
+        .bind(&claims.sub)
+        .execute(state.pool.inner())
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+
+    Ok(VilResponse::ok(OkResponse { ok: true }))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RespondFriendRequest {
+    pub requester_id: String,
+    pub accept: bool,
+}
+
+#[vil_handler]
+pub async fn respond_friend_request(
+    ctx: ServiceCtx,
+    claims: Claims,
+    body: ShmSlice,
+) -> Result<VilResponse<OkResponse>, AppError> {
+    let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    let req: RespondFriendRequest = body.json().map_err(|_| AppError::Validation("Invalid body".into()))?;
+
+    if req.requester_id == claims.sub {
+        return Err(AppError::Validation("Cannot respond to yourself".into()));
+    }
+
+    if !req.accept {
+        return Ok(VilResponse::ok(OkResponse { ok: true }));
+    }
+
+    let exists: Option<(String,)> = Profile::select_one(state.pool.inner(), &["id"], "id = ?", &[&req.requester_id]).await?;
+    if exists.is_none() {
+        return Err(AppError::NotFound("Requester not found".into()));
+    }
+
+    for (a, b) in [(&claims.sub, &req.requester_id), (&req.requester_id, &claims.sub)] {
+        let fid = uuid::Uuid::new_v4().to_string();
+        let uid = a.clone();
+        let friend_id = b.clone();
+        Friend::q()
+            .insert_columns(&["id", "user_id", "friend_id"])
+            .value(fid).value(uid).value(friend_id)
+            .on_conflict_nothing("user_id, friend_id")
+            .execute(state.pool.inner()).await?;
+    }
+
+    Ok(VilResponse::ok(OkResponse { ok: true }))
 }
 
 #[vil_handler]
@@ -259,16 +368,78 @@ pub async fn get_achievements(
 pub async fn get_notifications(
     ctx: ServiceCtx,
     claims: Claims,
-) -> Result<VilResponse<Vec<NotificationRow>>, AppError> {
+) -> Result<VilResponse<Vec<NotificationApiRow>>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
-    let notifs = Notification::q()
+    let rows: Vec<NotificationRow> = Notification::q()
         .select(&["id", "type", "message", "read", "created_at"])
         .where_eq("user_id", &claims.sub)
         .order_by_desc("created_at")
         .limit(50)
         .fetch_all::<NotificationRow>(state.pool.inner()).await?;
 
+    let notifs = rows
+        .into_iter()
+        .map(|r| {
+            let notif_type = r.notif_type;
+            let title = notif_type.replace('_', " ");
+            NotificationApiRow {
+                id: r.id,
+                user_id: claims.sub.clone(),
+                notif_type,
+                title,
+                message: r.message,
+                is_read: r.read != 0,
+                created_at: r.created_at,
+                data: None,
+            }
+        })
+        .collect();
+
     Ok(VilResponse::ok(notifs))
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NotificationApiRow {
+    pub id: String,
+    pub user_id: String,
+    #[serde(rename = "type")]
+    pub notif_type: String,
+    pub title: String,
+    pub message: String,
+    pub is_read: bool,
+    pub created_at: String,
+    pub data: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateNotificationRequest {
+    pub user_id: String,
+    #[serde(rename = "type")]
+    pub notif_type: String,
+    pub message: String,
+}
+
+#[vil_handler]
+pub async fn create_notification(
+    ctx: ServiceCtx,
+    _claims: Claims,
+    body: ShmSlice,
+) -> Result<VilResponse<OkWithIdResponse>, AppError> {
+    let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    let req: CreateNotificationRequest = body.json().map_err(|_| AppError::Validation("Invalid body".into()))?;
+
+    let id = uuid::Uuid::new_v4().to_string();
+    sqlx::query("INSERT INTO notifications (id, user_id, type, message, read, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))")
+        .bind(&id)
+        .bind(&req.user_id)
+        .bind(&req.notif_type)
+        .bind(&req.message)
+        .bind(0_i64)
+        .execute(state.pool.inner())
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+
+    Ok(VilResponse::created(OkWithIdResponse { ok: true, id }))
 }
 
 #[vil_handler]

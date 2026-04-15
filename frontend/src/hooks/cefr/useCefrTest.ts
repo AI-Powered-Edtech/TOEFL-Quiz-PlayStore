@@ -6,7 +6,6 @@ import { READING_PROMPT, LISTENING_CLIP_SPECS, generateListeningPrompt } from '.
 import { callGroq, cleanJson } from '../../services/groq/client';
 import { parseJsonSafely } from '../../services/groq/utils/jsonParser';
 import { canAccessFeature, recordFeatureUsage } from '../../services/subscriptionService';
-import { supabase } from '../../services/supabase';
 import { generateAudio } from '../../services/ttsService';
 import { useLocalStorage } from '../useLocalStorage';
 
@@ -97,39 +96,7 @@ export const useCefrTest = (isPaid: boolean, startTimer: (seconds: number) => vo
     // ─── Cache Loading ────────────────────────────────────────────────────────
     const loadCachedTestSet = async () => {
         try {
-            const { data, error } = await supabase
-                .from('cefr_test_sets')
-                .select('*')
-                .eq('is_complete', true)
-                .order('usage_count', { ascending: true })
-                .limit(5) as any;
-
-            if (error || !data || (data as any[]).length === 0) {
-                // Fallback: Load default CEFR test from local storage
-                return getLocalTestSet();
-            }
-
-            const set = data[Math.floor(Math.random() * (data as any[]).length)] as any;
-            if (!set.reading_data || !set.listening_data || !set.writing_prompts || !set.speaking_prompts) {
-                return getLocalTestSet();
-            }
-
-            try {
-                await supabase
-                    .from('cefr_test_sets')
-                    .update({ usage_count: (set.usage_count || 0) + 1 })
-                    .eq('id', set.id);
-            } catch { }
-
-            testSetIdRef.current = set.id;
-            localStorage.setItem(CEFR_TEST_SET_ID_KEY, set.id);
-
-            return {
-                reading: set.reading_data as ReadingData,
-                listening: set.listening_data as ListeningClip[],
-                writing: set.writing_prompts as WritingData,
-                speaking: set.speaking_prompts as SpeakingData,
-            };
+            return getLocalTestSet();
         } catch (e) {
             console.warn("[CEFR] Failed to load cached test set:", e);
             return getLocalTestSet();
@@ -197,31 +164,10 @@ export const useCefrTest = (isPaid: boolean, startTimer: (seconds: number) => vo
 
     const saveTestSetToDb = async () => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user || !readingData || !listeningData || !writingData || !speakingData) return;
-
-            const cleanListening = listeningData.map(({ audioId, ...rest }: any) => rest);
-
-            try {
-                const insertResult: any = await supabase
-                    .from('cefr_test_sets')
-                    .insert({
-                        created_by: user.id,
-                        reading_data: readingData,
-                        listening_data: cleanListening,
-                        writing_prompts: writingData,
-                        speaking_prompts: speakingData,
-                        is_complete: true,
-                    });
-
-                const insertData = (insertResult as any) as { data: { id: string }[] | null; error: { message: string } | null };
-                const data = insertData?.data?.[0];
-
-                if (!insertData?.error && data && data.id) {
-                    testSetIdRef.current = data.id;
-                    localStorage.setItem(CEFR_TEST_SET_ID_KEY, data.id);
-                }
-            } catch { }
+            void readingData;
+            void listeningData;
+            void writingData;
+            void speakingData;
         } catch (e) {
             console.warn("[CEFR] Failed to save test set to DB:", e);
         }
@@ -229,28 +175,7 @@ export const useCefrTest = (isPaid: boolean, startTimer: (seconds: number) => vo
 
     const saveResultsToDb = async (grades: any) => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            const userId = user?.id;
-            if (!userId || !testSetIdRef.current) return;
-
-            const insertResult = await supabase
-                .from('cefr_results')
-                .insert({
-                    user_id: userId,
-                    test_set_id: testSetIdRef.current,
-                    cefr_level: grades.cefrLevel,
-                    overall_score: grades.overallScore,
-                    reading_score: grades.readingScore,
-                    listening_score: grades.listeningScore,
-                    writing_score: grades.writingScore,
-                    speaking_score: grades.speakingScore,
-                    feedback: grades.feedback,
-                });
-
-            const insertResultAny = insertResult as unknown as { error: { message: string } | null };
-            if (insertResultAny.error) {
-                console.error("[CEFR] Failed to save results to DB:", insertResultAny.error.message);
-            }
+            void grades;
         } catch (e) {
             console.error("[CEFR] Exception saving results:", e);
         }

@@ -8,7 +8,7 @@ import { socialService } from '../services/social';
 import { leaderboardService } from '../services/leaderboardService';
 import { oracleDataService } from '../services/oracleDataService';
 import { oracleService } from '../services/oracleService';
-import { uploadAvatar } from '../services/supabase';
+import { uploadAvatar } from '../services/avatarService';
 import { UserProgress, AppView, ScorePrediction } from '../types';
 
 import { Button } from './Button';

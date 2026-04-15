@@ -1,4 +1,8 @@
 import api from './apiClient';
+import { Notification } from '../types';
+import { parseApi } from '../contracts/parse';
+import { FriendSchema, NotificationSchema } from '../contracts/schemas';
+import { mapFriendRowToFriend, mapNotificationRowToNotification } from './mappers';
 
 export interface Circle {
   id: string;
@@ -56,15 +60,6 @@ export interface LeaderboardEntry {
   full_name?: string;
   avatar_url?: string;
   xp: number;
-}
-
-export interface Notification {
-  id: string;
-  user_id: string;
-  type: string;
-  message: string;
-  read: boolean;
-  created_at: string;
 }
 
 export interface Achievement {
@@ -132,10 +127,10 @@ export const socialService = {
     return { ok: true };
   },
 
-  async listFriends(): Promise<Friend[]> {
-    const response = await api.get<Friend[]>('/api/social/friends');
+    const response = await api.get<any[]>('/api/social/friends');
+    if (!response.data) return [];
+    return response.data.map(r => parseApi(FriendSchema, mapFriendRowToFriend(r)));
     return response.data || [];
-  },
 
   async leaderboard(): Promise<LeaderboardEntry[]> {
     const response = await api.get<LeaderboardEntry[]>('/api/social/leaderboard');
@@ -166,8 +161,9 @@ export const socialService = {
   },
 
   async getNotifications(): Promise<Notification[]> {
-    const response = await api.get<Notification[]>('/api/social/notifications');
-    return response.data || [];
+    const response = await api.get<any[]>('/api/social/notifications');
+    if (!response.data) return [];
+    return response.data.map(r => parseApi(NotificationSchema, mapNotificationRowToNotification(r)));
   },
 
   async markNotificationRead(id: string): Promise<{ ok: boolean; error?: string }> {

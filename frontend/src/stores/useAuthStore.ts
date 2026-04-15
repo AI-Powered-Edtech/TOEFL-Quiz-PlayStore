@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import authService, { Profile } from '../services/auth';
 import { UserProgress } from '../types';
 import { trackEmailLogin, trackEmailRegister, trackLogout, trackGuestLogin } from '../utils/authAnalytics';
+import { secureStorage } from '../utils/secureStorage';
 
 interface AuthStore {
     user: Profile | null;
@@ -34,7 +35,7 @@ const DEFAULT_PROGRESS: UserProgress = {
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
     user: null,
-    isAuthenticated: !!localStorage.getItem('access_token'),
+    isAuthenticated: !!secureStorage.getItem('access_token'),
     isLoading: false,
     progress: DEFAULT_PROGRESS,
     unreadCount: 0,

@@ -1,6 +1,6 @@
 import { Metric, onCLS, onINP, onLCP, onFCP, onTTFB } from 'web-vitals';
 
-import { supabase } from '../services/supabase';
+import api from '../services/apiClient';
 
 const sendToAnalytics = (metric: Metric) => {
     const body = JSON.stringify(metric);
@@ -16,21 +16,20 @@ const sendToAnalytics = (metric: Metric) => {
         console.debug('[Web Vitals]', metric);
     }
 
-    // Optionally send to Supabase if enabled
     if (import.meta.env.VITE_ENABLE_PERFORMANCE_LOGGING === 'true') {
-        supabase.from('performance_metrics').insert({
+        api.post('/api/monitoring/metrics/batch', [{
             metric_name: metric.name,
-            value: metric.value,
-            rating: metric.rating,
-            delta: metric.delta,
-            id: metric.id,
-            navigation_type: metric.navigationType,
-            user_agent: navigator.userAgent
-        }).then(() => {
-            // Silently succeed or fail — vitals are non-critical
-        }).catch((e: unknown) => {
-            console.error('Failed to log performance metric:', e);
-        });
+            metric_value: metric.value,
+            unit: null,
+            component: 'web_vitals',
+            tags: {
+                rating: metric.rating,
+                delta: metric.delta,
+                id: metric.id,
+                navigation_type: metric.navigationType,
+                user_agent: navigator.userAgent,
+            }
+        }], { timeout: 3000 }).catch(() => {});
     }
 };
 

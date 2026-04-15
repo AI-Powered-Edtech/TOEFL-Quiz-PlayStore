@@ -1,5 +1,8 @@
 import api from './apiClient';
-import { CanonicalQuestionV1 } from '../types';
+import { CanonicalQuestionV1, QuizReportData } from '../types';
+import { parseApi } from '../contracts/parse';
+import { QuizReportDataSchema } from '../contracts/schemas';
+import { mapQuizReportResponseToQuizReportData } from './mappers';
 
 export interface Question {
   id: string;
@@ -117,35 +120,58 @@ export const quizService = {
     return response.data || null;
   },
 
-  async getQuizReportById(id: string): Promise<any | null> {
+  async getQuizReportById(id: string): Promise<QuizReportData | null> {
+    const response = await api.get<QuizReportData>(`/api/quiz/reports/${id}`);
+    if (response.data) {
+      return parseApi(QuizReportDataSchema, mapQuizReportResponseToQuizReportData(response.data));
+    }
     try {
-        const stored = localStorage.getItem('quiz_reports');
-        const reports = stored ? JSON.parse(stored) : [];
-        return reports.find((r: any) => r.id === id) || null;
-    } catch { return null; }
+      const stored = localStorage.getItem('quiz_reports');
+      const reports = stored ? JSON.parse(stored) : [];
+      return reports.find((r: any) => r.id === id) || null;
+    } catch {
+      return null;
+    }
   },
 
   async saveQuizReport(data: any): Promise<string | null> {
     try {
-        const id = crypto.randomUUID();
-        const report = {
-            id,
-            student_name: data.studentName,
-            quiz_topic: data.topic,
-            score: data.score,
-            total_questions: data.total,
-            correct_count: data.correct,
-            answers_snapshot: data.answers,
-            user_id: data.userId || null,
-            created_at: new Date().toISOString()
-        };
-        const stored = localStorage.getItem('quiz_reports');
-        const reports = stored ? JSON.parse(stored) : [];
-        reports.unshift(report);
-        if (reports.length > 100) reports.splice(100);
-        localStorage.setItem('quiz_reports', JSON.stringify(reports));
-        return id;
-    } catch { return null; }
+      const response = await api.post<{ ok: boolean; id: string }>('/api/quiz/reports', {
+        skill_id: data.skillId ? String(data.skillId) : undefined,
+        section: data.section,
+        student_name: data.studentName,
+        quiz_topic: data.topic,
+        score: data.score,
+        total_questions: data.total,
+        correct_count: data.correct,
+        answers_snapshot: data.answers,
+      });
+      if (response.data?.id) {
+        return response.data.id;
+      }
+    } catch {
+    }
+    try {
+      const id = crypto.randomUUID();
+      const report = {
+        id,
+        student_name: data.studentName,
+        quiz_topic: data.topic,
+        score: data.score,
+        total_questions: data.total,
+        correct_count: data.correct,
+        answers_snapshot: data.answers,
+        created_at: new Date().toISOString(),
+      };
+      const stored = localStorage.getItem('quiz_reports');
+      const reports = stored ? JSON.parse(stored) : [];
+      reports.unshift(report);
+      if (reports.length > 100) reports.splice(100);
+      localStorage.setItem('quiz_reports', JSON.stringify(reports));
+      return id;
+    } catch {
+      return null;
+    }
   }
 };
 

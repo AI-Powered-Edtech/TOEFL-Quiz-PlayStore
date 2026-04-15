@@ -15,7 +15,7 @@ mod tasks;
 
 use crate::config::AppConfig;
 use crate::db::Database;
-use crate::services::{admin, admin_monitoring, ai, auth, oauth, blog, creator, monitoring, quiz, social, storage, writing, purchases};
+use crate::services::{admin, admin_monitoring, ai, auth, oauth, blog, creator, monitoring, profile, quiz, social, storage, writing, purchases};
 
 #[tokio::main]
 async fn main() {
@@ -65,6 +65,8 @@ async fn main() {
         .endpoint(Method::GET, "/questions", get(quiz::list_questions))
         .endpoint(Method::GET, "/simulation", get(quiz::simulation))
         .endpoint(Method::POST, "/results", post(quiz::save_result))
+        .endpoint(Method::POST, "/reports", post(quiz::save_report))
+        .endpoint(Method::GET, "/reports/:id", get(quiz::get_report))
         .endpoint(Method::GET, "/history", get(quiz::history))
         .endpoint(Method::GET, "/progress", get(quiz::progress))
         .endpoint(Method::GET, "/bank/count", get(quiz::get_question_count))
@@ -77,6 +79,11 @@ async fn main() {
         .endpoint(Method::DELETE, "/bank/:id", delete(quiz::delete_question))
         .endpoint(Method::GET, "/passages/:id", get(quiz::get_passage))
         .endpoint(Method::POST, "/passages", post(quiz::save_passage))
+        .state(state.clone());
+
+    let profile_svc = ServiceProcess::new("profile")
+        .endpoint(Method::GET, "/:user_id", get(profile::get_profile_by_id))
+        .endpoint(Method::PATCH, "/:user_id", patch(profile::update_profile_by_id))
         .state(state.clone());
 
     let ai_svc = ServiceProcess::new("ai")
@@ -113,11 +120,14 @@ async fn main() {
         .endpoint(Method::GET, "/circles/:id/messages", get(social::get_messages))
         .endpoint(Method::POST, "/friends/add", post(social::add_friend))
         .endpoint(Method::GET, "/friends", get(social::list_friends))
+        .endpoint(Method::DELETE, "/friends/:friend_id", delete(social::remove_friend))
+        .endpoint(Method::POST, "/friends/respond", post(social::respond_friend_request))
         .endpoint(Method::GET, "/leaderboard", get(social::leaderboard))
         .endpoint(Method::GET, "/predictions", get(social::get_predictions))
         .endpoint(Method::POST, "/predictions", post(social::save_prediction))
         .endpoint(Method::GET, "/achievements", get(social::get_achievements))
         .endpoint(Method::GET, "/notifications", get(social::get_notifications))
+        .endpoint(Method::POST, "/notifications", post(social::create_notification))
         .endpoint(Method::PATCH, "/notifications/:id/read", patch(social::mark_notification_read))
         .state(state.clone());
 
@@ -135,6 +145,7 @@ async fn main() {
     let monitoring_svc = ServiceProcess::new("monitoring")
         .endpoint(Method::POST, "/logs/batch", post(monitoring::batch_logs))
         .endpoint(Method::POST, "/metrics/batch", post(monitoring::batch_metrics))
+        .endpoint(Method::POST, "/moderation/reports", post(monitoring::create_content_report))
         .state(state.clone());
 
     let storage_svc = ServiceProcess::new("storage")
@@ -177,6 +188,7 @@ async fn main() {
         .service(auth_svc)
         .service(admin_svc)
         .service(quiz_svc)
+        .service(profile_svc)
         .service(ai_svc)
         .service(purchases_svc)
         .service(writing_svc)

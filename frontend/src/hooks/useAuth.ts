@@ -4,7 +4,12 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { mergeMasonProgress } from '../services/masonProgressService';
 
 export const useAuth = () => {
-    const { user, isAuthenticated, isLoading } = useAuthStore();
+    const { user, isAuthenticated, isLoading, progress } = useAuthStore(state => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+        isLoading: state.isLoading,
+        progress: state.progress,
+    }));
 
     useEffect(() => {
         const store = useAuthStore.getState();
@@ -39,7 +44,7 @@ export const useAuth = () => {
     return {
         user,
         profile: user,
-        progress: useAuthStore.getState().progress,
+        progress,
         loading: isLoading,
         isAuthenticated,
         login,

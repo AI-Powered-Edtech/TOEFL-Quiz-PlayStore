@@ -16,8 +16,6 @@ import { useState, useCallback, useRef } from 'react';
 import { generateQuizUnified } from '../../services/aiProvider';
 import { getRandomQuestionsForSimulation } from '../../services/questionBankService';
 import { canAccessFeature, recordFeatureUsage } from '../../services/subscriptionService';
-import { supabase } from '../../services/supabase';
-import { getAnsweredQuestionIds } from '../../services/userQuestionHistoryService';
 import {
     FullSimulationPhase,
     AdaptiveDifficulty,
@@ -264,19 +262,6 @@ export const useFullSimulation = (): UseFullSimulationReturn => {
         setDifficulty('medium');
 
         try {
-            // Fetch answered question IDs
-            const { data: { user } } = await supabase.auth.getUser();
-            const userId = user?.id;
-            if (userId) {
-                const [reading, listening, structure, written] = await Promise.all([
-                    getAnsweredQuestionIds(userId, 'reading'),
-                    getAnsweredQuestionIds(userId, 'listening'),
-                    getAnsweredQuestionIds(userId, 'structure'),
-                    getAnsweredQuestionIds(userId, 'written'),
-                ]);
-                answeredRef.current = { reading, listening, structure, written };
-            }
-
             // Generate ONLY the first section (Reading)
             const firstQuestions = await generateSectionQuestions(0, 'medium');
 
