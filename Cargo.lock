@@ -2935,6 +2935,7 @@ dependencies = [
  "bytes",
  "chrono",
  "dotenv",
+ "jsonwebtoken",
  "rand",
  "reqwest",
  "rmp-serde",

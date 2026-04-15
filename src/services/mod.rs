@@ -10,3 +10,4 @@ pub mod monitoring;
 pub mod storage;
 pub mod blog;
 pub mod admin_monitoring;
+pub mod purchases;

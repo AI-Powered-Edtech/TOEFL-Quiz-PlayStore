@@ -1,5 +1,5 @@
 
-import { Bell, Volume2, Moon, Trash2, Shield, CircleHelp, ArrowLeft, Zap, Crown } from 'lucide-react';
+import { Bell, Volume2, Moon, Trash2, Shield, CircleHelp, ArrowLeft, Zap, Crown, BookOpen } from 'lucide-react';
 import React from 'react';
 
 import { useSubscription } from '../hooks/useSubscription';
@@ -179,6 +179,16 @@ export const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                             <h2 className="font-bold text-slate-700 text-sm uppercase tracking-wider">Support</h2>
                         </div>
                         <div className="p-2 space-y-1">
+                            <div
+                                className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer group"
+                                onClick={() => window.dispatchEvent(new CustomEvent('featuretour:open'))}
+                            >
+                                <div className="flex items-center">
+                                    <BookOpen className="w-5 h-5 text-slate-400 mr-3 group-hover:text-blue-600 transition-colors" />
+                                    <span className="text-slate-700 font-medium">Lihat Tutorial Fitur</span>
+                                </div>
+                                <span className="text-slate-500 text-xs bg-slate-50 px-2 py-1 rounded-md border border-slate-200">Open</span>
+                            </div>
                             <div className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer group">
                                 <div className="flex items-center">
                                     <CircleHelp className="w-5 h-5 text-slate-400 mr-3 group-hover:text-blue-600 transition-colors" />

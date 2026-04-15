@@ -1,0 +1,7 @@
+- [x] `frontend/android/` ter-generate dan `npx cap sync android` sukses.
+- [x] Backend `GET /api/ai/token-usage` mengembalikan limit sesuai tier (free 15 / basic 500 / c2 5000).
+- [x] Backend punya endpoint verifikasi purchase (authenticated) dan meng-update tier di `profiles`.
+- [x] Frontend purchase flow tidak memakai placeholder user dan tidak lagi “simulate verification”.
+- [x] Onboarding minimal muncul sekali dan bisa dibuka ulang dari Settings.
+- [x] Paywall enforcement bekerja saat token limit tercapai (server-side source of truth).
+- [x] Build release Android siap menghasilkan `.aab` signed (keystore tidak masuk git).

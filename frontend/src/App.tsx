@@ -2,6 +2,7 @@ import { WifiOff } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 
 import { AppRouter } from './components/AppRouter';
+import { FeatureTourModal, FEATURE_TOUR_KEY } from './components/FeatureTourModal';
 import { MobileTabBar } from './components/MobileTabBar';
 import { ToastContainer, useToast } from './components/ui/Toast';
 import { useAuth } from './hooks/useAuth';
@@ -40,6 +41,7 @@ const App: React.FC = () => {
     const { user, isAuthenticated, loading, login, register, logout, updateProfile } = useAuth();
     const { unreadCount } = useNotifications(user?.id);
     const [isAppInitialLoading, setIsAppInitialLoading] = useState(true);
+    const [showFeatureTour, setShowFeatureTour] = useState(false);
 
     const { currentView, setCurrentView, gymBackTarget } = useNavigationStore();
     const { setAuthState } = useAuthStore();
@@ -55,6 +57,8 @@ const App: React.FC = () => {
 
     useEffect(() => {
         setTimeout(() => setIsAppInitialLoading(false), 800);
+        const openHandler = () => setShowFeatureTour(true);
+        window.addEventListener('featuretour:open', openHandler);
 
         let backListener: any = null;
         if (Capacitor.isNativePlatform()) {
@@ -95,7 +99,14 @@ const App: React.FC = () => {
         return () => {
             CapacitorApp.removeAllListeners();
             if (backListener) backListener.remove();
+            window.removeEventListener('featuretour:open', openHandler);
         };
+    }, []);
+
+    useEffect(() => {
+        if (localStorage.getItem(FEATURE_TOUR_KEY) === '1') return;
+        const t = setTimeout(() => setShowFeatureTour(true), 900);
+        return () => clearTimeout(t);
     }, []);
 
     const [currentSkillId, setCurrentSkillId] = useState<number>(0);
@@ -368,6 +379,14 @@ const App: React.FC = () => {
             </button>
 
             <OfflineIndicator />
+            <FeatureTourModal
+                isOpen={showFeatureTour}
+                onClose={() => setShowFeatureTour(false)}
+                onComplete={() => {
+                    localStorage.setItem(FEATURE_TOUR_KEY, '1');
+                    setShowFeatureTour(false);
+                }}
+            />
 
             <div className={`flex-1 relative overflow-hidden transition-all duration-300 ${isSharing ? 'blur-md pointer-events-none' : ''}`}>
                 <AppRouter

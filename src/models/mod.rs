@@ -22,3 +22,5 @@ pub mod oauth;
 pub mod responses;
 #[allow(dead_code)]
 pub mod views;
+#[allow(dead_code)]
+pub mod purchases;

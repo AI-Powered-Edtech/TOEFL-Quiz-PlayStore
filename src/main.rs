@@ -15,7 +15,7 @@ mod tasks;
 
 use crate::config::AppConfig;
 use crate::db::Database;
-use crate::services::{admin, admin_monitoring, ai, auth, oauth, blog, creator, monitoring, quiz, social, storage, writing};
+use crate::services::{admin, admin_monitoring, ai, auth, oauth, blog, creator, monitoring, quiz, social, storage, writing, purchases};
 
 #[tokio::main]
 async fn main() {
@@ -82,6 +82,10 @@ async fn main() {
         .endpoint(Method::POST, "/generate", post(ai::generate))
         .endpoint(Method::POST, "/tts", post(ai::tts))
         .endpoint(Method::GET, "/token-usage", get(ai::token_usage))
+        .state(state.clone());
+
+    let purchases_svc = ServiceProcess::new("purchases")
+        .endpoint(Method::POST, "/verify", post(purchases::verify))
         .state(state.clone());
 
     let writing_svc = ServiceProcess::new("writing")
@@ -173,6 +177,7 @@ async fn main() {
         .service(admin_svc)
         .service(quiz_svc)
         .service(ai_svc)
+        .service(purchases_svc)
         .service(writing_svc)
         .service(social_svc)
         .service(creator_svc)

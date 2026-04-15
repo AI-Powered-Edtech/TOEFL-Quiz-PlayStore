@@ -13,7 +13,10 @@
 
 import { Capacitor } from '@capacitor/core';
 
+import authService from './auth';
+import { apiClient } from './apiClient';
 import { clearTierCache, type SubscriptionTier } from './subscriptionService';
+import { useAuthStore } from '../stores/useAuthStore';
 
 // ============================================
 // Product IDs (must match Google Play Console)
@@ -152,13 +155,14 @@ export async function purchaseSubscription(
     }
 
     try {
-        const user = { id: 'user_id' }; // Placeholder - get from auth service
-        if (!user) {
+        const userId =
+            useAuthStore.getState().user?.id ?? (await authService.getProfile())?.id ?? null;
+        if (!userId) {
             return { success: false, error: 'Silakan login terlebih dahulu' };
         }
 
         // Use a hashed user ID as appAccountToken (Android allows any string <=64 chars)
-        const appAccountToken = user.id.replace(/-/g, '').substring(0, 64);
+        const appAccountToken = userId.replace(/-/g, '').substring(0, 64);
 
         console.log(`[Purchase] Starting purchase: ${productId}`);
 
@@ -190,11 +194,7 @@ export async function purchaseSubscription(
         }
 
         // Verify and activate on server
-        const result = await verifyAndActivate(
-            transaction.purchaseToken!,
-            transaction.productIdentifier,
-            user.id
-        );
+        const result = await verifyAndActivate(transaction.purchaseToken!, transaction.productIdentifier);
 
         if (result.success) {
             // Acknowledge the purchase after successful verification
@@ -245,26 +245,28 @@ export async function purchaseSubscription(
 async function verifyAndActivate(
     purchaseToken: string,
     productId: string,
-    userId: string
 ): Promise<PurchaseResult> {
     try {
-        console.log('[Purchase] Server verification skipped - Supabase removed');
+        const response = await apiClient.post<any>('/api/purchases/verify', {
+            product_id: productId,
+            purchase_token: purchaseToken,
+        });
 
-        // For now, simulate successful verification
-        return {
-            success: true,
-            error: undefined,
-            productId,
-            purchaseToken,
-            expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            isTrial: false,
-        };
+        if (response.error) {
+            return { success: false, error: response.error.error };
+        }
 
-        const tier = PRODUCT_TO_TIER[productId] || 'basic';
-        console.log(`[Purchase] Activated tier: ${tier}`);
+        const tier = (response.data?.tier as SubscriptionTier) || PRODUCT_TO_TIER[productId] || 'basic';
         clearTierCache();
 
-        return { success: true, tier };
+        return {
+            success: true,
+            tier,
+            productId,
+            purchaseToken,
+            expiryDate: response.data?.expiry_date || undefined,
+            isTrial: false,
+        };
     } catch (err) {
         console.error('[Purchase] Server verification error:', err);
         return {
@@ -290,8 +292,9 @@ export async function restorePurchases(): Promise<PurchaseResult> {
     }
 
     try {
-        const user = { id: 'user_id' }; // Placeholder - get from auth service
-        if (!user) {
+        const userId =
+            useAuthStore.getState().user?.id ?? (await authService.getProfile())?.id ?? null;
+        if (!userId) {
             return { success: false, error: 'Silakan login terlebih dahulu' };
         }
 
@@ -316,11 +319,7 @@ export async function restorePurchases(): Promise<PurchaseResult> {
         }
 
         // Re-verify on server
-        return verifyAndActivate(
-            validPurchase.purchaseToken!,
-            validPurchase.productIdentifier,
-            user.id
-        );
+        return verifyAndActivate(validPurchase.purchaseToken!, validPurchase.productIdentifier);
     } catch (err) {
         console.error('[Purchase] Restore error:', err);
         return {

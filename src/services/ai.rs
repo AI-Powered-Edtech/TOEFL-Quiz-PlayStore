@@ -26,17 +26,14 @@ pub async fn generate(
     let user_id = claims.map(|c| c.sub).unwrap_or_else(|| "guest".to_string());
     
     let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
-    let mut limit = 15;
     let mut tier = "free".to_string();
 
     if user_id != "guest" {
         if let Ok(Some(profile)) = Profile::find_by_id(state.pool.inner(), &user_id).await {
             tier = profile.subscription_tier.clone();
-            if tier != "free" {
-                limit = 5000;
-            }
         }
     }
+    let limit = get_token_limit(&tier);
 
     let today_c = today.clone();
     let user_id_c = user_id.clone();
@@ -170,17 +167,14 @@ pub async fn token_usage(
     
     let user_id = claims.map(|c| c.sub).unwrap_or_else(|| "guest".to_string());
     
-    let mut limit = 15;
     let mut tier = "free".to_string();
 
     if user_id != "guest" {
         if let Ok(Some(profile)) = Profile::find_by_id(state.pool.inner(), &user_id).await {
             tier = profile.subscription_tier.clone();
-            if tier != "free" {
-                limit = 5000;
-            }
         }
     }
+    let limit = get_token_limit(&tier);
 
     let today_c = today.clone();
     let user_id_c = user_id.clone();
