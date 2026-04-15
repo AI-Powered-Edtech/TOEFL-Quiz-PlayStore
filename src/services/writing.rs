@@ -158,10 +158,81 @@ pub async fn evaluate_essay(
 ) -> Result<VilResponse<EvaluateResponse>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
     let req: EvaluateEssayRequest = body.json().map_err(|_| AppError::Validation("Invalid body".into()))?;
-    let word_count = req.essay.split_whitespace().count();
+    
+    // Validate essay structure
+    let mut warnings: Vec<String> = Vec::new();
+    let mut errors: Vec<String> = Vec::new();
 
-    if word_count < 50 {
-        return Err(AppError::Validation("Essay must be at least 50 words".into()));
+    let words: Vec<&str> = req.essay.trim().split_whitespace().collect();
+    let word_count = words.len();
+    let min_words = if req.task_type == "Task 1" { 150 } else { 250 };
+
+    if word_count < 10 {
+        errors.push(format!("Essay is too short to be evaluated ({} words). Minimum required is 10 words.", word_count));
+    } else if word_count < min_words {
+        warnings.push(format!("Essay is under length: {} words (minimum: {}). This will reduce your score.", word_count, min_words));
+    }
+
+    let paragraphs: Vec<&str> = req.essay.split("\n\n").filter(|p| !p.trim().is_empty()).collect();
+    if paragraphs.len() < 3 {
+        warnings.push(format!("Only {} paragraphs (recommended: 3+)", paragraphs.len()));
+    }
+
+    let essay_lower = req.essay.to_lowercase();
+    if req.task_type == "Task 1" {
+        let keywords = ["overall", "in general", "generally", "overview"];
+        if !keywords.iter().any(|kw| essay_lower.contains(kw)) {
+            warnings.push("No clear overview detected. Task 1 requires an overview.".to_string());
+        }
+    } else if req.task_type == "Task 2" {
+        let keywords = ["i believe", "i think", "in my opinion", "i agree", "this essay", "will argue", "my point of view"];
+        if !keywords.iter().any(|kw| essay_lower.contains(kw)) {
+            warnings.push("No clear thesis statement detected.".to_string());
+        }
+    }
+
+    let sentences: Vec<&str> = req.essay.split(|c| c == '.' || c == '!' || c == '?').filter(|s| !s.trim().is_empty()).collect();
+    let sentence_count = sentences.len();
+    let average_sentence_length = if sentence_count > 0 { word_count as f64 / sentence_count as f64 } else { word_count as f64 };
+
+    let is_valid = errors.is_empty();
+    let validation_result = serde_json::json!({
+        "isValid": is_valid,
+        "warnings": warnings,
+        "errors": errors,
+        "stats": {
+            "wordCount": word_count,
+            "paragraphCount": paragraphs.len(),
+            "sentenceCount": sentence_count,
+            "averageSentenceLength": average_sentence_length
+        }
+    });
+
+    if !is_valid {
+        let feedback = serde_json::json!({
+            "band_score": 0,
+            "feedback": format!("Your essay could not be evaluated: {}", errors.join(". ")),
+            "breakdown": {
+                "task_response": 0,
+                "coherence_cohesion": 0,
+                "lexical_resource": 0,
+                "grammatical_range": 0
+            },
+            "confidence": 1.0,
+            "confidence_factors": [{"factor": "Pre-Validation", "score": 1.0, "impact": "positive"}],
+            "grammar_errors": [],
+            "grammar_summary": {"total_errors": 0, "by_category": {}, "by_severity": {}, "most_frequent_error": "N/A"},
+            "indoglish_analysis": [],
+            "validation_result": validation_result
+        });
+
+        return Ok(VilResponse::ok(EvaluateResponse {
+            id: uuid::Uuid::new_v4().to_string(),
+            word_count,
+            feedback: Some(feedback),
+            message: Some("Validation failed".into()),
+            validation_result: Some(validation_result)
+        }));
     }
 
     // VIL Guardrails — content safety on evaluation input
@@ -216,12 +287,17 @@ pub async fn evaluate_essay(
 
         if let Ok(response) = provider.chat(&messages).await {
             let content = &response.content;
-            let feedback: serde_json::Value = serde_json::from_str(content).unwrap_or_default();
+            let mut feedback: serde_json::Value = serde_json::from_str(content).unwrap_or_default();
+            
+            // Inject validation result into feedback for frontend convenience
+            if let serde_json::Value::Object(ref mut map) = feedback {
+                map.insert("validation_result".to_string(), validation_result.clone());
+            }
 
             // Update submission with AI feedback
             WritingSubmission::q()
                 .update()
-                .set_optional("ai_feedback", Some(content.as_str()))
+                .set_optional("ai_feedback", Some(&serde_json::to_string(&feedback).unwrap_or_default()))
                 .set_optional_i64("ai_score", feedback.get("overall_score").and_then(|v| v.as_i64()))
                 .where_eq("id", &id)
                 .execute(state.pool.inner())
@@ -246,6 +322,7 @@ pub async fn evaluate_essay(
                 word_count,
                 feedback: Some(feedback),
                 message: None,
+                validation_result: Some(validation_result),
             }));
         }
     }
@@ -256,6 +333,7 @@ pub async fn evaluate_essay(
         word_count,
         feedback: None,
         message: Some("Saved. AI evaluation unavailable (no API key).".to_string()),
+        validation_result: Some(validation_result),
     }))
 }
 

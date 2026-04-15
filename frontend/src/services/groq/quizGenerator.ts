@@ -19,7 +19,7 @@ import { validateCanonicalQuestion } from "../validationService";
 
 import { callGroq, cleanJson } from './client';
 import { getTargetSkill, isLikelyQuestion } from './helpers';
-import { generateListeningBatch } from './listeningQuizEngine';
+import { api } from '../apiClient';
 import {
     BASE_SYSTEM_PROMPT,
     READING_PROMPT,
@@ -32,18 +32,13 @@ import {
     sanitizeQuestion,
     validateGeneratedQuestion,
 } from './quizEngineCore';
-import { generateReadingBatch } from './readingQuizEngine';
-import { generateStructureBatch } from './structureQuizEngine';
 import { parseJsonSafely } from './utils/jsonParser';
-
-// Import section-specific engines
-import { generateWrittenBatch } from './writtenQuizEngine';
 
 // ─── PUBLIC API (Backwards Compatible) ───────────────────────────────────────
 
 /**
  * Main quiz generation entry point.
- * Routes to the appropriate section-specific engine.
+ * Routes to the new Rust backend API /api/quiz/generate.
  */
 export const generateQuizBatch = async (
     topic: string,
@@ -56,51 +51,41 @@ export const generateQuizBatch = async (
             ? skillIdOverride
             : (() => {
                 const targetSkill = getTargetSkill(topic, section);
-                return targetSkill ? parseInt(targetSkill.id.replace(/\\D/g, ''), 10) : 1;
+                return targetSkill ? parseInt(targetSkill.id.replace(/\D/g, ''), 10) : 1;
             })();
 
-        console.log(`[Generator] 🎯 Routing to engine for section=${section}, Skill ID=${numericSkillId}`);
+        console.log(`[Generator] 🎯 Routing to Rust API for section=${section}, Skill ID=${numericSkillId}`);
 
-        // Detect Reading
-        const isReading =
-            section === 'READING' ||
-            topic.toLowerCase().includes('reading') ||
-            topic.toLowerCase().includes('main idea') ||
-            topic.toLowerCase().includes('detail question') ||
-            topic.toLowerCase().includes('vocabulary in context');
+        const response = await api.post<{ questions: CanonicalQuestionV1[] }>('/api/quiz/generate', {
+            topic,
+            section,
+            count,
+            skill_id_override: numericSkillId
+        }, { timeout: 60000 });
 
-        if (isReading) {
-            return await generateReadingBatch(topic, count, numericSkillId);
+        if (response.error || !response.data) {
+            throw new Error(response.error?.error || 'Failed to generate quiz from backend');
         }
 
-        // Route to Listening engine
-        if (section === 'LISTENING') {
-            return await generateListeningBatch(topic, count, skillIdOverride);
-        }
-
-        // Detect Written Expression (Skills 20-60)
-        const isWrittenExpression =
-            section === 'WRITTEN' ||
-            (numericSkillId >= 20 && numericSkillId <= 60) ||
-            topic.toLowerCase().includes('written expression');
-
-        if (isWrittenExpression) {
-            return await generateWrittenBatch(topic, count, skillIdOverride);
-        }
-
-        // Default: Structure engine
-        return await generateStructureBatch(topic, count, skillIdOverride);
-
+        return response.data.questions.map((q: any) => sanitizeQuestion(q))
+            .filter((q: any) => {
+                const validation = validateGeneratedQuestion(q);
+                if (!validation.valid) {
+                    console.warn(`[Generator] ❌ REJECTED (context): ${validation.reason}`, (q.prompt || '').substring(0, 60));
+                    return false;
+                }
+                return validateCanonicalQuestion(q);
+            });
     } catch (e) {
-        console.error("Groq Batch Generation Failed:", e);
+        console.error("Rust Backend Generation Failed:", e);
         throw e;
     }
 };
 
 /**
- * Generate a reading set — delegates to readingQuizEngine.
+ * Generate a reading set — delegates to Rust API.
  */
-export const generateReadingSet = generateReadingBatch;
+export const generateReadingSet = generateQuizBatch;
 
 // ─── MULTI-PURPOSE FUNCTIONS (Remain here — they span multiple sections) ─────
 

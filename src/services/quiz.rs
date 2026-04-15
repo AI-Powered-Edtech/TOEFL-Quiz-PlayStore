@@ -5,6 +5,9 @@ use crate::models::quiz::*;
 use crate::models::responses::*;
 use vil_orm::vil_args;
 use vil::prelude::*;
+use crate::services::quiz_prompts::get_system_prompt;
+use vil::ai::{ChatMessage as VilChat, LlmProvider, OpenAiConfig, OpenAiProvider};
+use serde_json::Value;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QuestionListResponse {
@@ -443,4 +446,100 @@ pub async fn delete_question(
     }
 
     Ok(VilResponse::ok(DeleteResponse { ok: true }))
+}
+
+#[vil_handler]
+pub async fn generate_quiz(
+    ctx: ServiceCtx,
+    _claims: Option<Claims>,
+    body: ShmSlice,
+) -> Result<VilResponse<QuizGenerateResponse>, AppError> {
+    let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    let req: QuizGenerateRequest = body.json().map_err(|_| AppError::Validation("Invalid body".into()))?;
+
+    let count = req.count.unwrap_or(5);
+    let skill_id = req.skill_id_override.unwrap_or(1);
+    let system_prompt = get_system_prompt(&req.section);
+    let user_prompt = format!("Generate {} UNIQUE questions for Skill ID {}. Topic: {}.", count, skill_id, req.topic);
+
+    let provider = OpenAiProvider::new(
+        OpenAiConfig::new(&state.config.groq_api_key, "llama-3.3-70b-versatile")
+            .base_url("https://api.groq.com/openai/v1")
+            .temperature(0.5)
+            .max_tokens(4096),
+    );
+
+    let messages = vec![
+        VilChat::system(&system_prompt),
+        VilChat::user(&user_prompt),
+    ];
+
+    let response = provider.chat(&messages).await.map_err(|e| {
+        AppError::AiUnavailable(e.to_string())
+    })?;
+
+    let content = response.content;
+    // Extract JSON from possible markdown response
+    let json_str = if content.contains("```json") {
+        let parts: Vec<&str> = content.split("```json").collect();
+        if parts.len() > 1 {
+            let inner_parts: Vec<&str> = parts[1].split("```").collect();
+            inner_parts[0].trim()
+        } else {
+            content.trim()
+        }
+    } else {
+        content.trim()
+    };
+
+    let parsed: Value = serde_json::from_str(json_str).map_err(|_| AppError::Validation("Failed to parse LLM JSON".into()))?;
+    
+    let questions_val = if let Some(q) = parsed.get("questions") {
+        q.clone()
+    } else if parsed.is_array() {
+        parsed
+    } else {
+        Value::Array(vec![])
+    };
+
+    let mut questions = Vec::new();
+    if let Value::Array(arr) = questions_val {
+        for mut q_val in arr {
+            if let Some(obj) = q_val.as_object_mut() {
+                obj.insert("id".to_string(), Value::String(uuid::Uuid::new_v4().to_string()));
+                obj.insert("created_at".to_string(), Value::String(chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string()));
+                
+                // Convert arrays/objects to string if needed for struct Question fields
+                if let Some(choices) = obj.get("choices") {
+                    obj.insert("choices".to_string(), Value::String(serde_json::to_string(choices).unwrap_or_default()));
+                }
+                if let Some(correct) = obj.get("correct_response") {
+                    obj.insert("correct_response".to_string(), Value::String(serde_json::to_string(correct).unwrap_or_default()));
+                }
+                if let Some(stimulus) = obj.get("stimulus") {
+                    obj.insert("stimulus".to_string(), Value::String(serde_json::to_string(stimulus).unwrap_or_default()));
+                }
+                if let Some(metadata) = obj.get("metadata") {
+                    obj.insert("metadata".to_string(), Value::String(serde_json::to_string(metadata).unwrap_or_default()));
+                }
+                if !obj.contains_key("skill_id") {
+                    obj.insert("skill_id".to_string(), Value::Number(serde_json::Number::from(skill_id)));
+                }
+                if !obj.contains_key("section") {
+                    obj.insert("section".to_string(), Value::String(req.section.clone()));
+                }
+                if !obj.contains_key("interaction") {
+                    obj.insert("interaction".to_string(), Value::String("multiple_choice".to_string()));
+                }
+                if !obj.contains_key("prompt") {
+                    obj.insert("prompt".to_string(), Value::String("".to_string()));
+                }
+            }
+            if let Ok(q) = serde_json::from_value::<Question>(q_val) {
+                questions.push(q);
+            }
+        }
+    }
+
+    Ok(VilResponse::ok(QuizGenerateResponse { questions }))
 }

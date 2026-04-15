@@ -97,6 +97,8 @@ pub struct EvaluateResponse {
     pub feedback: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub validation_result: Option<serde_json::Value>,
 }
 
 #[derive(Clone, Serialize, Deserialize, VilModel)]

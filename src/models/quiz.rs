@@ -65,6 +65,20 @@ pub struct QuestionFilter {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct QuizGenerateRequest {
+    pub topic: String,
+    pub section: String,
+    pub count: Option<i64>,
+    pub skill_id_override: Option<i64>,
+    pub difficulty: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct QuizGenerateResponse {
+    pub questions: Vec<Question>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct QuestionCreateRequest {
     pub skill_id: i64,
     pub section: String,
