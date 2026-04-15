@@ -2,6 +2,7 @@ pub mod auth;
 pub mod admin;
 pub mod oauth;
 pub mod quiz;
+pub mod quiz_prompts;
 pub mod ai;
 pub mod writing;
 pub mod social;

@@ -1,16 +1,59 @@
-/target
-
+# Frontend Dependencies
 frontend/node_modules/
 frontend/dist/
 frontend/dist-ssr/
+frontend/.cache/
+frontend/.next/
+frontend/out/
+frontend/build/
 
+# Frontend Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+# Frontend Env Files
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Backend Rust
+/target
+Cargo.lock
+
+# SQLite Database
 *.db
 *.db-wal
 *.db-shm
+
+# Uploads
 uploads/
+
+# OS/Editor Files
+.DS_Store
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment Variables
 .env
+.env.local
 *.env.local
 
+# Logs
+*.log
+backend.log
+.claude/
+frontend/.claude/
+
+# Keystore files
 *.jks
 *.keystore
 *.p12

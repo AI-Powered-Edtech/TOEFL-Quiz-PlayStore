@@ -8,7 +8,6 @@ import api from './apiClient';
 
 import { cacheService } from './cacheService';
 import { essayTaskCache } from './essayTaskCache';
-import { validateEssayStructure as validateEssayStructureFn } from './essayValidationService';
 
 const EXERCISE_POOL_KEY = 'writing_gym_exercise_pool';
 
@@ -278,49 +277,26 @@ export const writingGymService = {
         }
     },
 
-    validateEssayStructure(essay: string, type: 'Task 1' | 'Task 2'): any | null {
-        const validation = validateEssayStructureFn(essay, type);
-
-        if (!validation.isValid) {
-            return {
-                band_score: 0,
-                feedback: `Your essay could not be evaluated: ${validation.errors.join('. ')}`,
-                breakdown: {
-                    task_response: 0,
-                    coherence_cohesion: 0,
-                    lexical_resource: 0,
-                    grammatical_range: 0
-                },
-                confidence: 1.0,
-                confidence_factors: [{ factor: "Pre-Validation", score: 1.0, impact: 'positive' }],
-                grammar_errors: [],
-                grammar_summary: { total_errors: 0, by_category: {}, by_severity: {}, most_frequent_error: 'N/A' },
-                indoglish_analysis: [],
-                validation_result: validation,
-            };
-        }
-
-        if (validation.warnings.length > 0) {
-            (this as any)._lastValidationResult = validation;
-        }
-
-        return null;
-    },
-
     async evaluateEssay(prompt: string, essay: string, type: 'Task 1' | 'Task 2'): Promise<any> {
-        const validationError = this.validateEssayStructure(essay, type);
-        if (validationError) {
-            return validationError;
-        }
-
         const startTime = Date.now();
         try {
-            const { evaluateEssay } = await import('./groq/generators');
-            const result = await evaluateEssay(prompt, essay, type);
+            const response = await api.post('/api/writing/evaluate', {
+                essay,
+                task_type: type,
+                prompt,
+            });
 
             const latency = Date.now() - startTime;
             metricsCollector.increment('ielts_writing.essay.submitted', 1, { type });
             metricsCollector.histogram('ielts_writing.assessment.latency', latency, { type });
+
+            // The backend returns a VilResponse<EvaluateResponse>.
+            // We want to return the feedback object that includes validation_result.
+            const result = (response.data as any)?.feedback || response.data;
+            
+            if (result?.validation_result?.warnings?.length > 0) {
+                (this as any)._lastValidationResult = result.validation_result;
+            }
 
             return result;
         } catch (error) {
