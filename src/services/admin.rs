@@ -91,9 +91,9 @@ pub async fn assign_role(
         .insert_columns(&["user_id", "email", "role"])
         .value(req.user_id.clone())
         .value_opt_str(req.email.clone())
-        .value("admin".to_string())
+        .value(req.role.clone())
         .on_conflict("user_id")
-        .do_update(&["email"])
+        .do_update(&["email", "role"])
         .execute(state.pool.inner())
         .await?;
 

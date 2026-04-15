@@ -3,6 +3,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
 export interface ApiError {
   error: string;
   code?: string;
+  status?: number;
 }
 
 export interface ApiResponse<T> {
@@ -129,9 +130,9 @@ async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
     let error: ApiError;
     try {
       const data = await response.json();
-      error = { error: data.error || data.message || 'Request failed', code: data.code };
+      error = { error: data.error || data.message || 'Request failed', code: data.code, status: response.status };
     } catch {
-      error = { error: `HTTP ${response.status}: ${response.statusText}` };
+      error = { error: `HTTP ${response.status}: ${response.statusText}`, status: response.status };
     }
     return { error };
   }

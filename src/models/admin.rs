@@ -29,6 +29,7 @@ pub struct AuditLog {
 pub struct AssignRoleRequest {
     pub user_id: String,
     pub email: Option<String>,
+    pub role: String,
 }
 
 #[derive(Debug, Deserialize)]
