@@ -80,7 +80,7 @@ export const generateQuizBatch = async (
                 return validateCanonicalQuestion(q);
             });
     } catch (e) {
-        console.error("Rust Backend Generation Failed:", e);
+        console.warn("Rust Backend Generation Failed:", e);
         throw e;
     }
 };

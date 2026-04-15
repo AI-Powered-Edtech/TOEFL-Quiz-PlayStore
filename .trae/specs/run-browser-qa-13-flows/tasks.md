@@ -25,14 +25,14 @@
   - [x] FLOW 13: Native Navigation (Back button)
   - [x] Untuk setiap issue: simpan screenshot + catat console errors/network errors yang relevan
 
-- [ ] Task 4: Fix semua issue yang ditemukan (iterasi 1)
-  - [ ] Buat daftar issue dari `qa_report.md` yang statusnya PARTIAL/FAIL
-  - [ ] Implementasi perbaikan dengan perubahan minimal, mengikuti pola codebase
-  - [ ] Tambahkan/ubah test bila ada framework yang sudah tersedia (opsional, prioritas ke regression e2e manual)
+- [x] Task 4: Fix semua issue yang ditemukan (iterasi 1)
+  - [x] Buat daftar issue dari `qa_report.md` yang statusnya PARTIAL/FAIL
+  - [x] Implementasi perbaikan dengan perubahan minimal, mengikuti pola codebase
+  - [x] Tambahkan/ubah test bila ada framework yang sudah tersedia (opsional, prioritas ke regression e2e manual)
 
-- [ ] Task 5: Re-test seluruh FLOW 1–13 menggunakan browser tool (iterasi 1)
-  - [ ] Update status PASS/PARTIAL/FAIL di `qa_report.md`
-  - [ ] Ambil screenshot untuk issue yang masih tersisa atau regresi baru
+- [x] Task 5: Re-test seluruh FLOW 1–13 menggunakan browser tool (iterasi 1)
+  - [x] Update status PASS/PARTIAL/FAIL di `qa_report.md`
+  - [x] Ambil screenshot untuk issue yang masih tersisa atau regresi baru
 
 - [ ] Task 6: Ulangi siklus fix → re-test sampai diminta berhenti
   - [ ] Jika masih ada PARTIAL/FAIL, ulangi Task 4 dan Task 5 (buat entri iterasi berikutnya di laporan)

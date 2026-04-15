@@ -1,6 +1,7 @@
 // Feature Flag Service
 // Provides gradual rollout and A/B testing capabilities
 import { apiClient } from './apiClient';
+import { secureStorage } from '../utils/secureStorage';
 
 interface FeatureFlag {
     id: string;
@@ -131,6 +132,10 @@ class FeatureFlagService {
     private async fetchAllFlags(): Promise<FeatureFlag[]> {
         if (this.fetchPromise) {
             return this.fetchPromise;
+        }
+
+        if (!secureStorage.getItem('access_token')) {
+            return [];
         }
 
         this.fetchPromise = (async () => {
