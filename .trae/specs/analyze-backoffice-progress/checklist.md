@@ -1,0 +1,6 @@
+- [ ] Frontend backoffice entry point teridentifikasi (cara akses/build/routing).
+- [ ] Komponen UI backoffice yang ada (BackofficeHub) terdokumentasi kemampuannya dan keterbatasannya.
+- [ ] Backend endpoint admin terdokumentasi (users/roles/tier/verify-pin/audit-logs).
+- [ ] Backend endpoint admin monitoring terdokumentasi.
+- [ ] Gap produksi terpetakan jelas (auth gate stub, kontrak role, UX error 403).
+- [ ] Roadmap prioritas P0/P1 disepakati dan bisa dieksekusi sebagai spec implementasi berikutnya.
