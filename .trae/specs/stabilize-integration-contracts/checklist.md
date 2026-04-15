@@ -1,0 +1,15 @@
+- [ ] Quiz generate mengembalikan `choices/correct_response/stimulus/metadata` sebagai typed JSON (bukan string berisi JSON).
+- [ ] `get_question_count` terimplementasi dan menggunakan parameterized query (dengan filter `section` opsional).
+- [ ] `get_questions_paginated` tidak menggunakan string interpolation untuk filter `section` dan aman dari SQL injection.
+- [ ] `useAuthStore` membaca status auth dari secure storage abstraction (bukan localStorage hardcoded).
+- [ ] `apiClient` 401 handler menghapus token dari secure storage abstraction (bukan localStorage hardcoded).
+- [ ] `useAuth().progress` reaktif melalui subscription selector (tanpa `getState()` langsung untuk render).
+- [ ] `useQuizStore.answer()` idempotent dan tidak menaikkan score dua kali untuk question yang sama.
+- [ ] Backend menyediakan 5 endpoint social yang hilang dan semuanya ter-register di router.
+- [ ] Friend payload kompatibel dengan frontend (id/friend_id + bentuk profile konsisten via alias/mapper).
+- [ ] Notification payload kompatibel dengan frontend (read/is_read konsisten via alias/mapper).
+- [ ] `useNotifications` tidak lagi memakai Supabase channel stub dan menggunakan polling backend dengan cleanup interval.
+- [ ] Quiz report tersimpan di backend; share link `/share/{reportId}` dapat dibuka lintas device/browser (public fetch).
+- [ ] Service layer frontend memiliki mapper + runtime contract validation untuk response utama (Question/Friend/Notification/Report).
+- [ ] Dokumentasi endpoint selaras dengan routing backend yang aktual.
+
