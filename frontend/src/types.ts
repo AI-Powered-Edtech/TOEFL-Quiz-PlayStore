@@ -946,3 +946,15 @@ export interface Notification {
   is_read: boolean;
   created_at: string;
 }
+
+export interface Friend {
+  id: string;
+  user_id: string;
+  friend_id: string;
+  profile?: {
+    full_name?: string;
+    avatar_url?: string;
+    xp?: number;
+  };
+  created_at?: string;
+}

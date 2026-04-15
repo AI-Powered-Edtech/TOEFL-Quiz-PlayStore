@@ -57,7 +57,7 @@ export const mapApiQuestionToCanonical = (q: any): CanonicalQuestionV1 => {
 
   return {
     id: String(q?.id ?? crypto.randomUUID()),
-    skill_id: String(q?.skill_id ?? ''),
+    skill_id: Number(q?.skill_id ?? 0),
     section,
     interaction: String(q?.interaction ?? 'multiple_choice'),
     stimulus: stimulus && typeof stimulus === 'object' ? stimulus : {},

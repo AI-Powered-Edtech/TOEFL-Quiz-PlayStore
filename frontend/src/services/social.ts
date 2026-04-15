@@ -1,5 +1,5 @@
 import api from './apiClient';
-import { Notification } from '../types';
+import { Friend, Notification } from '../types';
 import { parseApi } from '../contracts/parse';
 import { FriendSchema, NotificationSchema } from '../contracts/schemas';
 import { mapFriendRowToFriend, mapNotificationRowToNotification } from './mappers';
@@ -40,18 +40,6 @@ export interface CircleMessage {
     full_name?: string;
     avatar_url?: string;
   };
-}
-
-export interface Friend {
-  id: string;
-  user_id: string;
-  friend_id: string;
-  profile?: {
-    full_name?: string;
-    avatar_url?: string;
-    xp?: number;
-  };
-  created_at?: string;
 }
 
 export interface LeaderboardEntry {
@@ -127,10 +115,11 @@ export const socialService = {
     return { ok: true };
   },
 
+  async listFriends(): Promise<Friend[]> {
     const response = await api.get<any[]>('/api/social/friends');
     if (!response.data) return [];
     return response.data.map(r => parseApi(FriendSchema, mapFriendRowToFriend(r)));
-    return response.data || [];
+  },
 
   async leaderboard(): Promise<LeaderboardEntry[]> {
     const response = await api.get<LeaderboardEntry[]>('/api/social/leaderboard');
