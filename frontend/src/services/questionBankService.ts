@@ -235,7 +235,7 @@ class QuestionBankService {
         difficulty?: number
     ): Promise<CanonicalQuestionV1[]> {
         const all = await this.getQuestions({ section: section as any });
-        const available = all.filter(q => (q.id ? !excludeIds.includes(q.id) : true));
+        const available = all.filter(q => q.id ? !excludeIds.includes(q.id) : true);
         
         if (difficulty !== undefined) {
             const filtered = available.filter(q => {

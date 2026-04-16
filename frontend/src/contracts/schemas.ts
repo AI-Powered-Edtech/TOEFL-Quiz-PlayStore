@@ -17,21 +17,9 @@ export const CanonicalQuestionV1Schema = z.object({
 });
 
 export const FriendProfileSchema = z.object({
-  full_name: z
-    .string()
-    .nullable()
-    .optional()
-    .transform(v => v ?? undefined),
-  avatar_url: z
-    .string()
-    .nullable()
-    .optional()
-    .transform(v => v ?? undefined),
-  xp: z
-    .number()
-    .nullable()
-    .optional()
-    .transform(v => v ?? undefined),
+  full_name: z.string().nullable().optional().transform(v => v ?? undefined),
+  avatar_url: z.string().nullable().optional().transform(v => v ?? undefined),
+  xp: z.number().nullable().optional().transform(v => v ?? undefined),
 });
 
 export const FriendSchema = z.object({

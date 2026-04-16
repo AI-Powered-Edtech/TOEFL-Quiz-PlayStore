@@ -33,7 +33,7 @@ export const mapFriendRowToFriend = (row: any): Friend => {
     user_id: String(row?.user_id ?? ''),
     friend_id: String(friendId),
     created_at: String(row?.created_at ?? new Date().toISOString()),
-    profile: profile,
+    profile,
   };
 };
 

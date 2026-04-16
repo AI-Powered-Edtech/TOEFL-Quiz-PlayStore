@@ -1,5 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
-
 interface QueuedOperation {
   id: string;
   service: string;
@@ -78,7 +76,7 @@ class OfflineQueueService {
     operation: Omit<QueuedOperation, 'id' | 'createdAt' | 'attempts'>
   ): Promise<string> {
     const db = this.ensureDB();
-    const id = uuidv4();
+    const id = crypto.randomUUID();
     const queuedOperation: QueuedOperation = {
       ...operation,
       id,
@@ -271,7 +269,7 @@ class OfflineQueueService {
     }
 
     const module: any = await (serviceLoader as any)();
-    const service = module[operation.service];
+    const service = module[operation.service] || module;
     if (!service || typeof service[operation.method] !== 'function') {
       throw new Error(`Unknown method: ${operation.service}.${operation.method}`);
     }

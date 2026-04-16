@@ -7,50 +7,17 @@ import { apiClient } from './apiClient';
 
 import { socialService } from './social';
 
-const REVIEWER_STATS_KEY = 'reviewer_stats_';
-const SUBMISSION_LIMITS_KEY = 'peer_review_limits_';
-
-interface SubmissionLimit {
-    userId: string;
-    submissionsToday: number;
-    lastResetDate: string;
-}
-
-const getStatsKey = (userId: string): string => `${REVIEWER_STATS_KEY}${userId}`;
-const getLimitsKey = (userId: string): string => `${SUBMISSION_LIMITS_KEY}${userId}`;
-
-
-
 export const checkSubmissionLimit = async (userId: string): Promise<{
     allowed: boolean;
     remaining: number;
     submissionsToday: number;
 }> => {
     try {
-        const limitsKey = getLimitsKey(userId);
-        const today = new Date().toISOString().split('T')[0];
-        
-        let limits: SubmissionLimit = {
-            userId,
-            submissionsToday: 0,
-            lastResetDate: today
-        };
-
-        const stored = localStorage.getItem(limitsKey);
-        if (stored) {
-            limits = JSON.parse(stored);
-            if (limits.lastResetDate !== today) {
-                limits.submissionsToday = 0;
-                limits.lastResetDate = today;
-            }
+        const res = await apiClient.get<{ allowed: boolean; remaining: number; submissionsToday: number }>(`/api/writing/peer-review/limits/${userId}`);
+        if (res.data) {
+            return res.data;
         }
-
-        const allowed = limits.submissionsToday < 5;
-        return {
-            allowed,
-            remaining: Math.max(0, 5 - limits.submissionsToday),
-            submissionsToday: limits.submissionsToday
-        };
+        return { allowed: true, remaining: 5, submissionsToday: 0 };
     } catch (error) {
         return { allowed: true, remaining: 5, submissionsToday: 0 };
     }
@@ -77,6 +44,9 @@ export const submitEssay = async (
         const { estimateDifficulty } = await import('../utils/contentModeration');
         const difficultyLevel = estimateDifficulty(essayContent);
 
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+
         const submission: PeerReviewSubmission = {
             id: crypto.randomUUID(),
             user_id: userId,
@@ -87,7 +57,8 @@ export const submitEssay = async (
             is_anonymous: isAnonymous,
             difficulty_level: difficultyLevel,
             status: 'pending',
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            expires_at: expiresAt.toISOString()
         } as PeerReviewSubmission;
 
         // Optimistic cache using offline queue
@@ -116,14 +87,7 @@ export const submitEssay = async (
             }
         }
 
-        const limitsKey = getLimitsKey(userId);
-        const today = new Date().toISOString().split('T')[0];
-        const limits: SubmissionLimit = {
-            userId,
-            submissionsToday: limitCheck.submissionsToday + 1,
-            lastResetDate: today
-        };
-        localStorage.setItem(limitsKey, JSON.stringify(limits));
+        // Limit check is handled by backend now.
 
         analytics.trackSubmission(userId, submission.id, { taskType, wordCount }).catch(() => {});
 

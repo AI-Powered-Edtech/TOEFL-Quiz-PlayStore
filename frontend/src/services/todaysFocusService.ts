@@ -31,8 +31,11 @@ export const TodaysFocusService = {
 
     async getTodaysFocus(userId: string): Promise<TodaysFocusResult> {
         const quizHistory = JSON.parse(localStorage.getItem(`quiz_history_${userId}`) || '[]');
+        return this.getFocusRecommendation(quizHistory);
+    },
 
-        if (quizHistory.length === 0) {
+    getFocusRecommendation(quizHistory: any[]): TodaysFocusResult {
+        if (!quizHistory || quizHistory.length === 0) {
             return this.getDefaultFocus();
         }
 

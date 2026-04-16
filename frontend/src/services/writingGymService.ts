@@ -235,7 +235,7 @@ export const writingGymService = {
             console.warn('AI generation failed:', error);
 
             if (level === 'mason') {
-                const target = `Students practice ${skillId || 'grammar'} every day.`;
+                const target = `Students practice ${(WRITING_GYM_SKILL_MAP as any)[skillId]?.title || 'grammar'} every day.`;
                 const fragments = target.replace(/([.,!?;:])/g, ' $1').split(/\s+/).filter(Boolean);
                 return this.buildExerciseFromAiResult('mason', skillId, {
                     target_sentence: target,
