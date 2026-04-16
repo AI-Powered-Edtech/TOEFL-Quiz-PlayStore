@@ -1,0 +1,33 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "back": "Back"
+  },
+  "nav": {
+    "home": "Home",
+    "practice": "Practice",
+    "social": "Social",
+    "more": "More",
+    "blog": "Blog"
+  },
+  "settings": {
+    "title": "Settings",
+    "preferences": "Preferences",
+    "sound_effects": "Sound Effects",
+    "notifications": "Notifications",
+    "dark_mode": "Dark Mode",
+    "my_plan": "My Plan",
+    "upgrade_to_pro": "Upgrade to Pro",
+    "support": "Support",
+    "tutorial": "View Feature Tutorial"
+  },
+  "more": {
+    "ai_studio": "AI Studio",
+    "essentials": "Essentials",
+    "preferences": "Preferences",
+    "sign_out": "Sign Out Session"
+  }
+}

@@ -1,6 +1,7 @@
 
 import { Bell, Volume2, Moon, Trash2, Shield, CircleHelp, ArrowLeft, Zap, Crown, BookOpen } from 'lucide-react';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useSubscription } from '../hooks/useSubscription';
 import { AppView } from '../types';
@@ -14,6 +15,7 @@ interface SettingsProps {
 }
 
 export const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
+    const { t } = useTranslation();
     const [showPaywall, setShowPaywall] = React.useState(false);
     const { tier, tierName, tierColor, tierIcon, tokenUsage, loading: subLoading } = useSubscription();
 
@@ -29,7 +31,7 @@ export const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                     >
                         <ArrowLeft className="w-5 h-5 text-slate-700" />
                     </button>
-                    <h1 className="text-xl font-bold text-slate-800 tracking-tight">Settings</h1>
+                    <h1 className="text-xl font-bold text-slate-800 tracking-tight">{t('settings.title')}</h1>
                 </div>
             </div>
 
@@ -40,7 +42,7 @@ export const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                     {/* Preferences Section */}
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                         <div className="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center">
-                            <h2 className="font-bold text-slate-700 text-sm uppercase tracking-wider">Preferences</h2>
+                            <h2 className="font-bold text-slate-700 text-sm uppercase tracking-wider">{t('settings.preferences')}</h2>
                         </div>
                         <div className="p-5 space-y-5">
                             <div className="flex items-center justify-between">
@@ -49,7 +51,7 @@ export const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                                         <Volume2 className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-slate-800 text-sm">Sound Effects</h3>
+                                        <h3 className="font-bold text-slate-800 text-sm">{t('settings.sound_effects')}</h3>
                                         <p className="text-xs text-slate-500 mt-0.5">Play sounds for correct answers and level ups</p>
                                     </div>
                                 </div>
@@ -65,7 +67,7 @@ export const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                                         <Bell className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-slate-800 text-sm">Notifications</h3>
+                                        <h3 className="font-bold text-slate-800 text-sm">{t('settings.notifications')}</h3>
                                         <p className="text-xs text-slate-500 mt-0.5">Email reminders for daily practice streaks</p>
                                     </div>
                                 </div>
@@ -185,7 +187,7 @@ export const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                             >
                                 <div className="flex items-center">
                                     <BookOpen className="w-5 h-5 text-slate-400 mr-3 group-hover:text-blue-600 transition-colors" />
-                                    <span className="text-slate-700 font-medium">Lihat Tutorial Fitur</span>
+                                    <span className="text-slate-700 font-medium">{t('settings.tutorial')}</span>
                                 </div>
                                 <span className="text-slate-500 text-xs bg-slate-50 px-2 py-1 rounded-md border border-slate-200">Open</span>
                             </div>
