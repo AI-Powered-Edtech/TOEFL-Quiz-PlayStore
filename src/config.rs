@@ -12,6 +12,7 @@ pub struct AppConfig {
     pub admin_passcode_hash: String,
     pub google_oauth_client_id: String,
     pub allowed_origins: Vec<String>,
+    pub sentry_dsn: Option<String>,
 }
 
 impl AppConfig {
@@ -36,6 +37,7 @@ impl AppConfig {
                 .split(',')
                 .map(|s| s.trim().to_string())
                 .collect(),
+            sentry_dsn: env::var("SENTRY_DSN").ok().filter(|s| !s.is_empty()),
         }
     }
 }
