@@ -293,7 +293,7 @@ export const SkillSelector: React.FC<SkillSelectorProps> = ({ onSelectSkill, isL
                       key={catName}
                       onClick={() => setActiveCategoryIndices(prev => ({
                         ...prev,
-                        [partName]: prev[partName] === idx ? -1 : idx
+                        [partName]: idx
                       }))}
                       className={`
                              w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold transition-all border

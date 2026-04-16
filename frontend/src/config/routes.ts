@@ -176,12 +176,12 @@ export const getRoutes = (deps: any): RouteConfig[] => {
                 onSelectSkill: (skill: any) => {
                     const partToSection: Record<string, any> = {
                         'Structure': 'STRUCTURE',
-                        'Written Expression': 'STRUCTURE',
+                        'Written Expression': 'WRITTEN',
                         'Listening': 'LISTENING',
                         'Reading': 'READING',
                     };
                     const section = partToSection[skill.part || ''] || 'STRUCTURE';
-                    deps.handleStartSkill(skill.numeric_id ? String(skill.numeric_id) : skill.name, section);
+                    deps.handleStartSkill(skill.id || (skill.numeric_id ? String(skill.numeric_id) : skill.name), section);
                 },
                 onOpenOnboarding: () => console.log("Onboarding"),
                 onboardingStatus: 'completed',

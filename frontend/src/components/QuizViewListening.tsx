@@ -63,7 +63,7 @@ export const QuizViewListening: React.FC<QuizViewListeningProps> = ({
                     questionId={currentQuestion.id}
                     audioUrl={currentQuestion.stimulus?.audio_url}
                     nextTranscript={nextTranscript}
-                    autoPlay={true}
+                    autoPlay={Boolean(currentQuestion.stimulus?.audio_url)}
                 />
             </div>
 

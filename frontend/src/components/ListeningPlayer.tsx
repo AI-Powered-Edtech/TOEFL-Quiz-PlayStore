@@ -269,6 +269,8 @@ export const ListeningPlayer: React.FC<ListeningPlayerProps> = ({
         handlePlay();
     }, [handlePlay]);
 
+    const hasAudioSource = Boolean(audioUrl && audioUrl.length > 0);
+
     // Upgrade gate for free users
     if (showUpgradeGate) {
         return (
@@ -309,6 +311,22 @@ export const ListeningPlayer: React.FC<ListeningPlayerProps> = ({
 
     // Service not ready
     if (isServiceReady === false) {
+        if (!hasAudioSource) {
+            return (
+                <div className="w-full bg-slate-50 rounded-xl border border-slate-200 p-4 shadow-sm">
+                    <div className="flex items-center gap-3 text-slate-700">
+                        <Volume2 className="w-5 h-5" />
+                        <div>
+                            <p className="font-semibold">Audio unavailable</p>
+                            <p className="text-sm text-slate-600">Transcript only</p>
+                        </div>
+                    </div>
+                    <div className="mt-3 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                        {transcript}
+                    </div>
+                </div>
+            );
+        }
         return (
             <div className="w-full bg-amber-50 rounded-xl border border-amber-200 p-4 shadow-sm">
                 <div className="flex items-center gap-3 text-amber-700">
@@ -326,6 +344,22 @@ export const ListeningPlayer: React.FC<ListeningPlayerProps> = ({
 
     // Error state (service is ready or loading, not the "service not running" case)
     if (error) {
+        if (!hasAudioSource) {
+            return (
+                <div className="w-full bg-slate-50 rounded-xl border border-slate-200 p-4 shadow-sm">
+                    <div className="flex items-center gap-3 text-slate-700">
+                        <Volume2 className="w-5 h-5" />
+                        <div>
+                            <p className="font-semibold">Audio unavailable</p>
+                            <p className="text-sm text-slate-600">Transcript only</p>
+                        </div>
+                    </div>
+                    <div className="mt-3 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                        {transcript}
+                    </div>
+                </div>
+            );
+        }
         return (
             <div className="w-full bg-red-50 rounded-xl border border-red-200 p-4 shadow-sm">
                 <div className="flex items-center gap-3 text-red-700">

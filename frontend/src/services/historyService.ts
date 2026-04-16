@@ -2,6 +2,7 @@ import { QuizResult, UserProgress } from '../types';
 
 import { quizService } from './quiz';
 import { syncQueueService } from './syncQueueService';
+import { secureStorage } from '../utils/secureStorage';
 
 const HISTORY_KEY = 'streamquiz_history_v1';
 
@@ -52,8 +53,42 @@ const getLocalHistory = (): QuizResult[] => {
     }
 };
 
+const appendLocalHistory = (result: QuizResult): void => {
+    const existing = getLocalHistory();
+    const payload: LocalQuizResult = {
+        id: result.id,
+        userName: result.userName,
+        date: result.date,
+        topic: result.topic,
+        skillId: result.skillId !== undefined ? String(result.skillId) : undefined,
+        section: result.section,
+        score: result.score,
+        correctCount: result.correctCount,
+        totalQuestions: result.totalQuestions,
+        xpEarned: result.xpEarned
+    };
+
+    const next = [payload, ...existing.map(h => ({
+        id: h.id,
+        userName: h.userName,
+        date: h.date,
+        topic: h.topic,
+        skillId: h.skillId !== undefined ? String(h.skillId) : undefined,
+        section: h.section,
+        score: h.score,
+        correctCount: h.correctCount,
+        totalQuestions: h.totalQuestions,
+        xpEarned: h.xpEarned
+    }))].slice(0, 200);
+
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+};
+
 export const getHistory = async (): Promise<QuizResult[]> => {
     try {
+        if (!secureStorage.getItem('access_token')) {
+            return getLocalHistory();
+        }
         const history = await quizService.history();
         return history.map(h => ({
             id: h.id,
@@ -75,6 +110,12 @@ export const getHistory = async (): Promise<QuizResult[]> => {
 
 export const saveQuizResult = async (result: QuizResult, userId?: string): Promise<void> => {
     try {
+        appendLocalHistory(result);
+
+        if (!userId || !secureStorage.getItem('access_token')) {
+            return;
+        }
+
         const apiResult = await quizService.saveResult({
             skill_id: result.skillId !== undefined ? String(result.skillId) : undefined,
             section: result.section || 'STRUCTURE',
@@ -88,8 +129,10 @@ export const saveQuizResult = async (result: QuizResult, userId?: string): Promi
             syncQueueService.enqueue('saveQuizResult', result);
         }
     } catch (error) {
-        console.warn('[HistoryService] Error saving result, queued for sync:', error);
-        syncQueueService.enqueue('saveQuizResult', result);
+        if (userId && secureStorage.getItem('access_token')) {
+            console.warn('[HistoryService] Error saving result, queued for sync:', error);
+            syncQueueService.enqueue('saveQuizResult', result);
+        }
     }
 };
 
