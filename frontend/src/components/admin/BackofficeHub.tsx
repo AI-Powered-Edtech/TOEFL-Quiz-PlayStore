@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { apiClient } from '../../services/apiClient';
 import { assignUserRole, removeUserRole } from '../../services/adminService';
 import { SystemHealth } from './SystemHealth';
+import { ModerationQueue } from './ModerationQueue';
+import { FeatureFlagToggle } from './FeatureFlagToggle';
 
 interface BackofficeHubProps {
     onNavigate?: (route: string) => void;
@@ -16,8 +18,17 @@ interface UserData {
     subscription_tier: string;
 }
 
+type AdminTab = 'users' | 'health' | 'moderation' | 'flags';
+
+const ADMIN_TABS: { id: AdminTab; label: string }[] = [
+    { id: 'users', label: 'User Management' },
+    { id: 'health', label: 'System Health' },
+    { id: 'moderation', label: 'Moderation Queue' },
+    { id: 'flags', label: 'Feature Flags' },
+];
+
 export const BackofficeHub: React.FC<BackofficeHubProps> = ({ onBack }) => {
-    const [activeTab, setActiveTab] = useState<'users' | 'health'>('users');
+    const [activeTab, setActiveTab] = useState<AdminTab>('users');
     const [users, setUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -97,27 +108,20 @@ export const BackofficeHub: React.FC<BackofficeHubProps> = ({ onBack }) => {
                 )}
             </div>
 
-            <div className="flex space-x-4 mb-6 border-b dark:border-slate-700">
-                <button
-                    className={`pb-2 px-1 text-sm font-medium transition-colors border-b-2 ${
-                        activeTab === 'users'
-                            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                            : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                    }`}
-                    onClick={() => setActiveTab('users')}
-                >
-                    User Management
-                </button>
-                <button
-                    className={`pb-2 px-1 text-sm font-medium transition-colors border-b-2 ${
-                        activeTab === 'health'
-                            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                            : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                    }`}
-                    onClick={() => setActiveTab('health')}
-                >
-                    System Health
-                </button>
+            <div className="flex flex-wrap gap-4 mb-6 border-b dark:border-slate-700">
+                {ADMIN_TABS.map((tab) => (
+                    <button
+                        key={tab.id}
+                        className={`pb-2 px-1 text-sm font-medium transition-colors border-b-2 ${
+                            activeTab === tab.id
+                                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                        }`}
+                        onClick={() => setActiveTab(tab.id)}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
             {error && activeTab === 'users' && (
@@ -126,7 +130,7 @@ export const BackofficeHub: React.FC<BackofficeHubProps> = ({ onBack }) => {
                 </div>
             )}
 
-            {activeTab === 'users' ? (
+            {activeTab === 'users' && (
                 loading ? (
                     <div className="flex justify-center items-center h-64">
                         <p className="text-slate-500">Memuat data pengguna...</p>
@@ -195,9 +199,11 @@ export const BackofficeHub: React.FC<BackofficeHubProps> = ({ onBack }) => {
                         </table>
                     </div>
                 )
-            ) : (
-                <SystemHealth />
             )}
+
+            {activeTab === 'health' && <SystemHealth />}
+            {activeTab === 'moderation' && <ModerationQueue />}
+            {activeTab === 'flags' && <FeatureFlagToggle />}
         </div>
     );
 };

@@ -164,3 +164,64 @@ export async function getAuditLogs(
 }
 
 export { isCurrentUserAdmin as isAdminUser };
+
+// --- Moderation & Feature Flags ---
+
+export interface ContentReport {
+    id: string;
+    content_type: string;
+    reporter_id: string;
+    target_id: string;
+    reason: string;
+    details?: string;
+    status: string;
+    created_at: string;
+}
+
+export interface FeatureFlag {
+    id: string;
+    name: string;
+    description?: string;
+    enabled: boolean;
+    updated_at: string;
+}
+
+export type ModerationAction = 'approve' | 'reject';
+
+export async function listReports(): Promise<ContentReport[]> {
+    const response = await apiClient.get<ContentReport[]>('/api/admin-monitoring/moderation/reports');
+    if (response.error) {
+        throw new Error(response.error.error || `HTTP ${response.error.status ?? 'error'}`);
+    }
+    return response.data ?? [];
+}
+
+export async function resolveReport(id: string, action: ModerationAction): Promise<void> {
+    const status = action === 'approve' ? 'resolved_clean' : 'resolved_removed';
+    const response = await apiClient.patch(`/api/admin-monitoring/moderation/reports/${id}`, { status });
+    if (response.error) {
+        throw new Error(response.error.error || `HTTP ${response.error.status ?? 'error'}`);
+    }
+}
+
+export async function listFeatureFlags(): Promise<FeatureFlag[]> {
+    const response = await apiClient.get<FeatureFlag[]>('/api/admin-monitoring/feature-flags');
+    if (response.error) {
+        throw new Error(response.error.error || `HTTP ${response.error.status ?? 'error'}`);
+    }
+    return response.data ?? [];
+}
+
+export async function toggleFeatureFlag(id: string, enabled: boolean): Promise<void> {
+    const response = await apiClient.patch(`/api/admin-monitoring/feature-flags/${id}`, { enabled });
+    if (response.error) {
+        throw new Error(response.error.error || `HTTP ${response.error.status ?? 'error'}`);
+    }
+}
+
+export const adminService = {
+    listReports,
+    resolveReport,
+    listFeatureFlags,
+    toggleFeatureFlag,
+};
