@@ -163,7 +163,7 @@ pub async fn evaluate_essay(
     let mut warnings: Vec<String> = Vec::new();
     let mut errors: Vec<String> = Vec::new();
 
-    let words: Vec<&str> = req.essay.trim().split_whitespace().collect();
+    let words: Vec<&str> = req.essay.split_whitespace().collect();
     let word_count = words.len();
     let min_words = if req.task_type == "Task 1" { 150 } else { 250 };
 
@@ -191,7 +191,7 @@ pub async fn evaluate_essay(
         }
     }
 
-    let sentences: Vec<&str> = req.essay.split(|c| c == '.' || c == '!' || c == '?').filter(|s| !s.trim().is_empty()).collect();
+    let sentences: Vec<&str> = req.essay.split(['.', '!', '?']).filter(|s| !s.trim().is_empty()).collect();
     let sentence_count = sentences.len();
     let average_sentence_length = if sentence_count > 0 { word_count as f64 / sentence_count as f64 } else { word_count as f64 };
 

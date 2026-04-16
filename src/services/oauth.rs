@@ -9,7 +9,6 @@ use vil::prelude::*;
 use vil::auth::VilPassword;
 
 const STATE_EXPIRY_SECS: i64 = 600;
-const PKCE_LENGTH: usize = 32;
 
 fn generate_random_string(length: usize) -> String {
     use rand::Rng;
@@ -23,21 +22,14 @@ fn generate_random_string(length: usize) -> String {
 }
 
 fn generate_pkce_challenge(verifier: &str) -> String {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-    let mut hasher = DefaultHasher::new();
-    verifier.hash(&mut hasher);
-    let hash = hasher.finish();
-    let mut bytes = hash.to_le_bytes().to_vec();
-    while bytes.len() < 32 {
-        bytes.push(bytes.len() as u8);
-    }
-    URL_SAFE_NO_PAD.encode(&bytes[..32])
+    use sha2::{Sha256, Digest};
+    let mut hasher = Sha256::new();
+    hasher.update(verifier.as_bytes());
+    let hash = hasher.finalize();
+    URL_SAFE_NO_PAD.encode(hash)
 }
 
-fn generate_pkce_verifier() -> String {
-    generate_random_string(PKCE_LENGTH)
-}
+
 
 #[vil_handler]
 pub async fn init_oauth(
@@ -51,8 +43,6 @@ pub async fn init_oauth(
         return Err(AppError::Config("Google OAuth not configured".into()));
     }
 
-    let code_verifier = generate_pkce_verifier();
-    let code_challenge = generate_pkce_challenge(&code_verifier);
     let state_token = generate_random_string(32);
 
     let now = SystemTime::now()
@@ -61,7 +51,7 @@ pub async fn init_oauth(
         .as_secs() as i64;
 
     let state_data = OAuthStateData {
-        code_verifier,
+        code_challenge: req.code_challenge.clone(),
         created_at: now,
     };
 
@@ -74,7 +64,7 @@ pub async fn init_oauth(
         state.config.google_oauth_client_id,
         urlencoding::encode(&req.redirect_uri),
         state_token,
-        code_challenge
+        req.code_challenge
     );
 
     Ok(VilResponse::ok(OAuthInitResponse {
@@ -96,17 +86,22 @@ pub async fn oauth_callback(
     let state_data = oauth_store.get(&req.state)
         .ok_or_else(|| AppError::Auth("Invalid or expired OAuth state".into()))?;
     
-    let code_verifier = state_data.code_verifier;
+    let stored_challenge = state_data.code_challenge;
     oauth_store.remove(&req.state);
 
     drop(oauth_store);
+
+    let generated_challenge = generate_pkce_challenge(&req.code_verifier);
+    if generated_challenge != stored_challenge {
+        return Err(AppError::Auth("PKCE validation failed".into()));
+    }
 
     let token_response = reqwest::Client::new()
         .post("https://oauth2.googleapis.com/token")
         .form(&[
             ("client_id", state.config.google_oauth_client_id.as_str()),
             ("code", req.code.as_str()),
-            ("code_verifier", code_verifier.as_str()),
+            ("code_verifier", req.code_verifier.as_str()),
             ("grant_type", "authorization_code"),
             ("redirect_uri", "http://localhost:3000/auth/callback"),
         ])
@@ -139,7 +134,7 @@ pub async fn oauth_callback(
         .ok_or_else(|| AppError::Auth("Missing email".into()))?;
     let name = user_info["name"].as_str().unwrap_or("Google User");
 
-    let profile = match Profile::find_where(state.pool.inner(), "username = ?", &[&google_id]).await? {
+    let profile = match Profile::find_where(state.pool.inner(), "username = ?", &[google_id]).await? {
         Some(p) => p,
         None => {
             let id = uuid::Uuid::new_v4().to_string();

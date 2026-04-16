@@ -281,7 +281,7 @@ export const useFullSimulation = (): UseFullSimulationReturn => {
 
     // ─── Submit Section Answers ─────────────────────────────────────────────
 
-    const submitSectionAnswers = useCallback((answers: Record<number, number>, timeUsed: number) => {
+    const submitSectionAnswers = useCallback(async (answers: Record<number, number>, timeUsed: number) => {
         const sectionDef = SIMULATION_SECTIONS_ORDER[currentSectionIndex];
         if (!sectionDef) return;
 
@@ -309,19 +309,6 @@ export const useFullSimulation = (): UseFullSimulationReturn => {
 
         setSectionResults(prev => [...prev, result]);
 
-        // Set adaptive difficulty for next section
-        const nextDifficulty = getAdaptiveDifficulty(accuracy);
-        setDifficulty(nextDifficulty);
-        console.log(`[FullSimulation] Section ${sectionDef.label}: ${correct}/${total} (${(accuracy * 100).toFixed(0)}%) → next difficulty: ${nextDifficulty}`);
-
-        // Check if there are more sections
-        const nextIndex = currentSectionIndex + 1;
-        if (nextIndex >= SIMULATION_SECTIONS_ORDER.length) {
-            // All sections complete → results
-            setPhase('results');
-            return;
-        }
-
         // Start break phase with background generation
         setPhase('section_break');
         setBreakTimeLeft(BREAK_DURATION_SECONDS);
@@ -339,22 +326,71 @@ export const useFullSimulation = (): UseFullSimulationReturn => {
             });
         }, 1000);
 
-        // Generate next section in background
-        generateSectionQuestions(nextIndex, nextDifficulty).then(questions => {
-            setIsGeneratingNext(false);
+        // Fetch API for next difficulty and save progress
+        try {
+            const { quizService } = await import('../../services/quiz');
+            const apiResult = await quizService.saveResult({
+                section: sectionDef.dbSection,
+                score: Math.round(accuracy * 100),
+                correct_count: correct,
+                total_questions: total,
+            });
 
-            if (questions.length > 0) {
-                setCurrentSectionIndex(nextIndex);
-                setCurrentSectionQuestions(questions);
-            } else {
-                setError(`Failed to generate questions for ${SIMULATION_SECTIONS_ORDER[nextIndex]?.label || 'next section'}`);
+            const nextDifficulty = (apiResult.next_difficulty_level as AdaptiveDifficulty) || getAdaptiveDifficulty(accuracy);
+            setDifficulty(nextDifficulty);
+            console.log(`[FullSimulation] Section ${sectionDef.label}: ${correct}/${total} (${(accuracy * 100).toFixed(0)}%) → next difficulty: ${nextDifficulty}`);
+
+            // Check if there are more sections
+            const nextIndex = currentSectionIndex + 1;
+            if (nextIndex >= SIMULATION_SECTIONS_ORDER.length) {
+                // All sections complete → results
+                setPhase('results');
+                return;
             }
-        }).catch(err => {
-            console.error('[FullSimulation] Background generation failed:', err);
-            setIsGeneratingNext(false);
-            setError('Failed to generate next section. You can try to skip the break.');
-        });
 
+            // Generate next section in background
+            generateSectionQuestions(nextIndex, nextDifficulty).then(questions => {
+                setIsGeneratingNext(false);
+
+                if (questions.length > 0) {
+                    setCurrentSectionIndex(nextIndex);
+                    setCurrentSectionQuestions(questions);
+                } else {
+                    setError(`Failed to generate questions for ${SIMULATION_SECTIONS_ORDER[nextIndex]?.label || 'next section'}`);
+                }
+            }).catch(err => {
+                console.error('[FullSimulation] Background generation failed:', err);
+                setIsGeneratingNext(false);
+                setError('Failed to generate next section. You can try to skip the break.');
+            });
+
+        } catch (e) {
+            console.error('Failed to save section result to API:', e);
+            // Fallback to local adaptive difficulty calculation
+            const nextDifficulty = getAdaptiveDifficulty(accuracy);
+            setDifficulty(nextDifficulty);
+
+            // Check if there are more sections
+            const nextIndex = currentSectionIndex + 1;
+            if (nextIndex >= SIMULATION_SECTIONS_ORDER.length) {
+                setPhase('results');
+                return;
+            }
+
+            generateSectionQuestions(nextIndex, nextDifficulty).then(questions => {
+                setIsGeneratingNext(false);
+                if (questions.length > 0) {
+                    setCurrentSectionIndex(nextIndex);
+                    setCurrentSectionQuestions(questions);
+                } else {
+                    setError(`Failed to generate questions for ${SIMULATION_SECTIONS_ORDER[nextIndex]?.label || 'next section'}`);
+                }
+            }).catch(err => {
+                console.error('[FullSimulation] Background generation failed:', err);
+                setIsGeneratingNext(false);
+                setError('Failed to generate next section. You can try to skip the break.');
+            });
+        }
     }, [currentSectionIndex, currentSectionQuestions, difficulty, generateSectionQuestions]);
 
     // ─── Skip Break ─────────────────────────────────────────────────────────

@@ -634,7 +634,8 @@ export interface PeerReviewSubmission {
   claimed_by?: string;
   claimed_at?: string;
   created_at: string;
-  expires_at: string;
+  expires_at?: string;
+  difficulty_level?: 'beginner' | 'intermediate' | 'advanced' | string;
 }
 
 export interface InlineCorrection {

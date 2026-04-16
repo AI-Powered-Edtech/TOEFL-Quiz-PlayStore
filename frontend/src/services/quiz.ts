@@ -57,6 +57,24 @@ export interface SaveResultRequest {
   total_questions: number;
 }
 
+export interface AdaptiveMetricsResponse {
+  total_questions: number;
+  correct_answers: number;
+  accuracy_by_section: Record<string, { correct: number; total: number }>;
+  accuracy_by_skill: Record<string, { correct: number; total: number }>;
+  recent_accuracy: number[];
+  average_response_time: number;
+  last_updated: number;
+  current_difficulty: string;
+}
+
+export interface RecordAnswerRequest {
+  correct: boolean;
+  section: string;
+  skill_id: string;
+  response_time_ms: number;
+}
+
 export interface ProgressResponse {
   total_quizzes: number;
   total_correct: number;
@@ -95,8 +113,8 @@ export const quizService = {
     return response.data || [];
   },
 
-  async saveResult(data: SaveResultRequest): Promise<{ ok: boolean; id?: string; xp_earned?: number; error?: string }> {
-    const response = await api.post<{ ok: boolean; id: string; xp_earned: number }>('/api/quiz/results', data);
+  async saveResult(data: SaveResultRequest): Promise<{ ok: boolean; id?: string; xp_earned?: number; next_difficulty_level?: string; error?: string }> {
+    const response = await api.post<{ ok: boolean; id: string; xp_earned: number; next_difficulty_level?: string }>('/api/quiz/results', data);
     if (response.error) {
       return { ok: false, error: response.error.error };
     }
@@ -105,6 +123,7 @@ export const quizService = {
         ok: response.data.ok,
         id: response.data.id,
         xp_earned: response.data.xp_earned,
+        next_difficulty_level: response.data.next_difficulty_level,
       };
     }
     return { ok: false, error: 'Unknown error' };
@@ -117,6 +136,16 @@ export const quizService = {
 
   async progress(): Promise<ProgressResponse | null> {
     const response = await api.get<ProgressResponse>('/api/quiz/progress');
+    return response.data || null;
+  },
+
+  async getAdaptiveMetrics(): Promise<AdaptiveMetricsResponse | null> {
+    const response = await api.get<AdaptiveMetricsResponse>('/api/quiz/adaptive-metrics');
+    return response.data || null;
+  },
+
+  async recordAnswer(data: RecordAnswerRequest): Promise<AdaptiveMetricsResponse | null> {
+    const response = await api.post<AdaptiveMetricsResponse>('/api/quiz/record-answer', data);
     return response.data || null;
   },
 

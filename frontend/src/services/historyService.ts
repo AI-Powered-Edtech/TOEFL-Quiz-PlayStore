@@ -108,12 +108,12 @@ export const getHistory = async (): Promise<QuizResult[]> => {
     }
 };
 
-export const saveQuizResult = async (result: QuizResult, userId?: string): Promise<void> => {
+export const saveQuizResult = async (result: QuizResult, userId?: string): Promise<{ nextDifficulty?: string }> => {
     try {
         appendLocalHistory(result);
 
         if (!userId || !secureStorage.getItem('access_token')) {
-            return;
+            return {};
         }
 
         const apiResult = await quizService.saveResult({
@@ -127,12 +127,16 @@ export const saveQuizResult = async (result: QuizResult, userId?: string): Promi
         if (!apiResult.ok) {
             console.warn('[HistoryService] Failed to save to API:', apiResult.error);
             syncQueueService.enqueue('saveQuizResult', result);
+            return {};
         }
+        
+        return { nextDifficulty: apiResult.next_difficulty_level };
     } catch (error) {
         if (userId && secureStorage.getItem('access_token')) {
             console.warn('[HistoryService] Error saving result, queued for sync:', error);
             syncQueueService.enqueue('saveQuizResult', result);
         }
+        return {};
     }
 };
 

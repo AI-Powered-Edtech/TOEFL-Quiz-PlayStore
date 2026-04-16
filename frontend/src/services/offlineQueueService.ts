@@ -259,9 +259,10 @@ class OfflineQueueService {
 
   private async executeOperation(operation: QueuedOperation): Promise<void> {
     const serviceMap: Record<string, unknown> = {
-      quiz: () => import('./quizService'),
-      auth: () => import('./authService'),
+      quiz: () => import('./quiz'),
+      auth: () => import('./auth'),
       progress: () => import('./progressService'),
+      peerReview: () => import('./peerReviewService'),
     };
 
     const serviceLoader = serviceMap[operation.service];
@@ -269,7 +270,7 @@ class OfflineQueueService {
       throw new Error(`Unknown service: ${operation.service}`);
     }
 
-    const module = await serviceLoader();
+    const module: any = await (serviceLoader as any)();
     const service = module[operation.service];
     if (!service || typeof service[operation.method] !== 'function') {
       throw new Error(`Unknown method: ${operation.service}.${operation.method}`);
@@ -299,4 +300,5 @@ class OfflineQueueService {
 
 const offlineQueue = new OfflineQueueService();
 
-export { offlineQueue, OfflineQueueService, QueuedOperation, RETRY_CONFIG };
+export type { QueuedOperation };
+export { offlineQueue, OfflineQueueService, RETRY_CONFIG };

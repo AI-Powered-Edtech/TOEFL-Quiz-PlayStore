@@ -55,6 +55,25 @@ export interface TokenRotateResponse {
   refresh_token: string;
 }
 
+export function generateCodeVerifier(): string {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode(...Array.from(array)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+export async function generateCodeChallenge(verifier: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...Array.from(new Uint8Array(digest))))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
 export const authService = {
   async register(
     data: RegisterRequest
@@ -197,6 +216,10 @@ export const authService = {
 
   async initOAuth(redirectUri: string): Promise<OAuthInitResponse | null> {
     try {
+      const codeVerifier = generateCodeVerifier();
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+      secureStorage.setItem('pkce_code_verifier', codeVerifier);
+
       const response = await withRetry(
         () =>
           api.post<OAuthInitResponse>(
@@ -204,6 +227,7 @@ export const authService = {
             {
               provider: 'google',
               redirect_uri: redirectUri,
+              code_challenge: codeChallenge,
             },
             { timeout: TIMEOUTS.auth }
           ),
@@ -220,6 +244,11 @@ export const authService = {
     state: string
   ): Promise<{ ok: boolean; loading?: boolean; error?: string }> {
     try {
+      const codeVerifier = secureStorage.getItem('pkce_code_verifier');
+      if (!codeVerifier) {
+        return { ok: false, error: 'Missing PKCE verifier' };
+      }
+
       const response = await withRetry(
         () =>
           api.post<AuthResponse>(
@@ -227,11 +256,16 @@ export const authService = {
             {
               code,
               state,
+              code_verifier: codeVerifier,
             },
             { timeout: TIMEOUTS.auth }
           ),
         RETRY_CONFIG
       );
+      
+      // Cleanup verifier after use
+      secureStorage.removeItem('pkce_code_verifier');
+      
       if (response.error) {
         return { ok: false, error: response.error.error };
       }

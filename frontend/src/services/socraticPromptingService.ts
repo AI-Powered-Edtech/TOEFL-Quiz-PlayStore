@@ -208,7 +208,7 @@ export const socraticChat = async (
             max_tokens: 500,
         });
 
-        return { response: response.content };
+        return { response: response.data };
     } catch (error) {
         return {
             response: '',

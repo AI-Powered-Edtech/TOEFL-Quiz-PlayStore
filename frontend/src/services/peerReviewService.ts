@@ -2,11 +2,11 @@ import { PeerReviewSubmission, PeerReview, ReviewerStats, InlineCorrection } fro
 import * as analytics from '../utils/analytics';
 import { sanitizeText } from '../utils/inputValidation';
 import { peerReviewLogger } from '../utils/monitoring';
+import { offlineQueue } from './offlineQueueService';
+import { apiClient } from './apiClient';
 
 import { socialService } from './social';
 
-const SUBMISSIONS_KEY = 'peer_review_submissions_';
-const REVIEWS_KEY = 'peer_reviews_';
 const REVIEWER_STATS_KEY = 'reviewer_stats_';
 const SUBMISSION_LIMITS_KEY = 'peer_review_limits_';
 
@@ -16,36 +16,10 @@ interface SubmissionLimit {
     lastResetDate: string;
 }
 
-const getSubmissionsKey = (userId: string): string => `${SUBMISSIONS_KEY}${userId}`;
-const getReviewsKey = (userId: string): string => `${REVIEWS_KEY}${userId}`;
 const getStatsKey = (userId: string): string => `${REVIEWER_STATS_KEY}${userId}`;
 const getLimitsKey = (userId: string): string => `${SUBMISSION_LIMITS_KEY}${userId}`;
 
-const getLocalSubmissions = (): PeerReviewSubmission[] => {
-    try {
-        const stored = localStorage.getItem('peer_review_all_submissions');
-        return stored ? JSON.parse(stored) : [];
-    } catch {
-        return [];
-    }
-};
 
-const saveLocalSubmissions = (submissions: PeerReviewSubmission[]): void => {
-    localStorage.setItem('peer_review_all_submissions', JSON.stringify(submissions));
-};
-
-const getLocalReviews = (): PeerReview[] => {
-    try {
-        const stored = localStorage.getItem('peer_review_all_reviews');
-        return stored ? JSON.parse(stored) : [];
-    } catch {
-        return [];
-    }
-};
-
-const saveLocalReviews = (reviews: PeerReview[]): void => {
-    localStorage.setItem('peer_review_all_reviews', JSON.stringify(reviews));
-};
 
 export const checkSubmissionLimit = async (userId: string): Promise<{
     allowed: boolean;
@@ -116,9 +90,31 @@ export const submitEssay = async (
             created_at: new Date().toISOString()
         } as PeerReviewSubmission;
 
-        const submissions = getLocalSubmissions();
-        submissions.unshift(submission);
-        saveLocalSubmissions(submissions);
+        // Optimistic cache using offline queue
+        await offlineQueue.enqueue({
+            service: 'peerReview',
+            method: 'submitEssayApi',
+            params: {
+                essay_content: essayContent,
+                prompt,
+                task_type: taskType,
+                is_anonymous: isAnonymous
+            },
+            priority: 1
+        });
+
+        // Or we can directly call API if online, offlineQueue processes later if offline
+        if (navigator.onLine) {
+            const res = await apiClient.post<PeerReviewSubmission>('/api/writing/peer-review/submissions', {
+                essay_content: essayContent,
+                prompt,
+                task_type: taskType,
+                is_anonymous: isAnonymous
+            });
+            if (res.data) {
+                Object.assign(submission, res.data);
+            }
+        }
 
         const limitsKey = getLimitsKey(userId);
         const today = new Date().toISOString().split('T')[0];
@@ -138,22 +134,23 @@ export const submitEssay = async (
     }
 };
 
+// Required method for offlineQueueService execution
+export const submitEssayApi = async (data: any) => {
+    await apiClient.post('/api/writing/peer-review/submissions', data);
+};
+
 export const getReviewQueue = async (
     userId: string,
     page: number = 1,
     limit: number = 10
 ): Promise<PeerReviewSubmission[]> => {
     try {
-        const offset = (page - 1) * limit;
-        const submissions = getLocalSubmissions();
-        
-        const queue = submissions.filter(s => 
-            s.status === 'pending' && 
-            !s.claimed_by && 
-            s.user_id !== userId
-        ).slice(offset, offset + limit);
-
-        return queue;
+        const res = await apiClient.get<PeerReviewSubmission[]>('/api/writing/peer-review/queue');
+        if (res.data) {
+            const offset = (page - 1) * limit;
+            return res.data.slice(offset, offset + limit);
+        }
+        return [];
     } catch (error) {
         peerReviewLogger.error('[PeerReview] Get queue failed:', error as any);
         return [];
@@ -175,7 +172,12 @@ export const getFilteredReviewQueue = async (
 ): Promise<{ submissions: PeerReviewSubmission[]; total: number }> => {
     try {
         const offset = (page - 1) * limit;
-        let submissions = getLocalSubmissions().filter(s => 
+        const res = await apiClient.get<PeerReviewSubmission[]>('/api/writing/peer-review/queue');
+        if (!res.data) {
+            return { submissions: [], total: 0 };
+        }
+
+        let submissions = res.data.filter(s => 
             s.status === 'pending' && 
             !s.claimed_by && 
             s.user_id !== userId
@@ -228,18 +230,8 @@ export const claimEssay = async (
     reviewerId: string
 ): Promise<boolean> => {
     try {
-        const submissions = getLocalSubmissions();
-        const index = submissions.findIndex(s => s.id === submissionId && !s.claimed_by);
-        
-        if (index === -1) return false;
-
-        submissions[index] = {
-            ...submissions[index],
-            claimed_by: reviewerId,
-            claimed_at: new Date().toISOString(),
-            status: 'in_review'
-        };
-        saveLocalSubmissions(submissions);
+        const res = await apiClient.patch(`/api/writing/peer-review/submissions/${submissionId}/claim`);
+        if (res.error) return false;
 
         analytics.trackClaim(reviewerId, submissionId).catch(() => {});
         return true;
@@ -256,11 +248,11 @@ export const getMySubmissions = async (
 ): Promise<PeerReviewSubmission[]> => {
     try {
         const offset = (page - 1) * limit;
-        const submissions = getLocalSubmissions()
-            .filter(s => s.user_id === userId)
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-        return submissions.slice(offset, offset + limit);
+        const res = await apiClient.get<PeerReviewSubmission[]>('/api/writing/peer-review/my-submissions');
+        if (res.data) {
+            return res.data.slice(offset, offset + limit);
+        }
+        return [];
     } catch (error) {
         peerReviewLogger.error('[PeerReview] Get my submissions failed:', error as any);
         return [];
@@ -304,33 +296,40 @@ export const submitReview = async (
             created_at: new Date().toISOString()
         } as PeerReview;
 
-        const reviews = getLocalReviews();
-        reviews.unshift(review);
-        saveLocalReviews(reviews);
+        // Optimistic cache using offline queue
+        await offlineQueue.enqueue({
+            service: 'peerReview',
+            method: 'submitReviewApi',
+            params: {
+                submission_id: submissionId,
+                task_response_score: scores.taskResponse,
+                coherence_score: scores.coherence,
+                lexical_score: scores.lexical,
+                grammar_score: scores.grammar,
+                strengths: feedback.strengths,
+                weaknesses: feedback.weaknesses,
+                suggestions: feedback.suggestions,
+                inline_corrections: JSON.stringify(inlineCorrections),
+                time_spent_seconds: timeSpentSeconds
+            },
+            priority: 1
+        });
 
-        const submissions = getLocalSubmissions();
-        const subIndex = submissions.findIndex(s => s.id === submissionId);
-        if (subIndex !== -1) {
-            submissions[subIndex].status = 'completed';
-            saveLocalSubmissions(submissions);
-
-            const submissionData = submissions[subIndex];
-            if (submissionData.user_id) {
-                try {
-                    await socialService.createNotification({
-                        user_id: submissionData.user_id,
-                        type: 'peer_review',
-                        title: 'Essay Review Completed',
-                        message: `Your essay received a Band ${overallBand} review!`,
-                        data: {
-                            submission_id: submissionId,
-                            review_id: review.id,
-                            band_score: overallBand
-                        }
-                    });
-                } catch (e) {
-                    peerReviewLogger.error('[PeerReview] Notification failed:', e);
-                }
+        if (navigator.onLine) {
+            const res = await apiClient.post<any>('/api/writing/peer-review/reviews', {
+                submission_id: submissionId,
+                task_response_score: scores.taskResponse,
+                coherence_score: scores.coherence,
+                lexical_score: scores.lexical,
+                grammar_score: scores.grammar,
+                strengths: feedback.strengths,
+                weaknesses: feedback.weaknesses,
+                suggestions: feedback.suggestions,
+                inline_corrections: JSON.stringify(inlineCorrections),
+                time_spent_seconds: timeSpentSeconds
+            });
+            if (res.data && res.data.id) {
+                review.id = res.data.id;
             }
         }
 
@@ -348,14 +347,20 @@ export const submitReview = async (
     }
 };
 
+// Required method for offlineQueueService execution
+export const submitReviewApi = async (data: any) => {
+    await apiClient.post('/api/writing/peer-review/reviews', data);
+};
+
 export const getReviewsForSubmission = async (
     submissionId: string
 ): Promise<PeerReview[]> => {
     try {
-        const reviews = getLocalReviews()
-            .filter(r => r.submission_id === submissionId)
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        return reviews;
+        const res = await apiClient.get<PeerReview[]>(`/api/writing/peer-review/submissions/${submissionId}/reviews`);
+        if (res.data) {
+            return res.data;
+        }
+        return [];
     } catch (error) {
         peerReviewLogger.error('[PeerReview] Get reviews failed:', error as any);
         return [];
@@ -369,11 +374,11 @@ export const getMyReviews = async (
 ): Promise<PeerReview[]> => {
     try {
         const offset = (page - 1) * limit;
-        const reviews = getLocalReviews()
-            .filter(r => r.reviewer_id === userId)
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-        return reviews.slice(offset, offset + limit);
+        const res = await apiClient.get<PeerReview[]>('/api/writing/peer-review/my-reviews');
+        if (res.data) {
+            return res.data.slice(offset, offset + limit);
+        }
+        return [];
     } catch (error) {
         peerReviewLogger.error('[PeerReview] Get my reviews failed:', error as any);
         return [];
@@ -387,25 +392,12 @@ export const rateReview = async (
     comment?: string
 ): Promise<boolean> => {
     try {
-        const reviews = getLocalReviews();
-        const reviewIndex = reviews.findIndex(r => r.id === reviewId);
-
-        if (reviewIndex === -1) return false;
-
-        const submissions = getLocalSubmissions();
-        const submission = submissions.find(s => s.id === reviews[reviewIndex].submission_id);
-
-        if (!submission || submission.user_id !== userId) {
-            throw new Error('Unauthorized to rate this review');
-        }
-
-        reviews[reviewIndex].helpfulness_rating = rating;
-        reviews[reviewIndex].author_comment = comment;
-        saveLocalReviews(reviews);
-
-        if (reviews[reviewIndex].reviewer_id) {
-            await updateReviewerStats(reviews[reviewIndex].reviewer_id);
-        }
+        const res = await apiClient.patch(`/api/writing/peer-review/reviews/${reviewId}/rate`, {
+            rating,
+            comment
+        });
+        
+        if (res.error) return false;
 
         return true;
     } catch (error) {
@@ -415,28 +407,14 @@ export const rateReview = async (
 };
 
 const updateReviewerStats = async (userId: string): Promise<void> => {
-    try {
-        const reviews = getLocalReviews().filter(r => r.reviewer_id === userId);
-        
-        const stats: ReviewerStats = {
-            user_id: userId,
-            total_reviews: reviews.length,
-            avg_helpfulness: reviews.filter(r => r.helpfulness_rating).reduce((sum, r) => sum + (r.helpfulness_rating || 0), 0) / Math.max(1, reviews.filter(r => r.helpfulness_rating).length),
-            xp_earned: reviews.length * 10,
-            tier: reviews.length >= 50 ? 'Expert' : reviews.length >= 20 ? 'Advanced' : reviews.length >= 5 ? 'Intermediate' : 'Novice'
-        } as ReviewerStats;
-
-        localStorage.setItem(getStatsKey(userId), JSON.stringify(stats));
-    } catch (error) {
-        peerReviewLogger.error('[PeerReview] Update stats failed:', error as any);
-    }
+    // Stats are now updated on the backend when a review is submitted
 };
 
 export const getReviewerStats = async (userId: string): Promise<ReviewerStats | null> => {
     try {
-        const stored = localStorage.getItem(getStatsKey(userId));
-        if (stored) {
-            return JSON.parse(stored);
+        const res = await apiClient.get<ReviewerStats>(`/api/writing/peer-review/users/${userId}/stats`);
+        if (res.data) {
+            return res.data;
         }
         return {
             user_id: userId,
@@ -452,17 +430,11 @@ export const getReviewerStats = async (userId: string): Promise<ReviewerStats | 
 
 export const getTopReviewers = async (limit: number = 10): Promise<ReviewerStats[]> => {
     try {
-        const allStats: ReviewerStats[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key?.startsWith(REVIEWER_STATS_KEY)) {
-                const stats = JSON.parse(localStorage.getItem(key) || '{}');
-                allStats.push(stats);
-            }
+        const res = await apiClient.get<ReviewerStats[]>(`/api/writing/peer-review/top-reviewers?limit=${limit}`);
+        if (res.data) {
+            return res.data;
         }
-        return allStats
-            .sort((a, b) => (b.total_reviews || 0) - (a.total_reviews || 0))
-            .slice(0, limit);
+        return [];
     } catch (error) {
         peerReviewLogger.error('[PeerReview] Get top reviewers failed:', error as any);
         return [];

@@ -56,6 +56,7 @@ pub struct SaveResultResponse {
     pub ok: bool,
     pub id: String,
     pub xp_earned: i64,
+    pub next_difficulty_level: Option<String>,
 }
 
 // ── Quiz ──
