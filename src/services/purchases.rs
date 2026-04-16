@@ -2,9 +2,12 @@ use crate::error::AppError;
 use crate::middleware::auth::Claims;
 use crate::models::profile::Profile;
 use crate::models::purchases::{VerifyPurchaseRequest, VerifyPurchaseResponse};
+use base64::engine::general_purpose::STANDARD as B64;
+use base64::Engine;
 use chrono::{TimeZone, Utc};
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use vil::prelude::*;
 
 #[derive(Debug, Deserialize)]
@@ -177,4 +180,109 @@ pub async fn verify(
         expiry_date,
         is_active,
     }))
+}
+
+#[derive(Debug, Serialize)]
+pub struct WebhookAck {
+    pub ok: bool,
+}
+
+// Google RTDN notificationType constants.
+const NTYPE_RECOVERED: i64 = 1;
+const NTYPE_RENEWED: i64 = 2;
+const NTYPE_CANCELED: i64 = 3;
+const NTYPE_PURCHASED: i64 = 4;
+const NTYPE_REVOKED: i64 = 12;
+const NTYPE_EXPIRED: i64 = 13;
+
+/// Google Play Real-time Developer Notifications handler.
+/// Returns 200 even on malformed payloads — Google retries on non-2xx.
+#[vil_handler]
+pub async fn webhook(
+    ctx: ServiceCtx,
+    body: ShmSlice,
+) -> Result<VilResponse<WebhookAck>, AppError> {
+    let state = ctx
+        .state::<crate::AppState>()
+        .map_err(|_| AppError::Internal("state".into()))?;
+
+    if let Err(e) = process_rtdn(state, &body).await {
+        vil::prelude::vil_log::app_log!(Warn, "purchases.webhook_ignored", {
+            reason: e.to_string()
+        });
+    }
+
+    Ok(VilResponse::ok(WebhookAck { ok: true }))
+}
+
+async fn process_rtdn(state: &crate::AppState, body: &ShmSlice) -> Result<(), String> {
+    let envelope: Value = body.json().map_err(|e| format!("invalid json: {e}"))?;
+
+    let data_b64 = envelope
+        .get("message")
+        .and_then(|m| m.get("data"))
+        .and_then(|d| d.as_str())
+        .ok_or_else(|| "missing message.data".to_string())?;
+
+    let decoded = B64
+        .decode(data_b64)
+        .map_err(|e| format!("base64 decode: {e}"))?;
+
+    let payload: Value =
+        serde_json::from_slice(&decoded).map_err(|e| format!("inner json: {e}"))?;
+
+    let notif = payload
+        .get("subscriptionNotification")
+        .ok_or_else(|| "missing subscriptionNotification".to_string())?;
+
+    let ntype = notif
+        .get("notificationType")
+        .and_then(|v| v.as_i64())
+        .ok_or_else(|| "missing notificationType".to_string())?;
+
+    let purchase_token = notif
+        .get("purchaseToken")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "missing purchaseToken".to_string())?;
+
+    let subscription_id = notif
+        .get("subscriptionId")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "missing subscriptionId".to_string())?;
+
+    let user_id: Option<String> =
+        sqlx::query_scalar("SELECT from_user_id FROM transactions WHERE order_id = ? LIMIT 1")
+            .bind(purchase_token)
+            .fetch_optional(state.pool.inner())
+            .await
+            .map_err(|e| format!("lookup user: {e}"))?
+            .flatten();
+
+    let Some(user_id) = user_id else {
+        return Err(format!(
+            "no user for purchase_token (type={ntype}, sub={subscription_id})"
+        ));
+    };
+
+    let new_tier = match ntype {
+        NTYPE_PURCHASED | NTYPE_RENEWED | NTYPE_RECOVERED => product_to_tier(subscription_id)
+            .ok_or_else(|| format!("unknown subscriptionId: {subscription_id}"))?,
+        NTYPE_CANCELED | NTYPE_EXPIRED | NTYPE_REVOKED => "free",
+        _ => return Ok(()),
+    };
+
+    Profile::q()
+        .update()
+        .set("subscription_tier", new_tier.to_string())
+        .where_eq("id", &user_id)
+        .execute(state.pool.inner())
+        .await
+        .map_err(|e| format!("update tier: {e}"))?;
+
+    vil::prelude::vil_log::app_log!(Info, "purchases.webhook_applied", {
+        user_id: user_id.clone(),
+        tier: new_tier.to_string(),
+        ntype: ntype
+    });
+    Ok(())
 }
