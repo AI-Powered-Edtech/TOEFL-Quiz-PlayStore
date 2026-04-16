@@ -95,6 +95,7 @@ async fn main() {
 
     let purchases_svc = ServiceProcess::new("purchases")
         .endpoint(Method::POST, "/verify", post(purchases::verify))
+        .endpoint(Method::POST, "/webhook", post(purchases::webhook))
         .state(state.clone());
 
     let writing_svc = ServiceProcess::new("writing")
