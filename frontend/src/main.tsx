@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/react';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
+import './i18n';
 import App from './App';
 import { SentryErrorBoundary } from './components/SentryErrorBoundary';
 import { reportWebVitals } from './utils/reportWebVitals';

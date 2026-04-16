@@ -1,0 +1,33 @@
+{
+  "common": {
+    "loading": "Memuat...",
+    "cancel": "Batal",
+    "confirm": "Konfirmasi",
+    "save": "Simpan",
+    "back": "Kembali"
+  },
+  "nav": {
+    "home": "Beranda",
+    "practice": "Latihan",
+    "social": "Sosial",
+    "more": "Lainnya",
+    "blog": "Blog"
+  },
+  "settings": {
+    "title": "Pengaturan",
+    "preferences": "Preferensi",
+    "sound_effects": "Efek Suara",
+    "notifications": "Notifikasi",
+    "dark_mode": "Mode Gelap",
+    "my_plan": "Paket Saya",
+    "upgrade_to_pro": "Upgrade ke Pro",
+    "support": "Dukungan",
+    "tutorial": "Lihat Tutorial Fitur"
+  },
+  "more": {
+    "ai_studio": "AI Studio",
+    "essentials": "Esensial",
+    "preferences": "Preferensi",
+    "sign_out": "Keluar dari Sesi"
+  }
+}

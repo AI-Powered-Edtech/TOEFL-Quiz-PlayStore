@@ -4,6 +4,7 @@ import {
     TrendingUp, Zap, Shield, GraduationCap, Sparkles, ArrowLeft, Trophy, Activity
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { featureFlagService } from '../services/featureFlagService';
 import { AppView, UserProgress } from '../types';
@@ -91,6 +92,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ icon: Icon, label, onClick, iconCol
 // Main Component: MoreHub
 // ----------------------------------------------------------------------
 export const MoreHub: React.FC<MoreHubProps> = ({ onNavigate, onSignOut, user, progress, jailCount = 0 }) => {
+    const { t } = useTranslation();
 
 
 
@@ -190,7 +192,7 @@ export const MoreHub: React.FC<MoreHubProps> = ({ onNavigate, onSignOut, user, p
                     <div className="mb-8">
                         <div className="flex items-center gap-2 mb-4 px-2">
                             <Sparkles className="w-4 h-4 text-indigo-500" />
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">AI Studio</span>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('more.ai_studio')}</span>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <FeatureCard
@@ -214,7 +216,7 @@ export const MoreHub: React.FC<MoreHubProps> = ({ onNavigate, onSignOut, user, p
                     <div className="mb-8">
                         <div className="flex items-center gap-2 mb-4 px-2">
                             <Zap className="w-4 h-4 text-amber-500" />
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Essentials</span>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('more.essentials')}</span>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
 
@@ -241,7 +243,7 @@ export const MoreHub: React.FC<MoreHubProps> = ({ onNavigate, onSignOut, user, p
                     <div className="mb-8">
                         <div className="flex items-center gap-2 mb-4 px-2">
                             <Settings className="w-4 h-4 text-slate-400" />
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Preferences</span>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('more.preferences')}</span>
                         </div>
 
                         <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
@@ -267,7 +269,7 @@ export const MoreHub: React.FC<MoreHubProps> = ({ onNavigate, onSignOut, user, p
                         className="w-full py-4 rounded-2xl border border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-100 transition-colors active:scale-95"
                     >
                         <LogOut className="w-4 h-4" />
-                        Sign Out Session
+                        {t('more.sign_out')}
                     </button>
 
                     {/* Footer Brand */}
