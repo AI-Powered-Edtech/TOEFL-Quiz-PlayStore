@@ -1,12 +1,16 @@
 
-import { Bell, Volume2, Moon, Trash2, Shield, CircleHelp, ArrowLeft, Zap, Crown, BookOpen } from 'lucide-react';
+import { Bell, Volume2, Moon, Trash2, Shield, CircleHelp, ArrowLeft, Zap, Crown, BookOpen, Download, UserX } from 'lucide-react';
 import React from 'react';
 
 import { useSubscription } from '../hooks/useSubscription';
+import authService from '../services/auth';
+import { useAuthStore } from '../stores/useAuthStore';
 import { AppView } from '../types';
 
 import { Button } from './Button';
 import PaywallSheet from './PaywallSheet';
+import { ConfirmDialog } from './ui/ConfirmDialog';
+import { ToastContainer, useToast } from './ui/Toast';
 
 
 interface SettingsProps {
@@ -15,8 +19,49 @@ interface SettingsProps {
 
 export const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
     const [showPaywall, setShowPaywall] = React.useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
+    const [exporting, setExporting] = React.useState(false);
     const { tier, tierName, tierColor, tierIcon, tokenUsage, loading: subLoading } = useSubscription();
+    const user = useAuthStore((s) => s.user);
+    const { toasts, removeToast, success, error: showError, info } = useToast();
 
+    const username = user?.username || 'me';
+    const deleteConfirmText = `DELETE-${username}`;
+
+    const handleExport = async () => {
+        if (exporting) return;
+        setExporting(true);
+        info('Preparing your data...');
+        try {
+            await authService.exportMyData(username);
+            success('Downloaded!');
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Export failed';
+            if (message === 'NOT_IMPLEMENTED') {
+                showError('Feature not yet deployed — contact support');
+            } else {
+                showError(`Export failed: ${message}`);
+            }
+        } finally {
+            setExporting(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        try {
+            await authService.deleteMyAccount(deleteConfirmText);
+            localStorage.clear();
+            window.location.href = '/';
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Delete failed';
+            if (message === 'NOT_IMPLEMENTED') {
+                showError('Feature not yet deployed');
+            } else {
+                showError(`Delete failed: ${message}`);
+            }
+            setShowDeleteDialog(false);
+        }
+    };
 
     return (
         <div className="flex flex-col h-full bg-slate-50">
@@ -206,6 +251,53 @@ export const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                         </div>
                     </div>
 
+                    {/* Account & Data Section */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="px-5 py-4 border-b border-slate-200 bg-slate-50">
+                            <h2 className="font-bold text-slate-700 text-sm uppercase tracking-wider">Account & Data</h2>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center min-w-0">
+                                    <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mr-4 flex-shrink-0">
+                                        <Download className="w-5 h-5" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className="font-bold text-slate-800 text-sm">Export my data</h3>
+                                        <p className="text-xs text-slate-500 mt-0.5">Download a JSON copy of your account data</p>
+                                    </div>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    onClick={handleExport}
+                                    isLoading={exporting}
+                                    disabled={exporting}
+                                >
+                                    Export
+                                </Button>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center min-w-0">
+                                    <div className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center mr-4 flex-shrink-0 border border-red-200">
+                                        <UserX className="w-5 h-5" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className="font-bold text-slate-800 text-sm">Delete my account</h3>
+                                        <p className="text-xs text-slate-500 mt-0.5">Permanently remove your account and data</p>
+                                    </div>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                                    onClick={() => setShowDeleteDialog(true)}
+                                >
+                                    Delete
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Danger Zone */}
                     <div className="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
                         <div className="px-5 py-4 border-b border-red-100 bg-red-50">
@@ -240,6 +332,19 @@ export const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                 onClose={() => setShowPaywall(false)}
                 currentTier={tier}
             />
+
+            <ConfirmDialog
+                open={showDeleteDialog}
+                title="Delete account"
+                description="This will permanently delete your account and all associated data. This action cannot be undone."
+                confirmText={deleteConfirmText}
+                confirmLabel="Delete account"
+                confirmButtonClass="bg-red-600 hover:bg-red-700 text-white"
+                onConfirm={handleDeleteAccount}
+                onClose={() => setShowDeleteDialog(false)}
+            />
+
+            <ToastContainer toasts={toasts} onRemove={removeToast} />
         </div>
     );
 };

@@ -290,6 +290,48 @@ export const authService = {
     }
   },
 
+  async exportMyData(username?: string): Promise<void> {
+    const accessToken = secureStorage.getItem('access_token');
+    if (!accessToken) throw new Error('NOT_AUTHENTICATED');
+
+    const base = (import.meta.env.VITE_API_URL as string | undefined) || '';
+    const res = await fetch(`${base}/api/auth/export`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (res.status === 404) throw new Error('NOT_IMPLEMENTED');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    try {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `toeflquiz-export-${username || 'me'}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  },
+
+  async deleteMyAccount(confirm: string): Promise<void> {
+    const accessToken = secureStorage.getItem('access_token');
+    if (!accessToken) throw new Error('NOT_AUTHENTICATED');
+
+    const base = (import.meta.env.VITE_API_URL as string | undefined) || '';
+    const res = await fetch(`${base}/api/auth/account`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ confirm }),
+    });
+    if (res.status === 404) throw new Error('NOT_IMPLEMENTED');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  },
+
   async rotateTokens(): Promise<{ ok: boolean; access_token?: string }> {
     const refreshToken = secureStorage.getItem('refresh_token');
     if (!refreshToken) {
