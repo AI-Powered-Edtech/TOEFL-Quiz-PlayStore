@@ -1,5 +1,5 @@
 import { ValidationError } from '../types/service-types';
-import { CanonicalQuestionV1 } from '../types';
+import { CanonicalQuestionV1, QuizData, SectionType } from '../types';
 
 interface ValidationResult<T> {
   isValid: boolean;
@@ -146,6 +146,28 @@ export function validateCanonicalQuestion(q: any): q is CanonicalQuestionV1 {
   if (!q.metadata || typeof q.metadata !== 'object') return false;
   if (!['ai', 'db', 'pdf'].includes(q.metadata.source)) return false;
   return true;
+}
+
+export function validateQuestionStrictly(
+  q: any,
+  skillId: string,
+  section: SectionType
+): q is QuizData {
+  if (!validateCanonicalQuestion(q)) return false;
+
+  const numericSkillId = parseInt(skillId.replace(/\D/g, ''), 10);
+  if (Number.isFinite(numericSkillId) && q.skill_id !== numericSkillId) return false;
+
+  const expectedSection =
+    section === 'LISTENING'
+      ? 'listening'
+      : section === 'READING'
+        ? 'reading'
+        : section === 'WRITTEN'
+          ? 'written'
+          : 'structure';
+
+  return q.section === expectedSection;
 }
 
 export type { ValidationResult };

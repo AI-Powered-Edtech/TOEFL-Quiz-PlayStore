@@ -164,7 +164,9 @@ class QuestionBankService {
 
         const tx = db.transaction('questions', 'readwrite');
         for (const q of toDelete) {
-            await tx.store.delete(q.id);
+            if (q.id) {
+                await tx.store.delete(q.id);
+            }
         }
         await tx.done;
 
@@ -204,13 +206,16 @@ class QuestionBankService {
         return JSON.stringify(all, null, 2);
     }
 
-    async importQuestionsToBank(questions: any[]): Promise<{ added: number }> {
+    async importQuestionsToBank(
+        questions: any[]
+    ): Promise<{ added: number; savedQuestions: CanonicalQuestionV1[] }> {
         try {
-            await this.saveQuestions(questions as CanonicalQuestionV1[]);
-            return { added: questions.length };
+            const savedQuestions = questions as CanonicalQuestionV1[];
+            await this.saveQuestions(savedQuestions);
+            return { added: savedQuestions.length, savedQuestions };
         } catch (e) {
             console.error('[QuestionBank] Import to bank failed:', e);
-            return { added: 0 };
+            return { added: 0, savedQuestions: [] };
         }
     }
 
@@ -230,7 +235,7 @@ class QuestionBankService {
         difficulty?: number
     ): Promise<CanonicalQuestionV1[]> {
         const all = await this.getQuestions({ section: section as any });
-        const available = all.filter(q => !excludeIds.includes(q.id));
+        const available = all.filter(q => (q.id ? !excludeIds.includes(q.id) : true));
         
         if (difficulty !== undefined) {
             const filtered = available.filter(q => {
@@ -253,8 +258,18 @@ export const getAllQuestions = async (): Promise<CanonicalQuestionV1[]> => {
     return questionBank.getQuestions({});
 };
 
-export const getUnifiedQuestionsBySkill = async (skillId: number): Promise<CanonicalQuestionV1[]> => {
-    return questionBank.getQuestions({ skillId, limit: 100 });
+export const getUnifiedQuestionsBySkill = async (
+    skillId: number | string,
+    limit: number = 100
+): Promise<CanonicalQuestionV1[]> => {
+    const numericSkillId =
+        typeof skillId === 'string' ? parseInt(skillId.replace(/\D/g, ''), 10) : skillId;
+
+    if (!Number.isFinite(numericSkillId)) {
+        return [];
+    }
+
+    return questionBank.getQuestions({ skillId: numericSkillId, limit });
 };
 
 export const updateQuestion = async (id: string, updates: Partial<CanonicalQuestionV1>): Promise<void> => {
@@ -273,7 +288,9 @@ export const deleteQuestion = async (id: string): Promise<void> => {
     await db.delete('questions', id);
 };
 
-export const importQuestionsToBank = async (questions: any[]): Promise<{ added: number }> => {
+export const importQuestionsToBank = async (
+    questions: any[]
+): Promise<{ added: number; savedQuestions: CanonicalQuestionV1[] }> => {
     return questionBank.importQuestionsToBank(questions);
 };
 

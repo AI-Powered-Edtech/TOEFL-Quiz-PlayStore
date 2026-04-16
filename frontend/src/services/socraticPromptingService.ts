@@ -202,13 +202,9 @@ export const socraticChat = async (
         const prompt = generateSocraticPrompt(userQuestion, skillTitle, contextText, config);
         const messages = JSON.parse(prompt) as GroqMessage[];
         
-        const response = await callGroq(messages, {
-            model: 'llama-3.1-70b-versatile',
-            temperature: 0.7,
-            max_tokens: 500,
-        });
+        const response = await callGroq(messages, 0.7);
 
-        return { response: response.data };
+        return { response };
     } catch (error) {
         return {
             response: '',

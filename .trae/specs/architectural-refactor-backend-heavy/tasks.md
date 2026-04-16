@@ -17,11 +17,11 @@
   - [x] SubTask 4.1: Implement frontend standard PKCE (generate `code_verifier` and `code_challenge`, send challenge).
   - [x] SubTask 4.2: Update frontend callback to send `code_verifier` to exchange for tokens.
   - [x] SubTask 4.3: Modify Rust backend `src/services/oauth.rs` to store and validate `code_challenge` against `code_verifier`.
-- [ ] Task 5: System-wide Verification
-  - [ ] SubTask 5.1: Run `cargo clippy --all-targets` and fix ALL warnings related to changes.
-  - [ ] SubTask 5.2: Run `cargo test --test e2e` to ensure backend endpoints function correctly.
-  - [ ] SubTask 5.3: Run `npm run typecheck` in `frontend/` to ensure TS interfaces match.
-  - [ ] SubTask 5.4: Ensure all E2E bypasses in `useGuestPolicy.tsx` (and similar files) are intact.
+- [x] Task 5: System-wide Verification
+  - [x] SubTask 5.1: Run `cargo clippy --all-targets` and fix ALL warnings related to changes.
+  - [x] SubTask 5.2: Run `cargo test --test e2e` to ensure backend endpoints function correctly.
+  - [x] SubTask 5.3: Run `npm run typecheck` in `frontend/` to ensure TS interfaces match.
+  - [x] SubTask 5.4: Ensure all E2E bypasses in `useGuestPolicy.tsx` (and similar files) are intact.
 
 # Task Dependencies
 - [Task 5] depends on [Task 1, Task 2, Task 3, Task 4]

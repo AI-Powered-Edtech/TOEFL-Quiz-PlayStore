@@ -1,4 +1,4 @@
-import { CanonicalQuestionV1, Friend, Notification, QuizReportData } from '../types';
+import { CanonicalQuestionV1, Friend, Notification, NotificationType, QuizReportData } from '../types';
 
 const tryParseJson = (v: unknown): unknown => {
   if (typeof v !== 'string') return v;
@@ -11,13 +11,22 @@ const tryParseJson = (v: unknown): unknown => {
 
 export const mapFriendRowToFriend = (row: any): Friend => {
   const friendId = row?.friend_id ?? row?.id ?? '';
-  const profile =
+  const rawProfile =
     row?.profile ??
     ({
-      full_name: row?.full_name ?? null,
-      avatar_url: row?.avatar_url ?? null,
-      xp: row?.xp ?? null,
+      full_name: row?.full_name ?? undefined,
+      avatar_url: row?.avatar_url ?? undefined,
+      xp: row?.xp ?? undefined,
     } as any);
+
+  const profile =
+    rawProfile && typeof rawProfile === 'object'
+      ? {
+          full_name: rawProfile.full_name ?? undefined,
+          avatar_url: rawProfile.avatar_url ?? undefined,
+          xp: rawProfile.xp ?? undefined,
+        }
+      : undefined;
 
   return {
     id: String(row?.id ?? friendId),
@@ -28,20 +37,55 @@ export const mapFriendRowToFriend = (row: any): Friend => {
   };
 };
 
+const ALLOWED_NOTIFICATION_TYPES: readonly NotificationType[] = [
+  'friend_request',
+  'friend_accept',
+  'circle_invite',
+  'level_up',
+  'leaderboard_overtake',
+  'streak_warning',
+  'system_announcement',
+  'reward_claim',
+  'peer_review',
+  'ai_quota_warning',
+];
+
+const normalizeNotificationType = (v: unknown): NotificationType => {
+  if (typeof v !== 'string') return 'system_announcement';
+  return (ALLOWED_NOTIFICATION_TYPES as readonly string[]).includes(v)
+    ? (v as NotificationType)
+    : 'system_announcement';
+};
+
 export const mapNotificationRowToNotification = (row: any): Notification => {
   const isRead = typeof row?.is_read === 'boolean' ? row.is_read : !!row?.read;
-  const t = row?.type ?? row?.notif_type ?? 'system';
+  const t = normalizeNotificationType(row?.type ?? row?.notif_type);
   return {
     id: String(row?.id ?? ''),
     user_id: String(row?.user_id ?? ''),
     type: t,
     title: String(row?.title ?? t),
     message: String(row?.message ?? ''),
-    data: row?.data ?? null,
+    data: row?.data ?? undefined,
     is_read: isRead,
     created_at: String(row?.created_at ?? new Date().toISOString()),
   };
 };
+
+const ALLOWED_SECTIONS: readonly CanonicalQuestionV1['section'][] = [
+  'structure',
+  'written',
+  'reading',
+  'listening',
+];
+
+const ALLOWED_INTERACTIONS: readonly CanonicalQuestionV1['interaction'][] = [
+  'fill_blank',
+  'identify_error',
+  'multiple_choice',
+];
+
+const ALLOWED_CEFR: readonly CanonicalQuestionV1['cefr_target'][] = ['A2', 'B1', 'B2', 'C1'];
 
 export const mapApiQuestionToCanonical = (q: any): CanonicalQuestionV1 => {
   const stimulus = (tryParseJson(q?.stimulus) as any) ?? {};
@@ -53,18 +97,31 @@ export const mapApiQuestionToCanonical = (q: any): CanonicalQuestionV1 => {
   const choices = tryParseJson(q?.choices);
   const correct = tryParseJson(q?.correct_response);
 
-  const section = typeof q?.section === 'string' ? q.section.toLowerCase() : 'structure';
+  const sectionCandidate = typeof q?.section === 'string' ? q.section.toLowerCase() : 'structure';
+  const section = (ALLOWED_SECTIONS as readonly string[]).includes(sectionCandidate)
+    ? (sectionCandidate as CanonicalQuestionV1['section'])
+    : 'structure';
+
+  const interactionCandidate = typeof q?.interaction === 'string' ? q.interaction : 'multiple_choice';
+  const interaction = (ALLOWED_INTERACTIONS as readonly string[]).includes(interactionCandidate)
+    ? (interactionCandidate as CanonicalQuestionV1['interaction'])
+    : 'multiple_choice';
+
+  const cefrCandidate = typeof q?.cefr_target === 'string' ? q.cefr_target : 'B2';
+  const cefr_target = (ALLOWED_CEFR as readonly string[]).includes(cefrCandidate)
+    ? (cefrCandidate as CanonicalQuestionV1['cefr_target'])
+    : 'B2';
 
   return {
     id: String(q?.id ?? crypto.randomUUID()),
     skill_id: Number(q?.skill_id ?? 0),
     section,
-    interaction: String(q?.interaction ?? 'multiple_choice'),
+    interaction,
     stimulus: stimulus && typeof stimulus === 'object' ? stimulus : {},
     prompt: String(q?.prompt ?? ''),
     choices: Array.isArray(choices) ? choices.map(String) : [],
     correct_response: Array.isArray(correct) ? correct.map(String) : [],
-    cefr_target: String(q?.cefr_target ?? 'B2'),
+    cefr_target,
     difficulty_score: Number.isFinite(q?.difficulty_score) ? q.difficulty_score : 50,
     passage_id: q?.passage_id != null ? String(q.passage_id) : undefined,
     metadata: metadata && typeof metadata === 'object' ? metadata : { source: 'ai' },
@@ -84,4 +141,3 @@ export const mapQuizReportResponseToQuizReportData = (row: any): QuizReportData 
     created_at: String(row?.created_at ?? new Date().toISOString()),
   };
 };
-

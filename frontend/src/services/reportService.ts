@@ -35,7 +35,6 @@ export const saveQuizReport = async (data: {
         total_questions: data.total,
         correct_count: data.correct,
         answers_snapshot: data.answers,
-        user_id: data.userId || null,
         created_at: new Date().toISOString()
     };
 
