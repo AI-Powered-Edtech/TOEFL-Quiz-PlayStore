@@ -275,6 +275,14 @@ Secrets via [Infisical](http://10.10.0.11:8080) — hanya `INFISICAL_CLIENT_ID/S
 | [FRONTEND_CUTOVER.md](docs-dev/FRONTEND_CUTOVER.md) | Frontend migration guide — Supabase → API call mapping |
 | [.env.example](.env.example) | Environment variables template |
 
+## Production Deployment
+
+For deploying to production, see:
+- [PRODUCTION_CHECKLIST.md](docs-dev/PRODUCTION_CHECKLIST.md) — pre-launch checklist
+- [DEPLOYMENT_GUIDE.md](docs-dev/DEPLOYMENT_GUIDE.md) — Docker + Caddy setup
+- [SECRETS_ROTATION.md](docs-dev/SECRETS_ROTATION.md) — runbooks for each secret
+- [PLAYSTORE_SUBMISSION.md](docs-dev/PLAYSTORE_SUBMISSION.md) — Google Play Console walkthrough
+
 ## License
 
 MIT
