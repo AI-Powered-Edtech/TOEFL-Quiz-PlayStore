@@ -180,7 +180,12 @@ export const getRoutes = (deps: any): RouteConfig[] => {
                         'Listening': 'LISTENING',
                         'Reading': 'READING',
                     };
-                    const section = partToSection[skill.part || ''] || 'STRUCTURE';
+                    const categoryToSection: Record<string, any> = {
+                        listening: 'LISTENING',
+                        reading: 'READING',
+                        writing: 'WRITTEN',
+                    };
+                    const section = partToSection[skill.part || ''] || categoryToSection[String(skill.category || '').toLowerCase()] || 'STRUCTURE';
                     deps.handleStartSkill(skill.id || (skill.numeric_id ? String(skill.numeric_id) : skill.name), section);
                 },
                 onOpenOnboarding: () => console.log("Onboarding"),

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { CanonicalQuestionV1 } from '../types';
+import { isCorrectOption } from '../utils/quizCorrectness';
 
 export const usePhase0Quiz = () => {
     const [queue, setQueue] = useState<CanonicalQuestionV1[]>([]);
@@ -25,8 +26,7 @@ export const usePhase0Quiz = () => {
 
     const answer = (optionIndex: number) => {
         const currentQ = queue[index];
-        const choiceText = currentQ.choices[optionIndex];
-        const isCorrect = currentQ.correct_response.includes(choiceText);
+        const isCorrect = isCorrectOption(currentQ, optionIndex);
 
         setAnswers(prev => ({ ...prev, [index]: optionIndex }));
         if (isCorrect) setScore(prev => prev + 1);

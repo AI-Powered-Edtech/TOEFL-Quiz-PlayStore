@@ -3,6 +3,7 @@ import { CheckCircle, X, Lightbulb, ArrowRight, Ban, Sparkles, BookOpen, HelpCir
 import React, { useState, useEffect } from 'react';
 
 import { CanonicalQuestionV1 } from '../types';
+import { isCorrectOption } from '../utils/quizCorrectness';
 
 import { Button } from './Button';
 import { Typewriter } from './Typewriter';
@@ -57,7 +58,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
     };
 
     const selectedText = selectedOptionIndex !== null ? data.choices[selectedOptionIndex] : null;
-    const isCorrect = selectedText !== null && data.correct_response.includes(selectedText);
+    const isCorrect = selectedOptionIndex !== null && isCorrectOption(data, selectedOptionIndex);
 
     // --- RENDERERS ---
 
@@ -202,7 +203,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                         <div className="grid gap-3">
                             {data.choices.map((choiceText, idx) => {
                                 const isSelected = selectedOptionIndex === idx;
-                                const isTheCorrectOne = data.correct_response.includes(choiceText);
+                                const isTheCorrectOne = isCorrectOption(data, idx);
                                 const isEliminated = eliminatedIndices.includes(idx);
                                 const optionLabel = String.fromCharCode(65 + idx);
 

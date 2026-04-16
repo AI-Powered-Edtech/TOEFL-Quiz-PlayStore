@@ -2,6 +2,7 @@ import { CheckCircle, X, Lightbulb, ArrowRight, Ban, HelpCircle } from 'lucide-r
 import React, { useState, useEffect } from 'react';
 
 import { QuizData } from '../types';
+import { isCorrectOption } from '../utils/quizCorrectness';
 
 import { Button } from './Button';
 import { ReadingPassage } from './ReadingPassage';
@@ -163,7 +164,7 @@ export const QuizViewReading: React.FC<QuizViewReadingProps> = ({
                             <div className="grid gap-4 grid-cols-1">
                                 {currentQuestion.choices.map((choiceText, idx) => {
                                     const isSelected = selectedAnswerIndex === idx;
-                                    const isTheCorrectOne = currentQuestion.correct_response.includes(choiceText);
+                                    const isTheCorrectOne = isCorrectOption(currentQuestion, idx);
                                     const isEliminated = eliminatedIndices.includes(idx);
                                     const optionLabel = String.fromCharCode(65 + idx); // A, B, C, D
 

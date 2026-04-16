@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect } from 'react';
 
 import { QuizData, QuizState } from '../types';
+import { isCorrectOption } from '../utils/quizCorrectness';
 
 const STORAGE_KEY = 'streamquiz_current_session_v1';
 
@@ -118,12 +119,11 @@ export const useQuiz = (): UseQuizReturn => {
       const idx = prev.queueIndex;
       const newAnswers = { ...prev.answers, [idx]: choiceIndex };
 
-      const selectedChoice = prev.currentData.choices[choiceIndex];
-      const isCorrect = prev.currentData.correct_response.includes(selectedChoice);
+      const isCorrect = isCorrectOption(prev.currentData, choiceIndex);
 
       const previousIndex = prev.answers[idx];
       const previouslyCorrect = previousIndex !== undefined
-        ? prev.currentData.correct_response.includes(prev.currentData.choices[previousIndex])
+        ? isCorrectOption(prev.currentData, previousIndex)
         : false;
 
       // Simple scoring: Add 1 if correct and wasn't previously correct

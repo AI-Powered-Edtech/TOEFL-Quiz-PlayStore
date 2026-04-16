@@ -19,6 +19,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { useAuthStore } from './stores/useAuthStore';
 import { trackGuestLogin, trackOAuthLoginSuccess } from './utils/authAnalytics';
+import { isCorrectOption } from './utils/quizCorrectness';
 import { useNavigationStore } from './stores/useNavigationStore';
 import { useQuizStore } from './stores/useQuizStore';
 import { AppView, SectionType } from './types';
@@ -239,7 +240,7 @@ const App: React.FC = () => {
             if (status === 'finished' && queue.length > 0) {
                 const correctCount = queue.reduce((acc, q, idx) => {
                     const choiceIdx = answers[idx];
-                    return choiceIdx !== undefined && q.correct_response.includes(q.choices[choiceIdx]) ? acc + 1 : acc;
+                    return choiceIdx !== undefined && isCorrectOption(q, choiceIdx) ? acc + 1 : acc;
                 }, 0);
 
                 const sectionFromQuestion = queue[0]?.section || currentSection.toLowerCase();
@@ -263,7 +264,7 @@ const App: React.FC = () => {
                             const choiceIdx = answers[idx];
                             if (choiceIdx === undefined) return null;
                             const questionId = q.id || ((crypto.randomUUID && crypto.randomUUID()) || Math.random().toString(36).substring(2, 15));
-                            const isCorrect = q.correct_response.includes(q.choices[choiceIdx]);
+                            const isCorrect = isCorrectOption(q, choiceIdx);
                             return {
                                 questionId,
                                 section: (q.section || sectionFromQuestion).toLowerCase(),
@@ -288,7 +289,7 @@ const App: React.FC = () => {
                     .map((q, idx) => {
                         const choiceIdx = answers[idx];
                         if (choiceIdx === undefined) return null;
-                        const isCorrect = q.correct_response.includes(q.choices[choiceIdx]);
+                        const isCorrect = isCorrectOption(q, choiceIdx);
                         return {
                             section: (q.section || sectionFromQuestion).toLowerCase(),
                             isCorrect,
@@ -324,13 +325,13 @@ const App: React.FC = () => {
             const { queue, answers, score, topic } = useQuizStore.getState();
             const correctCount = queue.reduce((acc, q, idx) => {
                 const choiceIdx = answers[idx];
-                return choiceIdx !== undefined && q.correct_response.includes(q.choices[choiceIdx]) ? acc + 1 : acc;
+                return choiceIdx !== undefined && isCorrectOption(q, choiceIdx) ? acc + 1 : acc;
             }, 0);
 
             const answersSnapshot = queue.map((q, idx) => {
                 const choiceIdx = answers[idx];
                 const userAnswer = choiceIdx !== undefined ? q.choices[choiceIdx] : '';
-                const isCorrect = choiceIdx !== undefined && q.correct_response.includes(userAnswer);
+                const isCorrect = choiceIdx !== undefined && isCorrectOption(q, choiceIdx);
                 return {
                     question_number: idx + 1,
                     prompt_snippet: q.prompt.length > 140 ? `${q.prompt.slice(0, 140)}...` : q.prompt,

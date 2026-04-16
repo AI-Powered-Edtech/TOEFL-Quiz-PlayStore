@@ -5,7 +5,8 @@ import { getRoutes } from '../config/routes';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useNavigationStore } from '../stores/useNavigationStore';
 import { useQuizStore } from '../stores/useQuizStore';
-import { AppView, CanonicalQuestionV1 } from '../types';
+import { AppView, CanonicalQuestionV1, SectionType } from '../types';
+import { isCorrectOption } from '../utils/quizCorrectness';
 
 import { ErrorBoundary } from './ErrorBoundary';
 import { QuizCard } from './QuizCard';
@@ -24,8 +25,6 @@ const LoadingFallback = () => (
         <p className="text-sm font-bold text-slate-500 animate-pulse">Loading View...</p>
     </div>
 );
-
-import { SectionType } from '../types';
 
 interface AppRouterProps {
     handleStartSkill: (topic: string | number, section?: SectionType) => void;
@@ -145,7 +144,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({
                             (() => {
                                 const isAnswered = status === 'answered' || answers[index] !== undefined;
                                 const selectedIdx = answers[index] ?? null;
-                                const isCorrectAnswer = selectedIdx !== null && currentData.correct_response.includes(currentData.choices[selectedIdx]);
+                                const isCorrectAnswer = selectedIdx !== null && isCorrectOption(currentData, selectedIdx);
 
                                 // 1. Reading Section
                                 if (currentData.section === 'reading') {
@@ -254,7 +253,26 @@ export const AppRouter: React.FC<AppRouterProps> = ({
                                     </button>
 
                                     <button onClick={() => setCurrentView(AppView.DASHBOARD)} className="bg-blue-600 text-white px-6 py-3.5 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">Return Home</button>
-                                    <button onClick={() => handleStartSkill(topic, currentData?.section === 'reading' ? 'READING' : (currentData?.section === 'listening' ? 'LISTENING' : 'STRUCTURE'))} className="bg-white text-slate-600 border border-slate-200 px-6 py-3.5 rounded-xl font-bold hover:bg-slate-50 transition-all">Retry Similar</button>
+                                    <button
+                                        onClick={() => {
+                                            const baseQ = currentData || queue[0];
+                                            const isWrittenExpression = !!baseQ && (
+                                                (baseQ.skill_id >= 20 && baseQ.skill_id <= 60) ||
+                                                baseQ.section === 'written' ||
+                                                baseQ.interaction === 'identify_error' ||
+                                                (baseQ.prompt && baseQ.prompt.includes('{A}'))
+                                            );
+                                            const sect = baseQ?.section === 'reading'
+                                                ? 'READING'
+                                                : (baseQ?.section === 'listening'
+                                                    ? 'LISTENING'
+                                                    : (isWrittenExpression ? 'WRITTEN' : 'STRUCTURE'));
+                                            handleStartSkill(topic, sect);
+                                        }}
+                                        className="bg-white text-slate-600 border border-slate-200 px-6 py-3.5 rounded-xl font-bold hover:bg-slate-50 transition-all"
+                                    >
+                                        Retry Similar
+                                    </button>
                                 </div>
                             </div>
                         )}
