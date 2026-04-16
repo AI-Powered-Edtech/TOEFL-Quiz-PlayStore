@@ -141,8 +141,9 @@ class FeatureFlagService {
         this.fetchPromise = (async () => {
             try {
                 const response = await apiClient.get<FeatureFlag[]>('/api/admin-monitoring/feature-flags');
-                if (response.error || !response.data) {
-                    throw new Error(response.error?.error || 'Failed to fetch flags');
+                if (!response.data) {
+                    // 403 for non-admin users is expected — return empty silently
+                    return [];
                 }
                 
                 const flags = response.data;
