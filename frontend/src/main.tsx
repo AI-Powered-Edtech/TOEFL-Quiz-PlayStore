@@ -24,14 +24,23 @@ if (import.meta.env.DEV && devAccessToken) {
   secureStorage.setItem('access_token', devAccessToken);
 }
 
-// Initialize Sentry
-Sentry.init({
-  dsn: import.meta.env.VITE_SENTRY_DSN,
-  integrations: [],
-  // 10% in production to control cost & overhead. Full sampling in dev for debugging.
-  tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
-  environment: import.meta.env.MODE,
-});
+// Gate init on DSN so dev/local runs and unconfigured deploys stay silent.
+if (import.meta.env.VITE_SENTRY_DSN) {
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    environment: import.meta.env.VITE_SENTRY_ENV || 'production',
+    tracesSampleRate: 0.1,
+    replaysSessionSampleRate: 0, // replays are expensive; opt-in only
+    replaysOnErrorSampleRate: 0.1,
+    integrations: [Sentry.browserTracingIntegration()],
+    beforeSend(event) {
+      if (event.request?.url?.includes('/api/auth/') && event.request?.data) {
+        event.request.data = '[REDACTED]';
+      }
+      return event;
+    },
+  });
+}
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
