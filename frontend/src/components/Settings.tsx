@@ -1,9 +1,11 @@
 
-import { Bell, Volume2, Moon, Trash2, Shield, CircleHelp, ArrowLeft, Zap, Crown, BookOpen } from 'lucide-react';
+import { Bell, Volume2, Moon, Trash2, Shield, CircleHelp, ArrowLeft, Zap, Crown, BookOpen, RotateCw } from 'lucide-react';
 import React from 'react';
 
 import { useSubscription } from '../hooks/useSubscription';
+import { restorePurchases } from '../services/purchaseService';
 import { AppView } from '../types';
+import { showSuccess, showError, showInfo } from '../utils/toast';
 
 import { Button } from './Button';
 import PaywallSheet from './PaywallSheet';
@@ -15,7 +17,29 @@ interface SettingsProps {
 
 export const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
     const [showPaywall, setShowPaywall] = React.useState(false);
-    const { tier, tierName, tierColor, tierIcon, tokenUsage, loading: subLoading } = useSubscription();
+    const [restoring, setRestoring] = React.useState(false);
+    const { tier, tierName, tierColor, tierIcon, tokenUsage, loading: subLoading, refresh } = useSubscription();
+
+    const handleRestore = React.useCallback(async () => {
+        if (restoring) return;
+        setRestoring(true);
+        try {
+            const result = await restorePurchases();
+            if (result.success) {
+                const label = result.tier === 'c2' ? 'C2 Pro' : result.tier === 'basic' ? 'Basic' : 'Premium';
+                showSuccess(`Langganan ${label} dipulihkan`);
+                await refresh();
+            } else if (result.error) {
+                showInfo(result.error);
+            } else {
+                showError('Gagal memulihkan pembelian');
+            }
+        } catch (err: any) {
+            showError(err?.message || 'Gagal memulihkan pembelian');
+        } finally {
+            setRestoring(false);
+        }
+    }, [restoring, refresh]);
 
 
     return (
@@ -147,6 +171,16 @@ export const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                                             Upgrade to Pro
                                         </button>
                                     )}
+
+                                    <button
+                                        type="button"
+                                        onClick={handleRestore}
+                                        disabled={restoring}
+                                        className="mt-2 w-full py-2 rounded-xl border border-slate-200 bg-white text-slate-600 font-medium text-xs flex items-center justify-center gap-2 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        <RotateCw className={`w-3.5 h-3.5 ${restoring ? 'animate-spin' : ''}`} />
+                                        {restoring ? 'Memulihkan…' : 'Restore purchases'}
+                                    </button>
                                 </>
                             )}
                         </div>
