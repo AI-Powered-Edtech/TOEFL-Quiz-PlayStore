@@ -67,13 +67,11 @@ export function clearLeaderboardCache(): void {
 }
 
 interface LeaderboardProfile {
-    id: string;
+    rank: number;
+    user_id: string;
     full_name: string | null;
     avatar_url: string | null;
     xp: number;
-    quiz_xp: number | null;
-    writing_xp: number | null;
-    essay_xp: number | null;
 }
 
 export const leaderboardService = {
@@ -90,22 +88,22 @@ export const leaderboardService = {
         }
 
         try {
-            const response = await apiClient.get<LeaderboardProfile[]>(`/api/leaderboard?limit=${limit}`);
+            const response = await apiClient.get<LeaderboardProfile[]>(`/api/social/leaderboard`);
 
             if (response.error || !response.data) {
-                console.error('Failed to fetch leaderboard:', response.error);
+                console.warn('Failed to fetch leaderboard:', response.error);
                 return [];
             }
 
-            const entries: UnifiedLeaderboardEntry[] = response.data.map((profile, index) => ({
-                rank: index + 1,
-                userId: profile.id,
+            const entries: UnifiedLeaderboardEntry[] = response.data.slice(0, limit).map((profile, index) => ({
+                rank: profile.rank || index + 1,
+                userId: profile.user_id,
                 userName: profile.full_name || 'Anonymous',
                 avatarUrl: profile.avatar_url || undefined,
                 totalXp: profile.xp || 0,
-                quizXp: profile.quiz_xp || 0,
-                writingXp: profile.writing_xp || 0,
-                essayXp: profile.essay_xp || 0,
+                quizXp: 0,
+                writingXp: 0,
+                essayXp: 0,
                 streak: 0
             }));
 
@@ -113,7 +111,7 @@ export const leaderboardService = {
 
             return entries;
         } catch (err) {
-            console.error('Failed to fetch leaderboard:', err);
+            console.warn('Failed to fetch leaderboard:', err);
             return [];
         }
     },

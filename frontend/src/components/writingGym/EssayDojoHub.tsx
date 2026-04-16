@@ -82,7 +82,8 @@ export const EssayDojoHub: React.FC<EssayDojoHubProps> = ({ onNavigate, onBack, 
 
                     <div className="grid grid-cols-1 gap-4">
                         {/* Simulation Card */}
-                        <div
+                        <button
+                            type="button"
                             onClick={() => {
                                 if (!isPaid) {
                                     setShowPaywall(true);
@@ -94,7 +95,7 @@ export const EssayDojoHub: React.FC<EssayDojoHubProps> = ({ onNavigate, onBack, 
                                 });
                                 onNavigate(AppView.WRITING);
                             }}
-                            className={`group bg-white dark:bg-[#1E1E1E] rounded-2xl p-1 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer ${!isPaid ? 'opacity-60' : ''}`}
+                            className={`group bg-white dark:bg-[#1E1E1E] rounded-2xl p-1 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer text-left ${!isPaid ? 'opacity-60' : ''}`}
                         >
                             <div className="flex items-center gap-4 p-4">
                                 <div className="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
@@ -112,10 +113,11 @@ export const EssayDojoHub: React.FC<EssayDojoHubProps> = ({ onNavigate, onBack, 
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </button>
 
                         {/* Band 9 Library Card */}
-                        <div
+                        <button
+                            type="button"
                             onClick={() => {
                                 analytics.trackEvent({
                                     eventType: 'navigate',
@@ -123,7 +125,7 @@ export const EssayDojoHub: React.FC<EssayDojoHubProps> = ({ onNavigate, onBack, 
                                 });
                                 onNavigate(AppView.BAND9_LIBRARY);
                             }}
-                            className="group bg-white dark:bg-[#1E1E1E] rounded-2xl p-1 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                            className="group bg-white dark:bg-[#1E1E1E] rounded-2xl p-1 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer text-left"
                         >
                             <div className="flex items-center gap-4 p-4">
                                 <div className="w-14 h-14 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
@@ -141,10 +143,11 @@ export const EssayDojoHub: React.FC<EssayDojoHubProps> = ({ onNavigate, onBack, 
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </button>
 
                         {/* Peer Review Card */}
-                        <div
+                        <button
+                            type="button"
                             onClick={() => {
                                 if (!isPaid) {
                                     setShowPaywall(true);
@@ -156,7 +159,7 @@ export const EssayDojoHub: React.FC<EssayDojoHubProps> = ({ onNavigate, onBack, 
                                 });
                                 onNavigate(AppView.PEER_REVIEW);
                             }}
-                            className={`group bg-white dark:bg-[#1E1E1E] rounded-2xl p-1 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer ${!isPaid ? 'opacity-60' : ''}`}
+                            className={`group bg-white dark:bg-[#1E1E1E] rounded-2xl p-1 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer text-left ${!isPaid ? 'opacity-60' : ''}`}
                         >
                             <div className="flex items-center gap-4 p-4">
                                 <div className="w-14 h-14 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
@@ -174,7 +177,7 @@ export const EssayDojoHub: React.FC<EssayDojoHubProps> = ({ onNavigate, onBack, 
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </button>
                     </div>
                 </div>
 

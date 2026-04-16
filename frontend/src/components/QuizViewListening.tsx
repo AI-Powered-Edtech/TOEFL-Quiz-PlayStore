@@ -3,6 +3,7 @@ import { CheckCircle, X, ArrowRight, Ban, Headphones } from 'lucide-react';
 import React from 'react';
 
 import { QuizData } from '../types';
+import { isCorrectOption } from '../utils/quizCorrectness';
 
 import { Button } from './Button';
 import { ListeningPlayer } from './ListeningPlayer';
@@ -63,7 +64,7 @@ export const QuizViewListening: React.FC<QuizViewListeningProps> = ({
                     questionId={currentQuestion.id}
                     audioUrl={currentQuestion.stimulus?.audio_url}
                     nextTranscript={nextTranscript}
-                    autoPlay={true}
+                    autoPlay={Boolean(currentQuestion.stimulus?.audio_url)}
                 />
             </div>
 
@@ -82,7 +83,7 @@ export const QuizViewListening: React.FC<QuizViewListeningProps> = ({
                     <div className="grid gap-3">
                         {currentQuestion.choices.map((choice, idx) => {
                             const isSelected = selectedAnswerIndex === idx;
-                            const isTheCorrectOne = currentQuestion.correct_response.includes(choice);
+                            const isTheCorrectOne = isCorrectOption(currentQuestion, idx);
                             const isEliminated = eliminatedIndices.includes(idx);
                             const label = String.fromCharCode(65 + idx);
 

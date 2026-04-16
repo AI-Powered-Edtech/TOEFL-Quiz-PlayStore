@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import { CanonicalQuestionV1 } from '../types';
+import { isCorrectOption } from '../utils/quizCorrectness';
 
 type QuizStatus = 'idle' | 'generating' | 'playing' | 'answered' | 'finished';
 
@@ -48,8 +49,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
         const currentQ = queue[index];
         if (!currentQ) return;
         if (answers[index] !== undefined) return;
-        const choiceText = currentQ.choices[optionIndex];
-        const isCorrect = currentQ.correct_response.includes(choiceText);
+        const isCorrect = isCorrectOption(currentQ, optionIndex);
         set(prev => ({
             answers: { ...prev.answers, [index]: optionIndex },
             score: isCorrect ? prev.score + 1 : prev.score,

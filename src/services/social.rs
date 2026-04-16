@@ -243,7 +243,7 @@ pub async fn respond_friend_request(
 #[vil_handler]
 pub async fn leaderboard(
     ctx: ServiceCtx,
-    _claims: Claims,
+    _claims: Option<Claims>,
 ) -> Result<VilResponse<Vec<LeaderboardEntry>>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
     let entries = Profile::q()

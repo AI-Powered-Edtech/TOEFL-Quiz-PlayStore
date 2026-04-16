@@ -166,8 +166,8 @@ export const generateWritingGymExercise = async (
 
         return parsed;
     } catch (e) {
-        console.error("[WritingGym] Generation failed:", e);
-        console.error("[WritingGym] Raw Content:", content);
+        console.warn("[WritingGym] Generation failed:", e);
+        console.warn("[WritingGym] Raw Content:", content);
         throw e;
     }
 };

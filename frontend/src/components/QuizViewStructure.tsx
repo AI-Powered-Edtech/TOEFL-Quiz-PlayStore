@@ -2,6 +2,7 @@ import { CheckCircle, X, Lightbulb, ArrowRight, Ban, Sparkles } from 'lucide-rea
 import React, { useState, useEffect } from 'react';
 
 import { QuizData } from '../types';
+import { isCorrectOption } from '../utils/quizCorrectness';
 
 import { Button } from './Button';
 import { Typewriter } from './Typewriter';
@@ -142,7 +143,7 @@ export const QuizViewStructure: React.FC<QuizViewStructureProps> = ({
                             <div className="grid gap-3">
                                 {currentQuestion.choices.map((choiceText, idx) => {
                                     const isSelected = selectedAnswerIndex === idx;
-                                    const isTheCorrectOne = currentQuestion.correct_response.includes(choiceText);
+                                    const isTheCorrectOne = isCorrectOption(currentQuestion, idx);
                                     const isEliminated = eliminatedIndices.includes(idx);
                                     const optionLabel = String.fromCharCode(65 + idx);
                                     const showOptions = !isTyping || showExplanation;

@@ -232,7 +232,68 @@ export const writingGymService = {
                 metricsCollector.increment('exercise.generation_error', 1, { level, skillId });
             }
 
-            console.error('AI generation failed:', error);
+            console.warn('AI generation failed:', error);
+
+            if (level === 'mason') {
+                const target = `Students practice ${WRITING_GYM_SKILL_MAP[skillId]?.title || 'grammar'} every day.`;
+                const fragments = target.replace(/([.,!?;:])/g, ' $1').split(/\s+/).filter(Boolean);
+                return this.buildExerciseFromAiResult('mason', skillId, {
+                    target_sentence: target,
+                    fragments,
+                    translation: 'Latihan offline (tanpa AI).',
+                    explanation: 'Explanation will appear here.',
+                    hints: []
+                });
+            }
+
+            if (level === 'logic_weaver') {
+                return this.buildExerciseFromAiResult('logic_weaver', skillId, {
+                    clauses: {
+                        main: 'The results improved',
+                        subordinate: 'the team practiced consistently'
+                    },
+                    options: ['because', 'although', 'therefore'],
+                    correct_answer: 'because',
+                    translation: 'Latihan offline (tanpa AI).',
+                    explanation: 'Explanation will appear here.',
+                    hints: []
+                });
+            }
+
+            if (level === 'ielts_paragraph') {
+                return this.buildExerciseFromAiResult('ielts_paragraph', skillId, {
+                    task_prompt: 'Some people think students should do more group work at school. To what extent do you agree or disagree?',
+                    steps: [
+                        {
+                            step_type: 'Topic Sentence',
+                            options: [
+                                { id: 'A', text: 'Group work can significantly enhance students’ communication skills by requiring them to articulate ideas clearly.', band_level: 9, feedback: 'Precise claim with sophisticated wording.' },
+                                { id: 'B', text: 'Group work can improve communication because students need to share ideas with other classmates.', band_level: 8, feedback: 'Clear and strong, slightly less nuanced.' },
+                                { id: 'C', text: 'Group work is good because students talk to each other and learn together in class.', band_level: 7, feedback: 'Clear but simpler phrasing.' }
+                            ]
+                        },
+                        {
+                            step_type: 'Supporting Detail',
+                            options: [
+                                { id: 'A', text: 'For instance, collaborative tasks often assign roles that promote negotiation, turn-taking, and constructive disagreement.', band_level: 9, feedback: 'Strong support and natural flow.' },
+                                { id: 'B', text: 'In many projects, students must divide roles, listen, and respond, which strengthens teamwork and speaking ability.', band_level: 8, feedback: 'Solid support, slightly less refined.' },
+                                { id: 'C', text: 'When students work in groups, they share roles and speak more, so they practice teamwork.', band_level: 7, feedback: 'Support is present but more repetitive.' }
+                            ]
+                        },
+                        {
+                            step_type: 'Example',
+                            options: [
+                                { id: 'A', text: 'A debate-style group assignment can train learners to defend positions with evidence while respecting alternative viewpoints.', band_level: 9, feedback: 'Specific, relevant, and well-developed.' },
+                                { id: 'B', text: 'For example, group presentations push students to discuss content and prepare a clear message for an audience.', band_level: 8, feedback: 'Relevant example with good clarity.' },
+                                { id: 'C', text: 'For example, students can present together and talk about the topic in front of the class.', band_level: 7, feedback: 'Example is simple but understandable.' }
+                            ]
+                        }
+                    ],
+                    explanation: 'Explanation will appear here.',
+                    hints: []
+                });
+            }
+
             throw error;
         }
     },

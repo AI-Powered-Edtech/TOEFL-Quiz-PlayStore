@@ -1,6 +1,7 @@
 // Feature Flag Service
 // Provides gradual rollout and A/B testing capabilities
 import { apiClient } from './apiClient';
+import { secureStorage } from '../utils/secureStorage';
 
 interface FeatureFlag {
     id: string;
@@ -123,7 +124,7 @@ class FeatureFlagService {
 
             return Math.random() * 100 < flag.rollout_percent;
         } catch (error) {
-            console.error(`[FeatureFlags] Error checking flag ${flagName}:`, error);
+            console.warn(`[FeatureFlags] Error checking flag ${flagName}:`, error);
             return false;
         }
     }
@@ -131,6 +132,10 @@ class FeatureFlagService {
     private async fetchAllFlags(): Promise<FeatureFlag[]> {
         if (this.fetchPromise) {
             return this.fetchPromise;
+        }
+
+        if (!secureStorage.getItem('access_token')) {
+            return [];
         }
 
         this.fetchPromise = (async () => {
@@ -150,7 +155,7 @@ class FeatureFlagService {
                 
                 return flags;
             } catch (err) {
-                console.error('[FeatureFlags] Error fetching flags:', err);
+                console.warn('[FeatureFlags] Error fetching flags:', err);
                 return [];
             } finally {
                 this.fetchPromise = null;
@@ -226,7 +231,7 @@ class FeatureFlagService {
                 this.cache.set(flagName, updated);
                 this.cacheExpiry.set(flagName, Date.now() + this.cacheTTL);
             } catch (err) {
-                console.error(`[FeatureFlags] Error updating flag ${flagName}:`, err);
+                console.warn(`[FeatureFlags] Error updating flag ${flagName}:`, err);
                 throw err;
             }
         }

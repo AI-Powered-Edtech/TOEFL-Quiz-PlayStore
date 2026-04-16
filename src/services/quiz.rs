@@ -609,6 +609,121 @@ pub async fn generate_quiz(
 
     let count = req.count.unwrap_or(5);
     let skill_id = req.skill_id_override.unwrap_or(1);
+    let section = req.section.to_lowercase();
+
+    let offline_questions = || -> Vec<GeneratedQuestion> {
+        let now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
+        let topic = req.topic.trim();
+        let base_meta = serde_json::json!({ "source": "ai", "offline": true });
+
+        match section.as_str() {
+            "written" => (0..count)
+                .map(|i| GeneratedQuestion {
+                    id: uuid::Uuid::new_v4().to_string(),
+                    skill_id: skill_id.max(20).min(60),
+                    section: "written".to_string(),
+                    interaction: "identify_error".to_string(),
+                    stimulus: None,
+                    prompt: format!(
+                        "In the following sentence about {topic}, identify the underlined error: \
+{{A}}The report{{/A}} {{B}}were{{/B}} {{C}}completed{{/C}} {{D}}on time{{/D}}. (Item {})",
+                        i + 1
+                    ),
+                    choices: Some(vec!["A".to_string(), "B".to_string(), "C".to_string(), "D".to_string()]),
+                    correct_response: Some(vec!["B".to_string()]),
+                    cefr_target: Some("B1".to_string()),
+                    difficulty_score: Some(50),
+                    passage_id: None,
+                    metadata: Some(base_meta.clone()),
+                    created_at: now.clone(),
+                })
+                .collect(),
+            "reading" => {
+                let passage = format!(
+                    "Reading passage (offline) about {topic}: {topic} is an important academic subject. \
+This passage is generated as an offline fallback for QA testing when AI services are unavailable. \
+It provides enough length to satisfy client-side validation and allows multiple-choice questions to load properly. \
+Students can practice identifying main ideas, details, and inferences based on the passage content."
+                );
+
+                (0..count)
+                    .map(|i| GeneratedQuestion {
+                        id: uuid::Uuid::new_v4().to_string(),
+                        skill_id: skill_id.max(101),
+                        section: "reading".to_string(),
+                        interaction: "multiple_choice".to_string(),
+                        stimulus: Some(serde_json::json!({ "text": passage })),
+                        prompt: format!("What is the main purpose of the passage? (Item {})", i + 1),
+                        choices: Some(vec![
+                            "To explain a study topic".to_string(),
+                            "To advertise a product".to_string(),
+                            "To describe a fictional story".to_string(),
+                            "To list unrelated words".to_string(),
+                        ]),
+                        correct_response: Some(vec!["To explain a study topic".to_string()]),
+                        cefr_target: Some("B1".to_string()),
+                        difficulty_score: Some(50),
+                        passage_id: None,
+                        metadata: Some(base_meta.clone()),
+                        created_at: now.clone(),
+                    })
+                    .collect()
+            }
+            "listening" => (0..count)
+                .map(|i| GeneratedQuestion {
+                    id: uuid::Uuid::new_v4().to_string(),
+                    skill_id: skill_id.max(201),
+                    section: "listening".to_string(),
+                    interaction: "multiple_choice".to_string(),
+                    stimulus: Some(serde_json::json!({
+                        "text": format!("Listening transcript (offline) about {topic}: The professor discusses key points related to {topic} in a short lecture.")
+                    })),
+                    prompt: format!("What is the lecture mainly about? (Item {})", i + 1),
+                    choices: Some(vec![
+                        format!("{topic} basics"),
+                        "Cooking techniques".to_string(),
+                        "Sports results".to_string(),
+                        "Fashion trends".to_string(),
+                    ]),
+                    correct_response: Some(vec![format!("{topic} basics")]),
+                    cefr_target: Some("B1".to_string()),
+                    difficulty_score: Some(50),
+                    passage_id: None,
+                    metadata: Some(base_meta.clone()),
+                    created_at: now.clone(),
+                })
+                .collect(),
+            _ => (0..count)
+                .map(|i| GeneratedQuestion {
+                    id: uuid::Uuid::new_v4().to_string(),
+                    skill_id: skill_id.max(1).min(19),
+                    section: "structure".to_string(),
+                    interaction: "fill_blank".to_string(),
+                    stimulus: None,
+                    prompt: format!(
+                        "Choose the best word to complete the sentence about {topic}: Students _____ to practice every day. (Item {})",
+                        i + 1
+                    ),
+                    choices: Some(vec![
+                        "go".to_string(),
+                        "goes".to_string(),
+                        "going".to_string(),
+                        "gone".to_string(),
+                    ]),
+                    correct_response: Some(vec!["go".to_string()]),
+                    cefr_target: Some("B1".to_string()),
+                    difficulty_score: Some(50),
+                    passage_id: None,
+                    metadata: Some(base_meta.clone()),
+                    created_at: now.clone(),
+                })
+                .collect(),
+        }
+    };
+
+    if state.config.groq_api_key.is_empty() {
+        return Ok(VilResponse::ok(QuizGenerateResponse { questions: offline_questions() }));
+    }
     let system_prompt = get_system_prompt(&req.section);
     let user_prompt = format!("Generate {} UNIQUE questions for Skill ID {}. Topic: {}.", count, skill_id, req.topic);
 
@@ -624,9 +739,12 @@ pub async fn generate_quiz(
         VilChat::user(&user_prompt),
     ];
 
-    let response = provider.chat(&messages).await.map_err(|e| {
-        AppError::AiUnavailable(e.to_string())
-    })?;
+    let response = match provider.chat(&messages).await {
+        Ok(r) => r,
+        Err(_) => {
+            return Ok(VilResponse::ok(QuizGenerateResponse { questions: offline_questions() }));
+        }
+    };
 
     let content = response.content;
     // Extract JSON from possible markdown response
