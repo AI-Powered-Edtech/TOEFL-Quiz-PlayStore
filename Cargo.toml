@@ -44,6 +44,9 @@ vil_orm_derive = "0.1"
 vil_server_macros = "0.1"
 sha2 = "0.11.0"
 
+# Crash reporting (optional — activated via SENTRY_DSN env var)
+sentry = { version = "0.35", features = ["tracing", "panic", "tower"] }
+
 [dev-dependencies]
 vil_server_test = "0.1"
 reqwest = { version = "0.12", features = ["json"] }

@@ -18,11 +18,28 @@ use crate::services::{admin, admin_monitoring, ai, auth, oauth, blog, creator, m
 
 #[tokio::main]
 async fn main() {
+    dotenv::dotenv().ok();
+
+    // Sentry must init before other subsystems so panics during startup are captured.
+    // `PanicIntegration` is registered by default via `sentry::init`, installing a
+    // panic hook that forwards to the previous hook after reporting.
+    // Guard lives until main() exits; dropping it flushes queued events.
+    let _sentry_guard = std::env::var("SENTRY_DSN").ok().filter(|s| !s.is_empty()).map(|dsn| {
+        sentry::init((dsn.as_str(), sentry::ClientOptions {
+            release: sentry::release_name!(),
+            traces_sample_rate: 0.1,
+            environment: Some(
+                std::env::var("SENTRY_ENV")
+                    .unwrap_or_else(|_| "production".into())
+                    .into(),
+            ),
+            ..Default::default()
+        }))
+    });
+
     // vil::prelude::vil_log builder — dev_mode auto-detects debug/release profile.
     // dev_mode(true): tracing fallback (colored terminal)
     // dev_mode(false): full SPSC ring buffer (structured, fast)
-    dotenv::dotenv().ok();
-
     let _log = vil::prelude::vil_log::init()
         .dev_mode(cfg!(debug_assertions))
         .build();
