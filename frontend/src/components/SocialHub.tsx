@@ -7,7 +7,8 @@ import {
 import React, { useState, useEffect } from 'react';
 
 import { circleService } from '../services/circleService';
-import { socialService, Friend } from '../services/social';
+import { socialService } from '../services/social';
+type Friend = any;
 import { friendActivityService, FriendActivity } from '../services/friendActivityService';
 import { leaderboardService, UnifiedLeaderboardEntry } from '../services/leaderboardService';
 import { AppView, Circle } from '../types';

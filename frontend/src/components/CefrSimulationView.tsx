@@ -112,7 +112,7 @@ export const CefrSimulationView: React.FC<CefrSimulationViewProps> = ({ onNaviga
     } = useSpeechRecognition({
         initialTranscripts: speakingTranscripts,
         onTranscriptChange: (partId, transcript) => {
-            const key = partId as keyof SpeakingData;
+            const key = partId as keyof any;
             setPersistedSpeakingTranscripts(prev => ({
                 ...prev,
                 [key]: transcript

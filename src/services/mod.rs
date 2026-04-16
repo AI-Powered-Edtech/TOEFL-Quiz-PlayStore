@@ -13,3 +13,4 @@ pub mod storage;
 pub mod blog;
 pub mod admin_monitoring;
 pub mod purchases;
+pub mod oracle;

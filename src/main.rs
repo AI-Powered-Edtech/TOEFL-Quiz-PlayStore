@@ -14,7 +14,7 @@ mod tasks;
 
 use crate::config::AppConfig;
 use crate::db::Database;
-use crate::services::{admin, admin_monitoring, ai, auth, oauth, blog, creator, monitoring, profile, quiz, social, storage, writing, purchases};
+use crate::services::{admin, admin_monitoring, ai, auth, oauth, blog, creator, monitoring, profile, quiz, social, storage, writing, purchases, oracle};
 
 #[tokio::main]
 async fn main() {
@@ -78,6 +78,8 @@ async fn main() {
         .endpoint(Method::DELETE, "/bank/:id", delete(quiz::delete_question))
         .endpoint(Method::GET, "/passages/:id", get(quiz::get_passage))
         .endpoint(Method::POST, "/passages", post(quiz::save_passage))
+        .endpoint(Method::GET, "/adaptive-metrics", get(quiz::get_adaptive_metrics))
+        .endpoint(Method::POST, "/record-answer", post(quiz::record_answer))
         .state(state.clone());
 
     let profile_svc = ServiceProcess::new("profile")
@@ -170,6 +172,10 @@ async fn main() {
         .endpoint(Method::PATCH, "/moderation/reports/:id", patch(admin_monitoring::resolve_report))
         .state(state.clone());
 
+    let oracle_svc = ServiceProcess::new("oracle")
+        .endpoint(Method::GET, "/predict", get(oracle::predict_score))
+        .state(state.clone());
+
     // ── Background tasks ──
 
     let task_pool = state.pool.clone();
@@ -196,7 +202,8 @@ async fn main() {
         .service(monitoring_svc)
         .service(storage_svc)
         .service(blog_svc)
-        .service(admin_mon_svc);
+        .service(admin_mon_svc)
+        .service(oracle_svc);
 
     // G7: Contract export — dump process topology as JSON
     if std::env::args().any(|a| a == "--contract") {

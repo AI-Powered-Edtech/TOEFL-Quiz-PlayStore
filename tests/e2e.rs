@@ -428,7 +428,7 @@ async fn test_social(ctx: &TestCtx) {
         .send().await.unwrap();
     assert_eq!(resp.status(), 200);
     let body: Value = resp.json().await.unwrap();
-    assert!(body.as_array().unwrap().len() >= 1);
+    assert!(!body.as_array().unwrap().is_empty());
     assert_eq!(body[0]["rank"], 1);
 
     println!("  [social] save prediction");

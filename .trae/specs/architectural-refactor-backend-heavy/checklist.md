@@ -1,0 +1,11 @@
+- [x] Peer Review uses Rust backend API instead of LocalStorage for primary data.
+- [x] Peer Review implements a write-behind cache with optimistic UI updates.
+- [x] Score Oracle prediction algorithms are entirely implemented in Rust (`src/services/oracle.rs`).
+- [x] Frontend Score Oracle service fetches predictions from `/api/oracle/predict`.
+- [x] Adaptive Quiz Engine difficulty calculation and UserPerformanceMetrics tracking are handled by Rust (`src/services/quiz.rs`).
+- [x] Frontend quiz engine correctly consumes the backend's computed next question/difficulty while maintaining asset preloading.
+- [x] OAuth authentication flow successfully implements PKCE (frontend generates/sends challenge and verifier, backend validates).
+- [x] `cargo clippy --all-targets` passes with no warnings for the new code.
+- [x] `cargo test --test e2e` passes successfully.
+- [x] `npm run typecheck` passes in the frontend directory.
+- [x] Testing bypasses (e.g., `// HARDCODE BYPASS FOR E2E TESTING` in `useGuestPolicy.tsx`) remain untouched and intact.

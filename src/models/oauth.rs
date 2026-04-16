@@ -4,7 +4,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OAuthStateData {
-    pub code_verifier: String,
+    pub code_challenge: String,
     pub created_at: i64,
 }
 
@@ -45,6 +45,7 @@ impl OAuthStateStore {
 pub struct OAuthInitRequest {
     pub provider: String,
     pub redirect_uri: String,
+    pub code_challenge: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -57,6 +58,7 @@ pub struct OAuthInitResponse {
 pub struct OAuthCallbackRequest {
     pub code: String,
     pub state: String,
+    pub code_verifier: String,
 }
 
 #[derive(Debug, Deserialize)]

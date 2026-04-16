@@ -14,7 +14,7 @@ interface AuthStore {
     register: (username: string, password: string, fullName?: string) => Promise<{ ok: boolean; error?: string }>;
     logout: () => void;
     refreshProfile: () => Promise<void>;
-    updateProfile: (updates: { full_name?: string; bio?: string; avatar_url?: string }) => Promise<void>;
+    updateProfile: (updates: { full_name?: string; bio?: string; avatar_url?: string }) => Promise<{ ok: boolean; error?: string }>;
     signInWithGoogle: () => Promise<void>;
     signOut: () => void;
 

@@ -295,5 +295,4 @@ export const api = {
 
 export const apiClient = api;
 export { withTimeout, withRetry, toServiceError, isRetryableError, getRequestKey };
-export type { ServiceError };
 export default api;

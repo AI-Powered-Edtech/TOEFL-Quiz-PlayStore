@@ -177,9 +177,9 @@ pub async fn process_tip(
     let to_creator = creator.0.clone();
     let bid = bite_id.clone();
     let status = "completed".to_string();
-    let amount_f = req.amount as f64;
-    let pfee_f = platform_fee as f64;
-    let camount_f = creator_amount as f64;
+    let amount_f = req.amount;
+    let pfee_f = platform_fee;
+    let camount_f = creator_amount;
     Transaction::insert(state.pool.inner(), &["id", "type", "order_id", "from_user_id", "to_creator_id", "bite_id", "amount", "platform_fee", "creator_amount", "status"], vil_args![tx_id_c, ttype, order_id, from_user, to_creator, bid, amount_f, pfee_f, camount_f, status]).await?;
 
     // Creator earnings
@@ -188,7 +188,7 @@ pub async fn process_tip(
     let earn_bid = bite_id.clone();
     let earn_txid = tx_id.clone();
     let earn_type = "tip".to_string();
-    let earn_amount = creator_amount as f64;
+    let earn_amount = creator_amount;
     CreatorEarning::insert(state.pool.inner(), &["id", "creator_id", "bite_id", "transaction_id", "amount", "earning_type"], vil_args![earn_id, earn_cid, earn_bid, earn_txid, earn_amount, earn_type]).await?;
 
     let creator_id_owned = creator.0.clone();

@@ -93,7 +93,92 @@ pub async fn save_result(
     )
     .await?;
 
-    Ok(VilResponse::created(SaveResultResponse { ok: true, id, xp_earned: xp }))
+    // Update UserPerformanceMetrics
+    let mut row = UserPerformanceMetrics::find_where(
+        state.pool.inner(),
+        "user_id = ?",
+        &[&claims.sub],
+    )
+    .await?
+    .unwrap_or_else(|| UserPerformanceMetrics {
+        id: uuid::Uuid::new_v4().to_string(),
+        user_id: claims.sub.clone(),
+        total_questions: 0,
+        correct_answers: 0,
+        accuracy_by_section: "{}".to_string(),
+        accuracy_by_skill: "{}".to_string(),
+        recent_accuracy: "[]".to_string(),
+        average_response_time: 0.0,
+        current_difficulty: "medium".to_string(),
+        last_updated: chrono::Utc::now().timestamp_millis(),
+    });
+
+    let mut accuracy_by_section: std::collections::HashMap<String, SectionAccuracy> = serde_json::from_str(&row.accuracy_by_section).unwrap_or_default();
+    let mut accuracy_by_skill: std::collections::HashMap<String, SectionAccuracy> = serde_json::from_str(&row.accuracy_by_skill).unwrap_or_default();
+    let mut recent_accuracy: Vec<i64> = serde_json::from_str(&row.recent_accuracy).unwrap_or_default();
+
+    row.total_questions += req.total_questions;
+    row.correct_answers += req.correct_count;
+
+    let section_entry = accuracy_by_section.entry(req.section.clone()).or_insert(SectionAccuracy { correct: 0, total: 0 });
+    section_entry.total += req.total_questions;
+    section_entry.correct += req.correct_count;
+
+    if let Some(skill) = &req.skill_id {
+        let skill_entry = accuracy_by_skill.entry(skill.clone()).or_insert(SectionAccuracy { correct: 0, total: 0 });
+        skill_entry.total += req.total_questions;
+        skill_entry.correct += req.correct_count;
+    }
+
+    recent_accuracy.extend(std::iter::repeat_n(1, req.correct_count as usize));
+    recent_accuracy.extend(std::iter::repeat_n(0, (req.total_questions - req.correct_count) as usize));
+    while recent_accuracy.len() > 20 {
+        recent_accuracy.remove(0);
+    }
+
+    // Adjust difficulty
+    if recent_accuracy.len() >= 5 {
+        let recent_correct: i64 = recent_accuracy.iter().sum();
+        let accuracy = recent_correct as f64 / recent_accuracy.len() as f64;
+        let threshold = 0.2;
+
+        if accuracy > 0.75 + threshold && row.current_difficulty != "hard" {
+            row.current_difficulty = if row.current_difficulty == "easy" { "medium".to_string() } else { "hard".to_string() };
+            recent_accuracy.clear();
+        } else if accuracy < 0.45 - threshold && row.current_difficulty != "easy" {
+            row.current_difficulty = if row.current_difficulty == "hard" { "medium".to_string() } else { "easy".to_string() };
+            recent_accuracy.clear();
+        }
+    }
+
+    row.accuracy_by_section = serde_json::to_string(&accuracy_by_section).unwrap_or_else(|_| "{}".to_string());
+    row.accuracy_by_skill = serde_json::to_string(&accuracy_by_skill).unwrap_or_else(|_| "{}".to_string());
+    row.recent_accuracy = serde_json::to_string(&recent_accuracy).unwrap_or_else(|_| "[]".to_string());
+    row.last_updated = chrono::Utc::now().timestamp_millis();
+
+    if row.total_questions == req.total_questions {
+        sqlx::query(
+            "INSERT INTO user_performance_metrics (id, user_id, total_questions, correct_answers, accuracy_by_section, accuracy_by_skill, recent_accuracy, average_response_time, current_difficulty, last_updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .bind(&row.id).bind(&row.user_id).bind(row.total_questions).bind(row.correct_answers)
+        .bind(&row.accuracy_by_section).bind(&row.accuracy_by_skill).bind(&row.recent_accuracy)
+        .bind(row.average_response_time).bind(&row.current_difficulty).bind(row.last_updated)
+        .execute(state.pool.inner()).await.map_err(|e| AppError::Internal(e.to_string()))?;
+    } else {
+        sqlx::query(
+            "UPDATE user_performance_metrics SET total_questions = ?, correct_answers = ?, accuracy_by_section = ?, accuracy_by_skill = ?, recent_accuracy = ?, average_response_time = ?, current_difficulty = ?, last_updated = ? WHERE id = ?"
+        )
+        .bind(row.total_questions).bind(row.correct_answers).bind(&row.accuracy_by_section).bind(&row.accuracy_by_skill)
+        .bind(&row.recent_accuracy).bind(row.average_response_time).bind(&row.current_difficulty).bind(row.last_updated).bind(&row.id)
+        .execute(state.pool.inner()).await.map_err(|e| AppError::Internal(e.to_string()))?;
+    }
+
+    Ok(VilResponse::created(SaveResultResponse {
+        ok: true,
+        id,
+        xp_earned: xp,
+        next_difficulty_level: Some(row.current_difficulty),
+    }))
 }
 
 #[derive(Debug, Deserialize)]
@@ -358,7 +443,7 @@ pub async fn get_questions_paginated(
     Query(params): Query<PaginationParams>,
 ) -> Result<VilResponse<QuestionListResponse>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
-    let limit = params.limit.unwrap_or(20).min(100) as i64;
+    let limit = params.limit.unwrap_or(20).min(100);
     let page = params.page.unwrap_or(1).max(1);
     let offset = (page - 1) * limit;
 
@@ -421,7 +506,7 @@ pub async fn get_questions_by_skill(
     Query(params): Query<SkillParams>,
 ) -> Result<VilResponse<Vec<Question>>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
-    let limit = params.limit.unwrap_or(50) as i64;
+    let limit = params.limit.unwrap_or(50);
 
     let questions: Vec<Question> = sqlx::query_as(
         "SELECT id, skill_id, section, interaction, stimulus, prompt, choices, correct_response, cefr_target, difficulty_score, passage_id, metadata, created_at FROM question_bank WHERE skill_id = ? LIMIT ?"
@@ -620,7 +705,7 @@ pub async fn generate_quiz(
             "written" => (0..count)
                 .map(|i| GeneratedQuestion {
                     id: uuid::Uuid::new_v4().to_string(),
-                    skill_id: skill_id.max(20).min(60),
+                    skill_id: skill_id.clamp(20, 60),
                     section: "written".to_string(),
                     interaction: "identify_error".to_string(),
                     stimulus: None,
@@ -696,7 +781,7 @@ Students can practice identifying main ideas, details, and inferences based on t
             _ => (0..count)
                 .map(|i| GeneratedQuestion {
                     id: uuid::Uuid::new_v4().to_string(),
-                    skill_id: skill_id.max(1).min(19),
+                    skill_id: skill_id.clamp(1, 19),
                     section: "structure".to_string(),
                     interaction: "fill_blank".to_string(),
                     stimulus: None,
@@ -831,4 +916,176 @@ Students can practice identifying main ideas, details, and inferences based on t
     }
 
     Ok(VilResponse::ok(QuizGenerateResponse { questions }))
+}
+
+#[vil_handler]
+pub async fn get_adaptive_metrics(
+    ctx: ServiceCtx,
+    claims: Claims,
+) -> Result<VilResponse<AdaptiveMetricsResponse>, AppError> {
+    let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+
+    let row: Option<UserPerformanceMetrics> = UserPerformanceMetrics::find_where(
+        state.pool.inner(),
+        "user_id = ?",
+        &[&claims.sub],
+    )
+    .await?;
+
+    match row {
+        Some(m) => {
+            let accuracy_by_section: std::collections::HashMap<String, SectionAccuracy> = serde_json::from_str(&m.accuracy_by_section).unwrap_or_default();
+            let accuracy_by_skill: std::collections::HashMap<String, SectionAccuracy> = serde_json::from_str(&m.accuracy_by_skill).unwrap_or_default();
+            let recent_accuracy: Vec<i64> = serde_json::from_str(&m.recent_accuracy).unwrap_or_default();
+
+            Ok(VilResponse::ok(AdaptiveMetricsResponse {
+                total_questions: m.total_questions,
+                correct_answers: m.correct_answers,
+                accuracy_by_section,
+                accuracy_by_skill,
+                recent_accuracy,
+                average_response_time: m.average_response_time,
+                last_updated: m.last_updated,
+                current_difficulty: m.current_difficulty,
+            }))
+        }
+        None => {
+            Ok(VilResponse::ok(AdaptiveMetricsResponse {
+                total_questions: 0,
+                correct_answers: 0,
+                accuracy_by_section: std::collections::HashMap::new(),
+                accuracy_by_skill: std::collections::HashMap::new(),
+                recent_accuracy: vec![],
+                average_response_time: 0.0,
+                last_updated: chrono::Utc::now().timestamp_millis(),
+                current_difficulty: "medium".to_string(),
+            }))
+        }
+    }
+}
+
+#[vil_handler]
+pub async fn record_answer(
+    ctx: ServiceCtx,
+    claims: Claims,
+    body: ShmSlice,
+) -> Result<VilResponse<AdaptiveMetricsResponse>, AppError> {
+    let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    let req: RecordAnswerRequest = body.json().map_err(|_| AppError::Validation("Invalid body".into()))?;
+
+    let mut row: UserPerformanceMetrics = UserPerformanceMetrics::find_where(
+        state.pool.inner(),
+        "user_id = ?",
+        &[&claims.sub],
+    )
+    .await?
+    .unwrap_or_else(|| UserPerformanceMetrics {
+        id: uuid::Uuid::new_v4().to_string(),
+        user_id: claims.sub.clone(),
+        total_questions: 0,
+        correct_answers: 0,
+        accuracy_by_section: "{}".to_string(),
+        accuracy_by_skill: "{}".to_string(),
+        recent_accuracy: "[]".to_string(),
+        average_response_time: 0.0,
+        current_difficulty: "medium".to_string(),
+        last_updated: chrono::Utc::now().timestamp_millis(),
+    });
+
+    let mut accuracy_by_section: std::collections::HashMap<String, SectionAccuracy> = serde_json::from_str(&row.accuracy_by_section).unwrap_or_default();
+    let mut accuracy_by_skill: std::collections::HashMap<String, SectionAccuracy> = serde_json::from_str(&row.accuracy_by_skill).unwrap_or_default();
+    let mut recent_accuracy: Vec<i64> = serde_json::from_str(&row.recent_accuracy).unwrap_or_default();
+
+    row.total_questions += 1;
+    if req.correct {
+        row.correct_answers += 1;
+    }
+
+    let section_entry = accuracy_by_section.entry(req.section.clone()).or_insert(SectionAccuracy { correct: 0, total: 0 });
+    section_entry.total += 1;
+    if req.correct {
+        section_entry.correct += 1;
+    }
+
+    let skill_entry = accuracy_by_skill.entry(req.skill_id.clone()).or_insert(SectionAccuracy { correct: 0, total: 0 });
+    skill_entry.total += 1;
+    if req.correct {
+        skill_entry.correct += 1;
+    }
+
+    recent_accuracy.push(if req.correct { 1 } else { 0 });
+    if recent_accuracy.len() > 20 {
+        recent_accuracy.remove(0);
+    }
+
+    let total_time = row.average_response_time * (row.total_questions - 1) as f64;
+    row.average_response_time = (total_time + req.response_time_ms as f64) / row.total_questions as f64;
+    row.last_updated = chrono::Utc::now().timestamp_millis();
+
+    // Adjust difficulty
+    if recent_accuracy.len() >= 5 {
+        let recent_correct: i64 = recent_accuracy.iter().sum();
+        let accuracy = recent_correct as f64 / recent_accuracy.len() as f64;
+        let threshold = 0.2;
+
+        if accuracy > 0.75 + threshold && row.current_difficulty != "hard" {
+            row.current_difficulty = if row.current_difficulty == "easy" { "medium".to_string() } else { "hard".to_string() };
+            recent_accuracy.clear();
+        } else if accuracy < 0.45 - threshold && row.current_difficulty != "easy" {
+            row.current_difficulty = if row.current_difficulty == "hard" { "medium".to_string() } else { "easy".to_string() };
+            recent_accuracy.clear();
+        }
+    }
+
+    row.accuracy_by_section = serde_json::to_string(&accuracy_by_section).unwrap_or_else(|_| "{}".to_string());
+    row.accuracy_by_skill = serde_json::to_string(&accuracy_by_skill).unwrap_or_else(|_| "{}".to_string());
+    row.recent_accuracy = serde_json::to_string(&recent_accuracy).unwrap_or_else(|_| "[]".to_string());
+
+    if row.total_questions == 1 {
+        // Insert
+        sqlx::query(
+            "INSERT INTO user_performance_metrics (id, user_id, total_questions, correct_answers, accuracy_by_section, accuracy_by_skill, recent_accuracy, average_response_time, current_difficulty, last_updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .bind(&row.id)
+        .bind(&row.user_id)
+        .bind(row.total_questions)
+        .bind(row.correct_answers)
+        .bind(&row.accuracy_by_section)
+        .bind(&row.accuracy_by_skill)
+        .bind(&row.recent_accuracy)
+        .bind(row.average_response_time)
+        .bind(&row.current_difficulty)
+        .bind(row.last_updated)
+        .execute(state.pool.inner())
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    } else {
+        // Update
+        sqlx::query(
+            "UPDATE user_performance_metrics SET total_questions = ?, correct_answers = ?, accuracy_by_section = ?, accuracy_by_skill = ?, recent_accuracy = ?, average_response_time = ?, current_difficulty = ?, last_updated = ? WHERE id = ?"
+        )
+        .bind(row.total_questions)
+        .bind(row.correct_answers)
+        .bind(&row.accuracy_by_section)
+        .bind(&row.accuracy_by_skill)
+        .bind(&row.recent_accuracy)
+        .bind(row.average_response_time)
+        .bind(&row.current_difficulty)
+        .bind(row.last_updated)
+        .bind(&row.id)
+        .execute(state.pool.inner())
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    }
+
+    Ok(VilResponse::ok(AdaptiveMetricsResponse {
+        total_questions: row.total_questions,
+        correct_answers: row.correct_answers,
+        accuracy_by_section,
+        accuracy_by_skill,
+        recent_accuracy,
+        average_response_time: row.average_response_time,
+        last_updated: row.last_updated,
+        current_difficulty: row.current_difficulty,
+    }))
 }

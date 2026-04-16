@@ -1,6 +1,50 @@
 use serde::{Deserialize, Serialize};
 use vil_orm_derive::VilEntity;
 use serde_json::Value;
+use std::collections::HashMap;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SectionAccuracy {
+    pub correct: i64,
+    pub total: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow, VilEntity)]
+#[vil_entity(table = "user_performance_metrics")]
+pub struct UserPerformanceMetrics {
+    #[vil_entity(pk)]
+    pub id: String,
+    #[vil_entity(unique)]
+    pub user_id: String,
+    pub total_questions: i64,
+    pub correct_answers: i64,
+    pub accuracy_by_section: String, // JSON
+    pub accuracy_by_skill: String,   // JSON
+    pub recent_accuracy: String,     // JSON array
+    pub average_response_time: f64,
+    pub current_difficulty: String,
+    pub last_updated: i64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RecordAnswerRequest {
+    pub correct: bool,
+    pub section: String,
+    pub skill_id: String,
+    pub response_time_ms: i64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AdaptiveMetricsResponse {
+    pub total_questions: i64,
+    pub correct_answers: i64,
+    pub accuracy_by_section: HashMap<String, SectionAccuracy>,
+    pub accuracy_by_skill: HashMap<String, SectionAccuracy>,
+    pub recent_accuracy: Vec<i64>,
+    pub average_response_time: f64,
+    pub last_updated: i64,
+    pub current_difficulty: String,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow, VilEntity)]
 #[vil_entity(table = "question_bank")]

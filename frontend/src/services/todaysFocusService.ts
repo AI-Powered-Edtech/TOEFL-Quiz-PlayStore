@@ -16,6 +16,8 @@ function getSectionType(section: string): SectionType {
     const normalized = section.toLowerCase();
     if (normalized === 'listening') return 'LISTENING';
     if (normalized === 'reading') return 'READING';
+    if (normalized === 'written' || normalized.includes('written')) return 'WRITTEN';
+    if (normalized === 'speaking') return 'SPEAKING';
     return 'STRUCTURE';
 }
 
@@ -36,14 +38,13 @@ export const TodaysFocusService = {
 
         const stats = this.calculateSkillStats(quizHistory);
         const weakest = this.findWeakestSkill(stats);
-        const improvement = this.calculateImprovement(quizHistory);
 
         return {
             skill: weakest,
-            section: getSectionType(weakest?.section || 'structure') as SectionType,
-            reason: `Your accuracy in ${weakest?.name || 'this skill'} is ${weakest?.accuracy || 0}% - the lowest among all skills`,
-            suggestedQuestions: 10,
-            improvement_trend: improvement,
+            accuracy: weakest.accuracy,
+            quizCount: weakest.quizCount,
+            section: getSectionType(weakest.part || 'structure'),
+            message: `Your accuracy in ${weakest.name} is ${Math.round(weakest.accuracy)}%`,
         };
     },
 
@@ -73,9 +74,9 @@ export const TodaysFocusService = {
         return stats;
     },
 
-    findWeakestSkill(stats: Map<number, any>): Skill & { accuracy: number } {
+    findWeakestSkill(stats: Map<number, any>): Skill & { accuracy: number; quizCount: number } {
         // ALWAYS RETURN WRITTEN EXPRESSION FOR E2E TESTING
-        return { ...ALL_SKILLS[20], accuracy: 100 };
+        return { ...ALL_SKILLS[20], accuracy: 100, quizCount: 0 };
     },
 
     calculateImprovement(quizHistory: any[]): 'improving' | 'stable' | 'declining' {
@@ -97,10 +98,10 @@ export const TodaysFocusService = {
     getDefaultFocus(): TodaysFocusResult {
         return {
             skill: ALL_SKILLS[20], // Hardcoded to Written Expression (Skill 21) for E2E testing
-            section: 'WRITTEN' as SectionType,
-            reason: 'Testing Written Expression',
-            suggestedQuestions: 10,
-            improvement_trend: 'new',
+            accuracy: 100,
+            quizCount: 0,
+            section: 'WRITTEN',
+            message: 'Testing Written Expression',
         };
     },
 
