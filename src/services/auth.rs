@@ -6,12 +6,22 @@ use crate::AppState;
 use vil::prelude::*;
 use vil::auth::VilPassword;
 
+fn check_rate_limit(state: &AppState) -> Result<(), AppError> {
+    let ip = "default";
+    let mut limiter = state.rate_limiter.lock().unwrap();
+    match limiter.check_rate_limit(ip) {
+        Ok(()) => Ok(()),
+        Err(retry_after) => Err(AppError::RateLimited { retry_after_secs: retry_after }),
+    }
+}
+
 #[vil_handler]
 pub async fn register(
     ctx: ServiceCtx,
     body: ShmSlice,
 ) -> Result<VilResponse<AuthResponse>, AppError> {
     let state = ctx.state::<AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    check_rate_limit(&state)?;
     let req: RegisterRequest = body.json().map_err(|_| AppError::Validation("Invalid JSON body".into()))?;
 
     if req.username.len() < 3 || req.username.len() > 50 {
@@ -60,6 +70,7 @@ pub async fn login(
     body: ShmSlice,
 ) -> Result<VilResponse<AuthResponse>, AppError> {
     let state = ctx.state::<AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    check_rate_limit(&state)?;
     let req: LoginRequest = body.json().map_err(|_| AppError::Validation("Invalid JSON body".into()))?;
 
     let profile = Profile::find_where(state.pool.inner(), "username = ?", &[&req.username])

@@ -14,13 +14,10 @@ mod tasks;
 
 use crate::config::AppConfig;
 use crate::db::Database;
-use crate::services::{admin, admin_monitoring, ai, auth, oauth, blog, creator, monitoring, profile, quiz, social, storage, writing, purchases, oracle};
+use crate::services::{admin, admin_monitoring, ai, auth, oauth, blog, creator, metrics, monitoring, profile, quiz, social, storage, writing, purchases, oracle};
 
 #[tokio::main]
 async fn main() {
-    // vil::prelude::vil_log builder — dev_mode auto-detects debug/release profile.
-    // dev_mode(true): tracing fallback (colored terminal)
-    // dev_mode(false): full SPSC ring buffer (structured, fast)
     dotenv::dotenv().ok();
 
     let _log = vil::prelude::vil_log::init()
@@ -37,8 +34,6 @@ async fn main() {
     );
 
     let state = AppState::new(pool, config.clone(), jwt);
-
-    // ── ServiceProcess definitions ──
 
     let auth_svc = ServiceProcess::new("auth")
         .endpoint(Method::POST, "/register", post(auth::register))
@@ -107,7 +102,7 @@ async fn main() {
         .endpoint(Method::GET, "/model-essays", get(writing::list_model_essays))
         .endpoint(Method::GET, "/vocabulary", get(writing::get_vocabulary))
         .endpoint(Method::POST, "/vocabulary", post(writing::add_vocabulary))
-        .endpoint(Method::POST, "/devils-advocate", post(writing::devils_advocate))
+        .endpoint(Method::POST, "/devils_advocate", post(writing::devils_advocate))
         .endpoint(Method::POST, "/peer-review/submissions", post(writing::submit_essay))
         .endpoint(Method::GET, "/peer-review/queue", get(writing::review_queue))
         .endpoint(Method::POST, "/peer-review/reviews", post(writing::submit_review))
@@ -176,14 +171,16 @@ async fn main() {
         .endpoint(Method::GET, "/predict", get(oracle::predict_score))
         .state(state.clone());
 
-    // ── Background tasks ──
+    let metrics_svc = ServiceProcess::new("metrics")
+        .endpoint(Method::GET, "", get(metrics::get_metrics))
+        .state(state.clone());
+
+    metrics::init_metrics();
 
     let task_pool = state.pool.clone();
     tokio::spawn(async move {
         tasks::run_periodic_tasks(task_pool).await;
     });
-
-    // ── Run ──
 
     let port = config.port;
 
@@ -203,9 +200,9 @@ async fn main() {
         .service(storage_svc)
         .service(blog_svc)
         .service(admin_mon_svc)
-        .service(oracle_svc);
+        .service(oracle_svc)
+        .service(metrics_svc);
 
-    // G7: Contract export — dump process topology as JSON
     if std::env::args().any(|a| a == "--contract") {
         println!("{}", app.contract_json());
         return;
