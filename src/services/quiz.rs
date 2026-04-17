@@ -1,5 +1,6 @@
 use crate::error::AppError;
 use crate::middleware::auth::Claims;
+use crate::models::pagination::{PageParams, PaginatedResponse};
 use crate::models::profile::Profile;
 use crate::models::quiz::*;
 use crate::models::responses::*;
@@ -282,19 +283,40 @@ pub async fn get_report(
     }))
 }
 
+#[derive(Debug, Deserialize)]
+pub struct HistoryParams {
+    pub page: Option<i64>,
+    pub limit: Option<i64>,
+}
+
 #[vil_handler]
 pub async fn history(
     ctx: ServiceCtx,
     claims: Claims,
-) -> Result<VilResponse<Vec<QuizResult>>, AppError> {
+    Query(params): Query<HistoryParams>,
+) -> Result<VilResponse<PaginatedResponse<QuizResult>>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    let page_params = PageParams {
+        page: params.page,
+        limit: params.limit,
+    };
+    let limit = page_params.get_limit();
+    let offset = page_params.get_offset();
+
+    let total = QuizResult::scalar_v::<i64>(
+        state.pool.inner(),
+        "COUNT(*)",
+        "user_id = ?",
+        vil_args![&claims.sub],
+    ).await?;
+
     let results = QuizResult::find_all_where(
         state.pool.inner(),
-        "user_id = ? ORDER BY date DESC LIMIT 100",
-        &[&claims.sub],
+        "user_id = ? ORDER BY date DESC LIMIT ? OFFSET ?",
+        &[&claims.sub, &limit, &offset],
     )
     .await?;
-    Ok(VilResponse::ok(results))
+    Ok(VilResponse::ok(PaginatedResponse::new(results, page_params.get_page(), limit, total)))
 }
 
 #[vil_handler]

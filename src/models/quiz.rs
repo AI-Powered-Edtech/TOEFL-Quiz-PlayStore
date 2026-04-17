@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
-use vil_orm_derive::VilEntity;
 use serde_json::Value;
 use std::collections::HashMap;
+use vil_orm_derive::VilEntity;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SectionAccuracy {
@@ -54,14 +54,14 @@ pub struct Question {
     pub skill_id: i64,
     pub section: String,
     pub interaction: String,
-    pub stimulus: Option<String>,  // JSON
+    pub stimulus: Option<String>, // JSON
     pub prompt: String,
-    pub choices: Option<String>,   // JSON
+    pub choices: Option<String>,          // JSON
     pub correct_response: Option<String>, // JSON
     pub cefr_target: Option<String>,
     pub difficulty_score: Option<i64>,
     pub passage_id: Option<String>,
-    pub metadata: Option<String>,  // JSON
+    pub metadata: Option<String>, // JSON
     pub created_at: String,
 }
 
@@ -106,6 +106,15 @@ pub struct QuestionFilter {
     pub section: Option<String>,
     pub skill_id: Option<i64>,
     pub cefr: Option<String>,
+    pub limit: Option<i64>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct QuizListParams {
+    pub section: Option<String>,
+    pub skill_id: Option<i64>,
+    pub cefr: Option<String>,
+    pub page: Option<i64>,
     pub limit: Option<i64>,
 }
 

@@ -1,5 +1,6 @@
 use crate::error::AppError;
 use crate::middleware::auth::Claims;
+use crate::models::pagination::{PageParams, PaginatedResponse};
 use crate::models::profile::Profile;
 use crate::models::responses::*;
 use crate::models::social::*;
@@ -70,19 +71,42 @@ pub async fn join_circle(
     Ok(VilResponse::ok(CircleJoinResponse { ok: true, circle_id: circle.id }))
 }
 
+#[derive(Debug, Deserialize)]
+pub struct CircleListParams {
+    pub page: Option<i64>,
+    pub limit: Option<i64>,
+}
+
 #[vil_handler]
 pub async fn my_circles(
     ctx: ServiceCtx,
     claims: Claims,
-) -> Result<VilResponse<Vec<Circle>>, AppError> {
+    Query(params): Query<CircleListParams>,
+) -> Result<VilResponse<PaginatedResponse<Circle>>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    let page_params = PageParams {
+        page: params.page,
+        limit: params.limit,
+    };
+    let limit = page_params.get_limit();
+    let offset = page_params.get_offset();
+
+    let total = Circle::scalar_v::<i64>(
+        state.pool.inner(),
+        "COUNT(*)",
+        "id IN (SELECT circle_id FROM circle_members WHERE user_id = ?)",
+        vil_args![&claims.sub],
+    ).await?;
+
     let circles = Circle::q()
         .select(&["c.*"])
         .alias("c")
         .join("circle_members cm", "c.id = cm.circle_id")
         .where_eq("cm.user_id", &claims.sub)
+        .limit(limit)
+        .offset(offset)
         .fetch_all::<Circle>(state.pool.inner()).await?;
-    Ok(VilResponse::ok(circles))
+    Ok(VilResponse::ok(PaginatedResponse::new(circles, page_params.get_page(), limit, total)))
 }
 
 #[vil_handler]
@@ -116,20 +140,43 @@ pub async fn add_friend(
     Ok(VilResponse::ok(OkResponse { ok: true }))
 }
 
+#[derive(Debug, Deserialize)]
+pub struct FriendListParams {
+    pub page: Option<i64>,
+    pub limit: Option<i64>,
+}
+
 #[vil_handler]
 pub async fn list_friends(
     ctx: ServiceCtx,
     claims: Claims,
-) -> Result<VilResponse<Vec<FriendApiRow>>, AppError> {
+    Query(params): Query<FriendListParams>,
+) -> Result<VilResponse<PaginatedResponse<FriendApiRow>>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    let page_params = PageParams {
+        page: params.page,
+        limit: params.limit,
+    };
+    let limit = page_params.get_limit();
+    let offset = page_params.get_offset();
+
+    let total = Friend::scalar_v::<i64>(
+        state.pool.inner(),
+        "COUNT(*)",
+        "user_id = ?",
+        vil_args![&claims.sub],
+    ).await?;
+
     let rows: Vec<FriendJoinRow> = sqlx::query_as(
         "SELECT f.id, f.user_id, f.friend_id, f.created_at, p.full_name, p.avatar_url, p.xp \
          FROM friends f \
          JOIN profiles p ON p.id = f.friend_id \
          WHERE f.user_id = ? \
-         ORDER BY f.created_at DESC",
+         ORDER BY f.created_at DESC LIMIT ? OFFSET ?",
     )
     .bind(&claims.sub)
+    .bind(limit)
+    .bind(offset)
     .fetch_all(state.pool.inner())
     .await
     .map_err(|e| AppError::Internal(e.to_string()))?;
@@ -149,7 +196,7 @@ pub async fn list_friends(
         })
         .collect();
 
-    Ok(VilResponse::ok(friends))
+    Ok(VilResponse::ok(PaginatedResponse::new(friends, page_params.get_page(), limit, total)))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -240,18 +287,40 @@ pub async fn respond_friend_request(
     Ok(VilResponse::ok(OkResponse { ok: true }))
 }
 
+#[derive(Debug, Deserialize)]
+pub struct LeaderboardParams {
+    pub page: Option<i64>,
+    pub limit: Option<i64>,
+}
+
 #[vil_handler]
 pub async fn leaderboard(
     ctx: ServiceCtx,
     _claims: Option<Claims>,
-) -> Result<VilResponse<Vec<LeaderboardEntry>>, AppError> {
+    Query(params): Query<LeaderboardParams>,
+) -> Result<VilResponse<PaginatedResponse<LeaderboardEntry>>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    let page_params = PageParams {
+        page: params.page,
+        limit: params.limit,
+    };
+    let limit = page_params.get_limit();
+    let offset = page_params.get_offset();
+
+    let total = Profile::scalar_v::<i64>(
+        state.pool.inner(),
+        "COUNT(*)",
+        "1=1",
+        vil_args![],
+    ).await?;
+
     let entries = Profile::q()
         .select_expr("ROW_NUMBER() OVER (ORDER BY xp DESC) as rank, id as user_id, full_name, avatar_url, xp")
         .order_by_desc("xp")
-        .limit(50)
+        .limit(limit)
+        .offset(offset)
         .fetch_all::<LeaderboardEntry>(state.pool.inner()).await?;
-    Ok(VilResponse::ok(entries))
+    Ok(VilResponse::ok(PaginatedResponse::new(entries, page_params.get_page(), limit, total)))
 }
 
 // ── Circle Messages ──
@@ -283,21 +352,43 @@ pub async fn send_message(
     Ok(VilResponse::created(MessageCreatedResponse { ok: true, id }))
 }
 
+#[derive(Debug, Deserialize)]
+pub struct MessageListParams {
+    pub page: Option<i64>,
+    pub limit: Option<i64>,
+}
+
 #[vil_handler]
 pub async fn get_messages(
     ctx: ServiceCtx,
     _claims: Claims,
     Path(circle_id): Path<String>,
-) -> Result<VilResponse<Vec<MessageRow>>, AppError> {
+    Query(params): Query<MessageListParams>,
+) -> Result<VilResponse<PaginatedResponse<MessageRow>>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    let page_params = PageParams {
+        page: params.page,
+        limit: params.limit,
+    };
+    let limit = page_params.get_limit();
+    let offset = page_params.get_offset();
+
+    let total = CircleMessage::scalar_v::<i64>(
+        state.pool.inner(),
+        "COUNT(*)",
+        "circle_id = ?",
+        vil_args![&circle_id],
+    ).await?;
+
     let msgs = CircleMessage::q()
         .select(&["id", "user_id", "content", "is_system", "created_at"])
         .where_eq("circle_id", &circle_id)
         .order_by_desc("created_at")
-        .limit(50)
+        .limit(limit)
+        .offset(offset)
         .fetch_all::<MessageRow>(state.pool.inner()).await?;
 
-    Ok(VilResponse::ok(msgs))
+    Ok(VilResponse::ok(PaginatedResponse::new(msgs, page_params.get_page(), limit, total)))
 }
 
 // ── Oracle Predictions ──
@@ -347,34 +438,79 @@ pub async fn save_prediction(
 
 // ── Achievements ──
 
+#[derive(Debug, Deserialize)]
+pub struct AchievementListParams {
+    pub page: Option<i64>,
+    pub limit: Option<i64>,
+}
+
 #[vil_handler]
 pub async fn get_achievements(
     ctx: ServiceCtx,
     claims: Claims,
-) -> Result<VilResponse<Vec<AchievementRow>>, AppError> {
+    Query(params): Query<AchievementListParams>,
+) -> Result<VilResponse<PaginatedResponse<AchievementRow>>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    let page_params = PageParams {
+        page: params.page,
+        limit: params.limit,
+    };
+    let limit = page_params.get_limit();
+    let offset = page_params.get_offset();
+
+    let total = UserAchievement::scalar_v::<i64>(
+        state.pool.inner(),
+        "COUNT(*)",
+        "user_id = ?",
+        vil_args![&claims.sub],
+    ).await?;
+
     let achievements = UserAchievement::q()
         .select(&["id", "achievement_id", "feature", "xp_earned", "created_at"])
         .where_eq("user_id", &claims.sub)
         .order_by_desc("created_at")
+        .limit(limit)
+        .offset(offset)
         .fetch_all::<AchievementRow>(state.pool.inner()).await?;
 
-    Ok(VilResponse::ok(achievements))
+    Ok(VilResponse::ok(PaginatedResponse::new(achievements, page_params.get_page(), limit, total)))
 }
 
 // ── Notifications ──
+
+#[derive(Debug, Deserialize)]
+pub struct NotificationListParams {
+    pub page: Option<i64>,
+    pub limit: Option<i64>,
+}
 
 #[vil_handler]
 pub async fn get_notifications(
     ctx: ServiceCtx,
     claims: Claims,
-) -> Result<VilResponse<Vec<NotificationApiRow>>, AppError> {
+    Query(params): Query<NotificationListParams>,
+) -> Result<VilResponse<PaginatedResponse<NotificationApiRow>>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    let page_params = PageParams {
+        page: params.page,
+        limit: params.limit,
+    };
+    let limit = page_params.get_limit();
+    let offset = page_params.get_offset();
+
+    let total = Notification::scalar_v::<i64>(
+        state.pool.inner(),
+        "COUNT(*)",
+        "user_id = ?",
+        vil_args![&claims.sub],
+    ).await?;
+
     let rows: Vec<NotificationRow> = Notification::q()
         .select(&["id", "type", "message", "read", "created_at"])
         .where_eq("user_id", &claims.sub)
         .order_by_desc("created_at")
-        .limit(50)
+        .limit(limit)
+        .offset(offset)
         .fetch_all::<NotificationRow>(state.pool.inner()).await?;
 
     let notifs = rows
@@ -395,7 +531,7 @@ pub async fn get_notifications(
         })
         .collect();
 
-    Ok(VilResponse::ok(notifs))
+    Ok(VilResponse::ok(PaginatedResponse::new(notifs, page_params.get_page(), limit, total)))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
