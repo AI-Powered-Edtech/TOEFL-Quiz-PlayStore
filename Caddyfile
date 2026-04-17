@@ -1,0 +1,110 @@
+{
+    email admin@example.com
+    admin off
+}
+
+:80 {
+    rate_limit {
+        max_regions 1
+        table memory {
+            max_entries 10000
+        }
+        zone api {
+            key remote_ip
+            band 100
+            window 1s
+        }
+    }
+
+    @frontend {
+        path /static/*
+        path /
+        path /index.html
+    }
+
+    handle @frontend {
+        root * /usr/share/nginx/html
+        try_files {path} /index.html
+        file_server
+    }
+
+    @backend {
+        path /api/*
+        path /auth/*
+    }
+
+    handle @backend {
+        reverse_proxy backend:8082
+
+        header {
+            Access-Control-Allow-Origin "*"
+            Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Authorization, Content-Type, Accept"
+            Access-Control-Max-Age "3600"
+            Content-Type "application/json"
+        }
+
+        @ratelimited {
+            rate_limit zone:api by remote_ip
+        }
+
+        handle @ratelimited {
+            respond "Too Many Requests" 429
+        }
+    }
+
+    respond "Not Found" 404
+}
+
+:443 {
+    rate_limit {
+        max_regions 1
+        table memory {
+            max_entries 10000
+        }
+        zone api {
+            key remote_ip
+            band 100
+            window 1s
+        }
+    }
+
+    @frontend {
+        path /static/*
+        path /
+        path /index.html
+    }
+
+    handle @frontend {
+        root * /usr/share/nginx/html
+        try_files {path} /index.html
+        file_server
+    }
+
+    @backend {
+        path /api/*
+        path /auth/*
+    }
+
+    handle @backend {
+        reverse_proxy backend:8082
+
+        header {
+            Access-Control-Allow-Origin "*"
+            Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Authorization, Content-Type, Accept"
+            Access-Control-Max-Age "3600"
+            Content-Type "application/json"
+        }
+
+        @ratelimited {
+            rate_limit zone:api by remote_ip
+        }
+
+        handle @ratelimited {
+            respond "Too Many Requests" 429
+        }
+    }
+
+    respond "Not Found" 404
+}
