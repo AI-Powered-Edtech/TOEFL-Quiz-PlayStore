@@ -240,3 +240,9 @@ pub struct DevilsAdvocateRequest {
     pub user_argument: String,
     pub time_spent_seconds: Option<i64>,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct AiEssayEvaluateRequest {
+    pub essay_text: String,
+    pub essay_type: String,
+}

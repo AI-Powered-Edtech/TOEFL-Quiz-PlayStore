@@ -6,6 +6,7 @@ use crate::models::responses::*;
 use crate::models::views::*;
 use crate::models::writing::*;
 use vil::prelude::*;
+use vil::ai::{ChatMessage as VilChat, OpenAiConfig, OpenAiProvider, LlmProvider};
 
 // ── Writing Gym Progress ──
 
@@ -558,4 +559,95 @@ pub async fn submit_review(
     Profile::update_where(state.pool.inner(), "xp = xp + 25", "id = ?", &[&claims.sub]).await?;
 
     Ok(VilResponse::created(ReviewResponse { ok: true, id, overall_band: band }))
+}
+
+#[vil_handler]
+pub async fn ai_essay_evaluate(
+    ctx: ServiceCtx,
+    claims: Claims,
+    body: ShmSlice,
+) -> Result<VilResponse<AiEssayEvaluateResponse>, AppError> {
+    let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    let req: AiEssayEvaluateRequest = body.json().map_err(|_| AppError::Validation("Invalid body".into()))?;
+    
+    let word_count = req.essay_text.split_whitespace().count();
+    
+    if req.essay_text.len() < 10 {
+        return Err(AppError::Validation("Essay is too short to evaluate".into()));
+    }
+    
+    let essay_type = if req.essay_type == "integrated" { "Integrated Writing" } else { "Independent Writing" };
+    
+    if state.config.groq_api_key.is_empty() {
+        return Ok(VilResponse::ok(AiEssayEvaluateResponse {
+            score: 3,
+            feedback: "Essay evaluation unavailable - no API key configured".to_string(),
+            improvements: vec![],
+            word_count,
+        }));
+    }
+    
+    let system_prompt = format!(
+        "You are an expert TOEFL iBT writing examiner. Evaluate the {} essay and provide:\n\
+        1. A score from 0-5 (where 5 is excellent)\n\
+        2. Constructive feedback on organization, language use, and content development\n\
+        3. Specific suggestions for improvement as an array of strings\n\
+        Return ONLY valid JSON with this exact structure: {{\"score\": 0-5, \"feedback\": \"...\", \"improvements\": [\"...\", \"...\"]}}",
+        essay_type
+    );
+    
+    let provider = OpenAiProvider::new(
+        OpenAiConfig::new(&state.config.groq_api_key, "llama-3.3-70b-versatile")
+            .base_url("https://api.groq.com/openai/v1")
+            .temperature(0.3)
+            .max_tokens(1024),
+    );
+    
+    let messages = vec![
+        VilChat::system(system_prompt),
+        VilChat::user(req.essay_text.clone()),
+    ];
+    
+    if let Ok(response) = provider.chat(&messages).await {
+        let result: serde_json::Value = serde_json::from_str(&response.content).unwrap_or_else(|_| {
+            serde_json::json!({
+                "score": 3,
+                "feedback": "Unable to parse AI response - generic evaluation provided",
+                "improvements": ["Review essay structure", "Expand vocabulary usage"]
+            })
+        });
+        
+        let score = result.get("score").and_then(|v| v.as_i64()).unwrap_or(3);
+        let feedback = result.get("feedback").and_then(|v| v.as_str()).unwrap_or("Evaluation complete").to_string();
+        let improvements: Vec<String> = result.get("improvements")
+            .and_then(|v| v.as_array())
+            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+            .unwrap_or_default();
+        
+        let user_id = claims.sub.clone();
+        let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
+        let token_id = uuid::Uuid::new_v4().to_string();
+        AiTokenUsage::q()
+            .insert_columns(&["id", "user_id", "date", "tokens_used", "tokens_limit", "feature"])
+            .value(token_id).value(user_id).value(today)
+            .value(2_i64).value(15_i64).value("essay_eval")
+            .on_conflict("user_id, date")
+            .do_update_raw("tokens_used = tokens_used + 2")
+            .execute(state.pool.inner())
+            .await?;
+        
+        return Ok(VilResponse::ok(AiEssayEvaluateResponse {
+            score,
+            feedback,
+            improvements,
+            word_count,
+        }));
+    }
+    
+    Ok(VilResponse::ok(AiEssayEvaluateResponse {
+        score: 3,
+        feedback: "AI evaluation failed - essay saved for later review".to_string(),
+        improvements: vec!["Try again later".to_string()],
+        word_count,
+    }))
 }

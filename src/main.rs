@@ -91,6 +91,7 @@ async fn main() {
         .endpoint(Method::POST, "/generate", post(ai::generate))
         .endpoint(Method::POST, "/tts", post(ai::tts))
         .endpoint(Method::GET, "/token-usage", get(ai::token_usage))
+        .endpoint(Method::POST, "/essay-evaluate", post(writing::ai_essay_evaluate))
         .state(state.clone());
 
     let purchases_svc = ServiceProcess::new("purchases")

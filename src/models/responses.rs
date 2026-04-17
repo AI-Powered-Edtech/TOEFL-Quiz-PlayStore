@@ -333,3 +333,11 @@ pub struct PinVerifyResponse {
     pub ok: bool,
     pub valid: bool,
 }
+
+#[derive(Clone, Serialize, Deserialize, VilModel)]
+pub struct AiEssayEvaluateResponse {
+    pub score: i64,
+    pub feedback: String,
+    pub improvements: Vec<String>,
+    pub word_count: usize,
+}
