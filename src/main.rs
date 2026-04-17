@@ -1,4 +1,6 @@
+use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 use vil::prelude::*;
 use vil::auth::VilJwt;
@@ -218,6 +220,7 @@ pub struct AppState {
     pub config: AppConfig,
     pub jwt: Arc<VilJwt>,
     pub oauth_state: Arc<RwLock<OAuthStateStore>>,
+    pub rate_limiter: Arc<std::sync::Mutex<RateLimiter>>,
 }
 
 impl AppState {
@@ -227,6 +230,38 @@ impl AppState {
             config,
             jwt,
             oauth_state: Arc::new(RwLock::new(OAuthStateStore::new())),
+            rate_limiter: Arc::new(std::sync::Mutex::new(RateLimiter::new(60, 5))),
+        }
+    }
+}
+
+pub struct RateLimiter {
+    requests: HashMap<String, Vec<Instant>>,
+    window_secs: u64,
+    max_requests: usize,
+}
+
+impl RateLimiter {
+    pub fn new(window_secs: u64, max_requests: usize) -> Self {
+        Self {
+            requests: HashMap::new(),
+            window_secs,
+            max_requests,
+        }
+    }
+
+    pub fn check_rate_limit(&mut self, ip: &str) -> Result<(), u64> {
+        let now = Instant::now();
+        let window = Duration::from_secs(self.window_secs);
+        let entry = self.requests.entry(ip.to_string()).or_insert_with(Vec::new);
+        entry.retain(|&t| now.duration_since(t) < window);
+        if entry.len() >= self.max_requests {
+            let oldest = entry.first().map(|t| now.duration_since(*t).as_secs()).unwrap_or(self.window_secs);
+            let retry_after = self.window_secs.saturating_sub(oldest);
+            Err(retry_after)
+        } else {
+            entry.push(now);
+            Ok(())
         }
     }
 }
