@@ -86,6 +86,14 @@ jobs:
           } > frontend/android/keystore.properties
           echo "keystore.properties written ($(wc -c < frontend/android/keystore.properties) bytes)"
 
+      - name: Write frontend/.env.production
+        run: |
+          cat > frontend/.env.production <<'ENVEOF'
+          VITE_API_URL=https://api.toeflquiz.id
+          VITE_VWFD_URL=https://api.toeflquiz.id
+          ENVEOF
+          echo "wrote frontend/.env.production ($(wc -c < frontend/.env.production) bytes)"
+
       - name: Run release-gate (build + sync + bundleRelease)
         env:
           RUN_ANDROID_BUNDLE: '1'
