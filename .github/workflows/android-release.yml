@@ -46,7 +46,6 @@ jobs:
       - name: Cache Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          build-root-directory: frontend/android
           gradle-home-cache-cleanup: true
 
       - name: Install frontend deps
