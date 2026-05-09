@@ -61,10 +61,10 @@ jobs:
             echo "::error::ANDROID_KEYSTORE_BASE64 secret is empty"
             exit 1
           fi
-          mkdir -p frontend/android
-          echo "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > frontend/android/release.keystore
-          test -s frontend/android/release.keystore || { echo "::error::decoded keystore is empty"; exit 1; }
-          echo "keystore-bytes=$(stat -c%s frontend/android/release.keystore)" >> "$GITHUB_OUTPUT"
+          mkdir -p frontend/android/app
+          echo "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > frontend/android/app/release.keystore
+          test -s frontend/android/app/release.keystore || { echo "::error::decoded keystore is empty"; exit 1; }
+          echo "keystore-bytes=$(stat -c%s frontend/android/app/release.keystore)" >> "$GITHUB_OUTPUT"
 
       - name: Write keystore.properties
         env:
@@ -130,7 +130,7 @@ jobs:
       - name: Cleanup secrets on disk
         if: always()
         run: |
-          rm -f frontend/android/release.keystore frontend/android/keystore.properties
+          rm -f frontend/android/app/release.keystore frontend/android/keystore.properties
           echo "cleaned local keystore artifacts"
 
       - name: Summary
