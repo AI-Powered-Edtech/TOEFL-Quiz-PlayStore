@@ -47,6 +47,9 @@ export const BankView: React.FC<BankViewProps> = ({ onNavigate, onStartQuizWithQ
     // UI State
     const [isLoading, setIsLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
+    const [notice, setNotice] = useState<string | null>(null);
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+    const canMutateBank = import.meta.env.DEV;
 
     // Editor State
     const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -114,14 +117,21 @@ export const BankView: React.FC<BankViewProps> = ({ onNavigate, onStartQuizWithQ
     };
 
     // Handle delete
-    const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this question?')) return;
+    const handleDelete = (id: string) => {
+        setDeleteTargetId(id);
+    };
 
+    const confirmDeleteQuestion = async () => {
+        if (!deleteTargetId) return;
+        const id = deleteTargetId;
+        setDeleteTargetId(null);
         try {
             await deleteQuestion(id);
+            setNotice('Question deleted.');
+            loadAllQuestions(currentPage, filterSection);
         } catch (error) {
             console.error('Failed to delete:', error);
-            alert('Failed to delete question');
+            setNotice('Failed to delete question. Please try again.');
         }
     };
 
@@ -166,7 +176,7 @@ export const BankView: React.FC<BankViewProps> = ({ onNavigate, onStartQuizWithQ
         });
 
         if (selected.length === 0) {
-            alert('Please select at least one question');
+            setNotice('Please select at least one question.');
             return;
         }
 
@@ -250,17 +260,24 @@ export const BankView: React.FC<BankViewProps> = ({ onNavigate, onStartQuizWithQ
                         <h1 className="font-bold text-slate-800">Question Bank</h1>
                     </div>
                 </div>
-                <button
-                    onClick={handleCreateNew}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm"
-                >
-                    <Plus className="w-4 h-4" />
-                    New
-                </button>
+                {canMutateBank && (
+                    <button
+                        onClick={handleCreateNew}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm"
+                    >
+                        <Plus className="w-4 h-4" />
+                        New
+                    </button>
+                )}
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-24">
                 <div className="max-w-4xl mx-auto space-y-6">
+                    {notice && (
+                        <div role="status" aria-live="polite" className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+                            {notice}
+                        </div>
+                    )}
                     {/* View Mode Tabs */}
                     <div className="flex gap-2 bg-white p-1 rounded-xl shadow-sm border border-slate-200">
                         <button
@@ -447,6 +464,7 @@ export const BankView: React.FC<BankViewProps> = ({ onNavigate, onStartQuizWithQ
                                                     </div>
 
                                                     {/* Actions */}
+                                                    {canMutateBank && (
                                                     <div className="flex items-center gap-1">
                                                         <button
                                                             onClick={() => handleEdit(q)}
@@ -463,6 +481,7 @@ export const BankView: React.FC<BankViewProps> = ({ onNavigate, onStartQuizWithQ
                                                             <Trash2 className="w-4 h-4 text-red-600" />
                                                         </button>
                                                     </div>
+                                                    )}
                                                 </div>
 
                                                 {/* Prompt */}
@@ -544,6 +563,19 @@ export const BankView: React.FC<BankViewProps> = ({ onNavigate, onStartQuizWithQ
                             <Play className="w-5 h-5" fill="currentColor" />
                             Start Quiz ({selectedQuestions.size} question{selectedQuestions.size !== 1 ? 's' : ''})
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {deleteTargetId && (
+                <div className="fixed inset-0 z-50 bg-slate-950/40 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="delete-question-title">
+                    <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl border border-red-100">
+                        <h3 id="delete-question-title" className="text-lg font-bold text-slate-900 mb-2">Delete question?</h3>
+                        <p className="text-sm text-slate-500 mb-5">This removes the question from the local bank. This action is only available in development mode.</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setDeleteTargetId(null)} className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700">Cancel</button>
+                            <button onClick={confirmDeleteQuestion} className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white">Delete</button>
+                        </div>
                     </div>
                 </div>
             )}

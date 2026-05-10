@@ -34,6 +34,14 @@ const PRODUCT_TO_TIER: Record<string, SubscriptionTier> = {
     c2_monthly: 'c2',
 };
 
+const TIER_RANK: Record<SubscriptionTier, number> = { free: 0, basic: 1, c2: 2 };
+
+const notifySubscriptionChanged = () => {
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('subscription:changed'));
+    }
+};
+
 // ============================================
 // Types
 // ============================================
@@ -258,6 +266,7 @@ async function verifyAndActivate(
 
         const tier = (response.data?.tier as SubscriptionTier) || PRODUCT_TO_TIER[productId] || 'basic';
         clearTierCache();
+        notifySubscriptionChanged();
 
         return {
             success: true,
@@ -309,11 +318,16 @@ export async function restorePurchases(): Promise<PurchaseResult> {
             return { success: false, error: 'Tidak ditemukan langganan aktif' };
         }
 
-        // Find the most recent valid purchase
-        const validPurchase = purchases.find(
-            (p: any) => p.purchaseState === '1' && p.purchaseToken
-        );
+        // Find the highest-tier active purchase; fallback to newest purchase time if available.
+        const validPurchases = purchases
+            .filter((p: any) => p.purchaseState === '1' && p.purchaseToken && PRODUCT_TO_TIER[p.productIdentifier])
+            .sort((a: any, b: any) => {
+                const tierDelta = TIER_RANK[PRODUCT_TO_TIER[b.productIdentifier]] - TIER_RANK[PRODUCT_TO_TIER[a.productIdentifier]];
+                if (tierDelta !== 0) return tierDelta;
+                return Number(b.purchaseTime || 0) - Number(a.purchaseTime || 0);
+            });
 
+        const validPurchase = validPurchases[0];
         if (!validPurchase) {
             return { success: false, error: 'Tidak ditemukan langganan aktif yang valid' };
         }
@@ -341,8 +355,13 @@ export async function openSubscriptionManagement(): Promise<void> {
     if (plugin) {
         try {
             await plugin.manageSubscriptions();
+            return;
         } catch (err) {
             console.error('[Purchase] Failed to open subscription management:', err);
         }
+    }
+
+    if (typeof window !== 'undefined') {
+        window.open('https://play.google.com/store/account/subscriptions', '_blank', 'noopener,noreferrer');
     }
 }

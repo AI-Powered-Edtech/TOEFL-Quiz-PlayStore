@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
+import LandingSocialProof from './LandingSocialProof';
 import { TodaysFocusService } from '../services/todaysFocusService';
 import { AppView, SkillType, UserProgress, Skill, SectionType, TodaysFocusResult } from '../types';
 
@@ -153,7 +154,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                             <button className="flex-1 flex items-center justify-center gap-2 bg-white rounded-full px-4 py-2.5 shadow-sm border border-slate-100 hover:shadow-md transition-all">
                                 <span className="font-serif font-bold text-slate-800 text-sm tracking-tight">
-                                    StreamQuiz AI
+                                    TOEFL Quiz AI
                                 </span>
                             </button>
 
@@ -183,6 +184,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             </div>
                         </nav>
                     </div>
+
+                    {/* Social proof (VWFD oracle summary) */}
+                    <LandingSocialProof />
 
                     {/* 2. Greeting */}
                     <div className="px-5 md:px-8">

@@ -1,0 +1,92 @@
+# Production-0 DB table ownership registry lock
+# Updated post account/profile split (Gate-2). `accounts` is canonical auth identity;
+# `profiles` is the public 6-column projection only.
+tables:
+  - table: accounts
+    owner: rust-8082
+    purpose: auth identity canonical (id TEXT PK, password_hash, subscription_tier, public_profile_id linking to profiles)
+    ux_impact: Login/register/profile updates write here. Source of truth for paid tier.
+  - table: admin_users
+    owner: rust-8082
+    purpose: admin role + PIN auth
+    ux_impact: Admin panel access gate.
+  - table: app_logs
+    owner: rust-8082
+    purpose: monitoring/logging
+    ux_impact: System Health screen reads from here.
+  - table: audit_logs
+    owner: vwfd-8083
+    purpose: admin audit append
+    ux_impact: Admin audit trail tab.
+  - table: blog_posts
+    owner: rust-8082/vwfd-8083
+    purpose: static content
+    ux_impact: Public blog list/detail pages.
+  - table: cefr_results
+    owner: rust-8082
+    purpose: quiz/simulation
+    ux_impact: CEFR simulation history per user.
+  - table: circle_messages_v2
+    owner: vwfd-8083 transitional
+    purpose: circle messages
+    ux_impact: Circle chat history persists across reload.
+  - table: creator_payouts
+    owner: vwfd-8083 transitional
+    purpose: creator payout requests
+    ux_impact: Creator payout history persists.
+  - table: creator_profiles
+    owner: vwfd-8083 transitional
+    purpose: creator MVP
+    ux_impact: Creator dashboard records.
+  - table: creator_revenue_events
+    owner: vwfd-8083 transitional
+    purpose: creator revenue ledger
+    ux_impact: Revenue history survives reload.
+  - table: friend_codes
+    owner: rust-8082
+    purpose: account_id -> friend_code map (separate from accounts)
+    ux_impact: Friend code copy/share works in Profile/Social Hub.
+  - table: friends
+    owner: rust-8082
+    purpose: friend graph (account-id based)
+    ux_impact: Friend list, add/remove, pending requests.
+  - table: moderation_reports
+    owner: rust-8082/vwfd-8083
+    purpose: moderation canonical transition (security authority should land in Rust)
+    ux_impact: Report content + admin moderation queue.
+  - table: notifications
+    owner: rust-8082
+    purpose: per-user notification feed
+    ux_impact: Bell icon + notifications screen.
+  - table: oracle_prediction_history
+    owner: vwfd-8083 transitional
+    purpose: oracle prediction history
+    ux_impact: Oracle prediction list survives reload/device.
+  - table: peer_review_submissions
+    owner: rust-8082
+    purpose: writing peer review submissions
+    ux_impact: Peer review queue + review claim workflow.
+  - table: profiles
+    owner: rust-8082 (public projection)
+    purpose: 6-column public profile projection (id INT PK, username, avatar_url, total_xp, current_streak, is_public)
+    ux_impact: Leaderboard, public profile view, friend display name/avatar.
+  - table: purchase_entitlements
+    owner: rust-8082
+    purpose: server-side entitlement (user_id PK, tier, expiry)
+    ux_impact: Paid plan UI refreshes from server, not local-only state.
+  - table: question_bank_admin
+    owner: vwfd-8083 transitional
+    purpose: question bank admin CRUD
+    ux_impact: Admin can edit question bank entries.
+  - table: quiz_results
+    owner: rust-8082
+    purpose: per-user quiz result records
+    ux_impact: Quiz history, progress, XP awards.
+  - table: user_media_assets
+    owner: vwfd-8083 transitional
+    purpose: media metadata registry (binary in Rust storage)
+    ux_impact: Uploaded avatars/audio reference URLs.
+  - table: user_performance_metrics
+    owner: rust-8082
+    purpose: adaptive difficulty tracking per user
+    ux_impact: Adaptive question selection, weak-skill targeting.

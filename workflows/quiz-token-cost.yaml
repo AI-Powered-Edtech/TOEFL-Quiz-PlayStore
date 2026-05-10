@@ -1,0 +1,28 @@
+version: "3.0"
+metadata:
+  id: quiz-token-cost
+  name: "Quiz Token Cost Estimator"
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/quiz/cost-estimate, method: POST }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"input_usd": trigger_payload.body.prompt_tokens * 0.0000005, "output_usd": trigger_payload.body.completion_tokens * 0.0000015, "total_usd": (trigger_payload.body.prompt_tokens * 0.0000005) + (trigger_payload.body.completion_tokens * 0.0000015), "model": "gpt-4o-mini", "computed_at": now()}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: respond } }
+    - { id: f2, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }

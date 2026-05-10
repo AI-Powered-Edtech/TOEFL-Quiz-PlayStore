@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useAuthStore } from '../stores/useAuthStore';
 import { clearGuestData, getGuestUsageStats, type GuestUsageStats } from './useFreePlanHearts';
+import { apiClient } from '../services/apiClient';
 
 export interface GuestConversionResult {
     success: boolean;
@@ -72,19 +73,12 @@ export const useGuestConversion = (): UseGuestConversionReturn => {
         const stats = getGuestUsageStats();
         
         try {
-            const response = await fetch('/api/guest/merge', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-                },
-                body: JSON.stringify({
-                    user_id: userId,
-                    guest_stats: stats,
-                }),
+            const response = await apiClient.post('/api/guest/merge', {
+                user_id: userId,
+                guest_stats: stats,
             });
 
-            if (response.ok) {
+            if (!response.error) {
                 clearGuestData();
                 return { success: true, guestStats: stats };
             }

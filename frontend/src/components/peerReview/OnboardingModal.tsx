@@ -112,7 +112,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     <div className="bg-slate-100 dark:bg-slate-800 rounded-xl aspect-video flex items-center justify-center">
                         <div className="text-center">
                             <Play className="w-12 h-12 text-slate-400 mx-auto mb-2" />
-                            <p className="text-sm text-slate-500">Video content coming soon</p>
+                            <p className="text-sm text-slate-500">Guided examples are being prepared for this lesson</p>
                         </div>
                     </div>
                 );
@@ -120,7 +120,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             case 'interactive':
                 return (
                     <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-6 text-center">
-                        <p className="text-slate-600 dark:text-slate-400">Interactive exercise coming soon</p>
+                        <p className="text-slate-600 dark:text-slate-400">Practice checklist is available in the next step</p>
                     </div>
                 );
 

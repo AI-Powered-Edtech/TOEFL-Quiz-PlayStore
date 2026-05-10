@@ -1,12 +1,34 @@
 use crate::error::AppError;
 use crate::middleware::auth::Claims;
 use crate::models::ai::*;
-use crate::models::profile::Profile;
 use crate::models::responses::*;
 use vil::ai::LlmProvider;
 use vil_orm::vil_args;
 use vil_server::axum::response::Response as AxumResponse;
 use vil::prelude::*;
+
+
+async fn get_account_tier(pool: &vil::vil_db_sqlx::SqlxPool, user_id: &str) -> Result<String, AppError> {
+    let entitlement: Option<String> = sqlx::query_scalar(
+        "SELECT tier FROM purchase_entitlements WHERE user_id = ? AND is_active = 1 ORDER BY verified_at DESC LIMIT 1",
+    )
+    .bind(user_id)
+    .fetch_optional(pool.inner())
+    .await
+    .unwrap_or(None);
+
+    if let Some(tier) = entitlement {
+        return Ok(tier);
+    }
+
+    let tier: Option<String> = sqlx::query_scalar("SELECT subscription_tier FROM accounts WHERE id = ?")
+        .bind(user_id)
+        .fetch_optional(pool.inner())
+        .await
+        .unwrap_or(None);
+
+    Ok(tier.unwrap_or_else(|| "free".to_string()))
+}
 
 /// POST /api/ai/generate — Groq LLM proxy via VIL LLM Provider
 #[vil_handler]
@@ -29,9 +51,7 @@ pub async fn generate(
     let mut tier = "free".to_string();
 
     if user_id != "guest" {
-        if let Ok(Some(profile)) = Profile::find_by_id(state.pool.inner(), &user_id).await {
-            tier = profile.subscription_tier.clone();
-        }
+        tier = get_account_tier(&state.pool, &user_id).await?;
     }
     let limit = get_token_limit(&tier);
 
@@ -170,9 +190,7 @@ pub async fn token_usage(
     let mut tier = "free".to_string();
 
     if user_id != "guest" {
-        if let Ok(Some(profile)) = Profile::find_by_id(state.pool.inner(), &user_id).await {
-            tier = profile.subscription_tier.clone();
-        }
+        tier = get_account_tier(&state.pool, &user_id).await?;
     }
     let limit = get_token_limit(&tier);
 

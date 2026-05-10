@@ -1,0 +1,28 @@
+version: "3.0"
+metadata:
+  id: health-check
+  name: "Health Check"
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/health, method: GET }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"status": "ok", "service": "toefl-quiz-vwfd", "version": "0.4.0", "timestamp": now(), "trace_id": uuid_v4()}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: respond } }
+    - { id: f2, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }

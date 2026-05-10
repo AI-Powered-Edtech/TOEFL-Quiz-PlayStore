@@ -1,5 +1,8 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { getGuestUserId } from '../utils/guestUser';
+import { API_BASE_URL } from './core/endpointRegistry';
+import { httpRequest } from './core/httpClient';
+import { TIMEOUTS } from './core/retryPolicy';
 
 interface GuestProgress {
   id: string;
@@ -62,23 +65,21 @@ class OfflineSyncService {
       const token = tokenOverride || localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
       if (!token) return false;
 
-      const response = await fetch('/api/guest/merge-offline', {
+      await httpRequest({
+        baseUrl: API_BASE_URL,
+        path: '/api/guest/merge-offline',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+        headers: { Authorization: `Bearer ${token}` },
+        body: {
           progress: allProgress,
           guest_id: getGuestUserId()
-        }),
+        },
+        timeoutMs: TIMEOUTS.auth,
+        retry: false,
       });
 
-      if (response.ok) {
-        await this.clearAllProgress();
-        return true;
-      }
-      return false;
+      await this.clearAllProgress();
+      return true;
     } catch (error) {
       console.error('Failed to migrate offline data:', error);
       return false;

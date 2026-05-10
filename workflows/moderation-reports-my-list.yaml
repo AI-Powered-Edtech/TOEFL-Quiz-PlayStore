@@ -1,0 +1,42 @@
+version: "3.0"
+metadata:
+  id: moderation-reports-my-list
+  name: "Moderation: list reports by reporter"
+  description: "POST /api/v2/moderation/reports/me. Body {reporter_id}. Frontend validates reporter_id before SQL concat."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/moderation/reports/me, method: POST }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: query
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: select
+      input_mappings:
+        - target: sql
+          source:
+            language: vil-expr
+            source: "\"SELECT id, reporter_id, content_type, content_id, reason, description, status, resolved_by, resolution_note, created_at, resolved_at FROM moderation_reports WHERE reporter_id = '\" + trigger_payload.body.reporter_id + \"' ORDER BY created_at DESC LIMIT 100\""
+      output_variable: query_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"reports": query_result.rows, "count": query_result.row_count, "queried_at": now()}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: query } }
+    - { id: f2, from: { node: query }, to: { node: respond } }
+    - { id: f3, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: query_result, type: object }

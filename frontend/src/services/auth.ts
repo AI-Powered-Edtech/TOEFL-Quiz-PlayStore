@@ -11,7 +11,7 @@ export interface Profile {
   avatar_url?: string;
   bio?: string;
   friend_code?: string;
-  hearts_count: number;
+  hearts_count?: number;
   xp: number;
   subscription_tier: string;
   fcm_token?: string;
@@ -55,6 +55,31 @@ export interface TokenRotateResponse {
   refresh_token: string;
 }
 
+
+export const clearLocalUserData = () => {
+  secureStorage.removeItem('access_token');
+  secureStorage.removeItem('refresh_token');
+  secureStorage.removeItem('pkce_code_verifier');
+  sessionStorage.removeItem('oauth_state');
+
+  const storageKeys = [
+    'quiz_reports',
+    'toefl_guest_id',
+    'offline_queue',
+    'streamquiz_history_v1',
+    'streamquiz_current_session_v1',
+    'toefl_quiz_session_v2',
+    'toefl_question_bank_meta',
+  ];
+  storageKeys.forEach((key) => localStorage.removeItem(key));
+
+  if (typeof indexedDB !== 'undefined') {
+    ['toefl-question-bank'].forEach((dbName) => {
+      try { indexedDB.deleteDatabase(dbName); } catch { /* best effort */ }
+    });
+  }
+};
+
 export function generateCodeVerifier(): string {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
@@ -81,8 +106,8 @@ export const authService = {
     if (!data.username || data.username.trim().length < 3) {
       return { ok: false, error: 'Username must be at least 3 characters' };
     }
-    if (!data.password || data.password.length < 6) {
-      return { ok: false, error: 'Password must be at least 6 characters' };
+    if (!data.password || data.password.length < 8) {
+      return { ok: false, error: 'Password must be at least 8 characters' };
     }
 
     const validationError = validateAuth({
@@ -182,6 +207,20 @@ export const authService = {
     return { ok: true };
   },
 
+  async deleteAccount(): Promise<{ ok: boolean; error?: string }> {
+    const response = await api.delete<{ ok: boolean }>('/api/auth/account', {
+      timeout: TIMEOUTS.auth,
+    });
+    if (response.error) {
+      return { ok: false, error: response.error.error };
+    }
+    if (response.data?.ok) {
+      clearLocalUserData();
+      return { ok: true };
+    }
+    return { ok: false, error: 'Unknown error' };
+  },
+
   async refreshToken(): Promise<{ ok: boolean; access_token?: string }> {
     const refreshToken = secureStorage.getItem('refresh_token');
     if (!refreshToken) {
@@ -204,6 +243,7 @@ export const authService = {
   logout() {
     secureStorage.removeItem('access_token');
     secureStorage.removeItem('refresh_token');
+    sessionStorage.removeItem('oauth_state');
   },
 
   getToken(): string | null {

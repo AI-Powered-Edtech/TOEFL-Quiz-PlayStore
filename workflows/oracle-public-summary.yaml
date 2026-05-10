@@ -1,0 +1,42 @@
+version: "3.0"
+metadata:
+  id: oracle-public-summary
+  name: "Oracle Public 7d Score Band Distribution"
+  description: "Anonymized fleet-wide CEFR band counts over last 7 days. No PII. Cacheable. TEXT-cast workaround for fetch_all_json aggregate type inference."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/oracle/summary, method: GET }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: query
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: select
+      input_mappings:
+        - target: sql
+          source:
+            language: literal
+            source: "SELECT band, ('' || COUNT(*)) AS learner_count FROM cefr_results WHERE created_at > datetime('now', '-7 days') GROUP BY band ORDER BY COUNT(*) DESC"
+      output_variable: query_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"window": "7d", "buckets": query_result.rows, "row_count": query_result.row_count}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: query } }
+    - { id: f2, from: { node: query }, to: { node: respond } }
+    - { id: f3, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: query_result, type: object }

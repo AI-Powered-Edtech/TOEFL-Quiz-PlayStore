@@ -1,14 +1,14 @@
 import { X, AlertTriangle, Flag } from 'lucide-react';
 import React, { useState } from 'react';
 
-import api from '../../services/apiClient';
+import { submitReportV2 } from '../../services/moderationApiV2';
 import { ReportReason } from '../../types/moderation';
 import { getUserId } from '../../utils/guestId';
 import { Button } from '../Button';
 import { useToast } from '../ui/Toast';
 
 interface ReportModalProps {
-    contentType: 'submission' | 'review';
+    contentType: 'submission' | 'review' | 'profile';
     contentId: string;
     onClose: () => void;
     onSubmitted: () => void;
@@ -74,7 +74,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
         try {
             const userId = getUserId();
 
-            const res = await api.post<{ ok: boolean; id: string }>('/api/monitoring/moderation/reports', {
+            const res = await submitReportV2({
                 reporter_id: userId,
                 content_type: contentType,
                 content_id: contentId,
@@ -82,12 +82,12 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 description: description || undefined,
             });
 
-            if (res.data?.ok) {
+            if (res.ok) {
                 toast.success('Report submitted successfully. Thank you for helping keep our community safe.');
                 onSubmitted();
                 onClose();
             } else {
-                throw new Error(res.error?.error || 'Report submit failed');
+                throw new Error('Report submit failed');
             }
         } catch (error) {
             console.error('[ReportModal] Submit failed:', error);

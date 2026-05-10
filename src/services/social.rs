@@ -1,9 +1,9 @@
 use crate::error::AppError;
 use crate::middleware::auth::Claims;
-use crate::models::profile::Profile;
 use crate::models::responses::*;
 use crate::models::social::*;
 use crate::models::views::*;
+use crate::services::account_profile::{account_exists, account_id_by_friend_code, get_or_create_friend_code};
 use serde::{Deserialize, Serialize};
 use vil_orm::vil_args;
 use vil::prelude::*;
@@ -93,16 +93,16 @@ pub async fn add_friend(
 ) -> Result<VilResponse<OkResponse>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
     let req: AddFriendRequest = body.json().map_err(|_| AppError::Validation("Invalid body".into()))?;
-    let friend: (String,) = Profile::select_one(state.pool.inner(), &["id"], "friend_code = ?", &[&req.friend_code])
+    let friend_id = account_id_by_friend_code(&state.pool, &req.friend_code)
         .await?
         .ok_or_else(|| AppError::NotFound("Friend code not found".into()))?;
 
-    if friend.0 == claims.sub {
+    if friend_id == claims.sub {
         return Err(AppError::Validation("Cannot add yourself".into()));
     }
 
-    // Bilateral friendship
-    for (a, b) in [(&claims.sub, &friend.0), (&friend.0, &claims.sub)] {
+    // Bilateral friendship. friends.user_id/friend_id store account IDs.
+    for (a, b) in [(&claims.sub, &friend_id), (&friend_id, &claims.sub)] {
         let fid = uuid::Uuid::new_v4().to_string();
         let uid = a.clone();
         let friend_id = b.clone();
@@ -123,10 +123,14 @@ pub async fn list_friends(
 ) -> Result<VilResponse<Vec<FriendApiRow>>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
     let rows: Vec<FriendJoinRow> = sqlx::query_as(
-        "SELECT f.id, f.user_id, f.friend_id, f.created_at, p.full_name, p.avatar_url, p.xp \
-         FROM friends f \
-         JOIN profiles p ON p.id = f.friend_id \
-         WHERE f.user_id = ? \
+        "SELECT f.id, f.user_id, f.friend_id, f.created_at,
+                COALESCE(ac.full_name, p.username, ac.username) AS full_name,
+                COALESCE(p.avatar_url, ac.avatar_url) AS avatar_url,
+                COALESCE(p.total_xp, 0) AS xp
+         FROM friends f
+         JOIN accounts ac ON ac.id = f.friend_id
+         LEFT JOIN profiles p ON p.id = ac.public_profile_id
+         WHERE f.user_id = ?
          ORDER BY f.created_at DESC",
     )
     .bind(&claims.sub)
@@ -179,6 +183,22 @@ pub struct FriendJoinRow {
     pub xp: i64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FriendCodeResponse {
+    pub ok: bool,
+    pub friend_code: String,
+}
+
+#[vil_handler]
+pub async fn my_friend_code(
+    ctx: ServiceCtx,
+    claims: Claims,
+) -> Result<VilResponse<FriendCodeResponse>, AppError> {
+    let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
+    let code = get_or_create_friend_code(&state.pool, &claims.sub).await?;
+    Ok(VilResponse::ok(FriendCodeResponse { ok: true, friend_code: code }))
+}
+
 #[vil_handler]
 pub async fn remove_friend(
     ctx: ServiceCtx,
@@ -221,8 +241,7 @@ pub async fn respond_friend_request(
         return Ok(VilResponse::ok(OkResponse { ok: true }));
     }
 
-    let exists: Option<(String,)> = Profile::select_one(state.pool.inner(), &["id"], "id = ?", &[&req.requester_id]).await?;
-    if exists.is_none() {
+    if !account_exists(&state.pool, &req.requester_id).await? {
         return Err(AppError::NotFound("Requester not found".into()));
     }
 
@@ -246,11 +265,22 @@ pub async fn leaderboard(
     _claims: Option<Claims>,
 ) -> Result<VilResponse<Vec<LeaderboardEntry>>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
-    let entries = Profile::q()
-        .select_expr("ROW_NUMBER() OVER (ORDER BY xp DESC) as rank, id as user_id, full_name, avatar_url, xp")
-        .order_by_desc("xp")
-        .limit(50)
-        .fetch_all::<LeaderboardEntry>(state.pool.inner()).await?;
+    let entries: Vec<LeaderboardEntry> = sqlx::query_as(
+        "SELECT
+            ROW_NUMBER() OVER (ORDER BY COALESCE(p.total_xp, 0) DESC) AS rank,
+            COALESCE(ac.id, CAST(p.id AS TEXT)) AS user_id,
+            COALESCE(ac.full_name, p.username, ac.username, 'Anonymous') AS full_name,
+            COALESCE(p.avatar_url, ac.avatar_url) AS avatar_url,
+            COALESCE(p.total_xp, 0) AS xp
+         FROM profiles p
+         LEFT JOIN accounts ac ON ac.public_profile_id = p.id
+         WHERE COALESCE(p.is_public, 1) = 1
+         ORDER BY COALESCE(p.total_xp, 0) DESC
+         LIMIT 50",
+    )
+    .fetch_all(state.pool.inner())
+    .await
+    .map_err(|e| AppError::Internal(e.to_string()))?;
     Ok(VilResponse::ok(entries))
 }
 

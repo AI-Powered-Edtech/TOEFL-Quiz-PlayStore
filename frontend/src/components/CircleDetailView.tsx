@@ -29,6 +29,14 @@ interface ChatMessage {
 
 type TabType = 'chat' | 'leaderboard' | 'members' | 'settings';
 
+interface ConfirmAction {
+    title: string;
+    message: string;
+    confirmLabel: string;
+    tone: 'danger' | 'primary';
+    run: () => Promise<void>;
+}
+
 export const CircleDetailView: React.FC<CircleDetailViewProps> = ({
     circle,
     currentUserId,
@@ -43,6 +51,8 @@ export const CircleDetailView: React.FC<CircleDetailViewProps> = ({
     const [isAdmin, setIsAdmin] = useState(false);
     const [copied, setCopied] = useState(false);
     const [acting, setActing] = useState<string | null>(null);
+    const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
 
     // Pagination states
     const MEMBERS_PER_PAGE = 50;
@@ -209,90 +219,137 @@ export const CircleDetailView: React.FC<CircleDetailViewProps> = ({
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const handleKickMember = async (userId: string) => {
-        if (!confirm('Remove this member from the circle?')) return;
-        setActing(userId);
-        try {
-            await circleService.removeMember(circle.id, userId);
-            setMembers(prev => prev.filter(m => m.user_id !== userId));
-            setLeaderboard(prev => prev.filter(l => l.id !== userId));
-        } catch (error: any) {
-            alert(error.message || 'Failed to remove member');
-        } finally {
-            setActing(null);
-        }
+    const runConfirmedAction = async () => {
+        if (!confirmAction) return;
+        const action = confirmAction;
+        setConfirmAction(null);
+        await action.run();
     };
 
-    const handlePromoteMember = async (userId: string) => {
-        if (!confirm('Promote this member to Admin?')) return;
-        setActing(userId);
-        try {
-            await circleService.promoteMember(circle.id, userId);
-            setMembers(prev => prev.map(m =>
-                m.user_id === userId ? { ...m, role: 'admin' } : m
-            ));
-        } catch (error: any) {
-            alert(error.message || 'Failed to promote member');
-        } finally {
-            setActing(null);
-        }
+    const handleKickMember = (userId: string) => {
+        setConfirmAction({
+            title: 'Remove member?',
+            message: 'This member will lose access to the circle chat and leaderboard.',
+            confirmLabel: 'Remove',
+            tone: 'danger',
+            run: async () => {
+                setActing(userId);
+                try {
+                    await circleService.removeMember(circle.id, userId);
+                    setMembers(prev => prev.filter(m => m.user_id !== userId));
+                    setLeaderboard(prev => prev.filter(l => l.id !== userId));
+                    setNotice({ type: 'success', text: 'Member removed from circle.' });
+                } catch (error: any) {
+                    setNotice({ type: 'error', text: error.message || 'Failed to remove member.' });
+                } finally {
+                    setActing(null);
+                }
+            }
+        });
     };
 
-    const handleDemoteMember = async (userId: string) => {
-        if (!confirm('Demote this admin to Member?')) return;
-        setActing(userId);
-        try {
-            await circleService.demoteMember(circle.id, userId);
-            setMembers(prev => prev.map(m =>
-                m.user_id === userId ? { ...m, role: 'member' } : m
-            ));
-        } catch (error: any) {
-            alert(error.message || 'Failed to demote member');
-        } finally {
-            setActing(null);
-        }
+    const handlePromoteMember = (userId: string) => {
+        setConfirmAction({
+            title: 'Promote to admin?',
+            message: 'Admins can moderate members, chat permissions, and circle settings.',
+            confirmLabel: 'Promote',
+            tone: 'primary',
+            run: async () => {
+                setActing(userId);
+                try {
+                    await circleService.promoteMember(circle.id, userId);
+                    setMembers(prev => prev.map(m =>
+                        m.user_id === userId ? { ...m, role: 'admin' } : m
+                    ));
+                    setNotice({ type: 'success', text: 'Member promoted to admin.' });
+                } catch (error: any) {
+                    setNotice({ type: 'error', text: error.message || 'Failed to promote member.' });
+                } finally {
+                    setActing(null);
+                }
+            }
+        });
+    };
+
+    const handleDemoteMember = (userId: string) => {
+        setConfirmAction({
+            title: 'Demote admin?',
+            message: 'This admin will become a regular member and lose moderation controls.',
+            confirmLabel: 'Demote',
+            tone: 'danger',
+            run: async () => {
+                setActing(userId);
+                try {
+                    await circleService.demoteMember(circle.id, userId);
+                    setMembers(prev => prev.map(m =>
+                        m.user_id === userId ? { ...m, role: 'member' } : m
+                    ));
+                    setNotice({ type: 'success', text: 'Admin demoted to member.' });
+                } catch (error: any) {
+                    setNotice({ type: 'error', text: error.message || 'Failed to demote member.' });
+                } finally {
+                    setActing(null);
+                }
+            }
+        });
     };
 
     const handleSaveCircleInfo = async () => {
         setActing('save-info');
+        setNotice(null);
         try {
             await circleService.updateCircle(circle.id, {
                 name: editName.trim(),
                 description: editDesc.trim() || undefined,
             });
             setEditMode(false);
+            setNotice({ type: 'success', text: 'Circle info updated.' });
             onUpdate();
         } catch (error: any) {
-            alert(error.message || 'Failed to update circle info');
+            setNotice({ type: 'error', text: error.message || 'Failed to update circle info.' });
         } finally {
             setActing(null);
         }
     };
 
-    const handleDeleteCircle = async () => {
-        if (!confirm('⚠️ DELETE this circle permanently? All messages and members will be removed.')) return;
-        setActing('delete-circle');
-        try {
-            await circleService.deleteCircle(circle.id);
-            onUpdate();
-            onBack();
-        } catch (error) {
-            alert('Failed to delete circle');
-            setActing(null);
-        }
+    const handleDeleteCircle = () => {
+        setConfirmAction({
+            title: 'Delete circle permanently?',
+            message: 'All messages, members, and circle history will be removed. This cannot be undone.',
+            confirmLabel: 'Delete',
+            tone: 'danger',
+            run: async () => {
+                setActing('delete-circle');
+                try {
+                    await circleService.deleteCircle(circle.id);
+                    onUpdate();
+                    onBack();
+                } catch (error) {
+                    setNotice({ type: 'error', text: 'Failed to delete circle.' });
+                    setActing(null);
+                }
+            }
+        });
     };
 
-    const handleLeaveCircle = async () => {
-        if (!confirm('Leave this circle?')) return;
-        setActing('leave-circle');
-        try {
-            await circleService.leaveCircle(circle.id);
-            onUpdate();
-            onBack();
-        } catch (error) {
-            alert('Failed to leave circle');
-            setActing(null);
-        }
+    const handleLeaveCircle = () => {
+        setConfirmAction({
+            title: 'Leave circle?',
+            message: 'You will be removed from the member list and lose access to this circle.',
+            confirmLabel: 'Leave',
+            tone: 'danger',
+            run: async () => {
+                setActing('leave-circle');
+                try {
+                    await circleService.leaveCircle(circle.id);
+                    onUpdate();
+                    onBack();
+                } catch (error) {
+                    setNotice({ type: 'error', text: 'Failed to leave circle.' });
+                    setActing(null);
+                }
+            }
+        });
     };
 
     const getRankIcon = (index: number) => {
@@ -366,6 +423,12 @@ export const CircleDetailView: React.FC<CircleDetailViewProps> = ({
                     ))}
                 </div>
             </div>
+
+            {notice && (
+                <div id="circle-detail-notice" role="status" aria-live="polite" className={`mx-4 mt-3 rounded-xl px-4 py-3 text-sm font-semibold ${notice.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                    {notice.text}
+                </div>
+            )}
 
             {/* Content */}
             <div className={`flex-1 ${activeTab === 'chat' ? 'flex flex-col' : 'overflow-y-auto p-4'}`}>
@@ -703,7 +766,7 @@ export const CircleDetailView: React.FC<CircleDetailViewProps> = ({
                                                         await circleService.updateCircle(circle.id, { chat_mode: newMode });
                                                         setChatMode(newMode);
                                                     } catch (e: any) {
-                                                        alert(e.message || 'Failed to update chat mode');
+                                                        setNotice({ type: 'error', text: e.message || 'Failed to update chat mode.' });
                                                     } finally {
                                                         setTogglingChatMode(false);
                                                     }
@@ -770,6 +833,21 @@ export const CircleDetailView: React.FC<CircleDetailViewProps> = ({
                     </>
                 )}
             </div>
+
+            {confirmAction && (
+                <div className="fixed inset-0 z-50 bg-slate-950/40 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="circle-confirm-title">
+                    <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl border border-slate-100">
+                        <h3 id="circle-confirm-title" className="text-lg font-bold text-slate-900 mb-2">{confirmAction.title}</h3>
+                        <p className="text-sm text-slate-500 mb-5">{confirmAction.message}</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setConfirmAction(null)} className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700">Cancel</button>
+                            <button onClick={runConfirmedAction} className={`flex-1 rounded-xl px-4 py-3 text-sm font-bold text-white ${confirmAction.tone === 'danger' ? 'bg-red-600' : 'bg-indigo-600'}`}>
+                                {confirmAction.confirmLabel}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

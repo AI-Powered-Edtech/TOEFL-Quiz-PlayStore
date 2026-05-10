@@ -2,6 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { apiClient } from '../../services/apiClient';
 import { assignUserRole, removeUserRole } from '../../services/adminService';
 import { SystemHealth } from './SystemHealth';
+import { ModerationQueueTab } from './ModerationQueueTab';
+import { AuditLogTab } from './AuditLogTab';
+import { CreatorEconomyTab } from './CreatorEconomyTab';
+import { QuestionBankAdminTab } from './QuestionBankAdminTab';
+import { MediaAssetsTab } from './MediaAssetsTab';
+import { auditService } from '../../services/auditService';
+import { requireAdminPin } from '../../services/adminPinService';
 
 interface BackofficeHubProps {
     onNavigate?: (route: string) => void;
@@ -17,10 +24,12 @@ interface UserData {
 }
 
 export const BackofficeHub: React.FC<BackofficeHubProps> = ({ onBack }) => {
-    const [activeTab, setActiveTab] = useState<'users' | 'health'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'health' | 'moderation' | 'audit' | 'creator' | 'questions' | 'media'>('users');
     const [users, setUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [roleChangeRequest, setRoleChangeRequest] = useState<{ userId: string; currentRole: string; email?: string; newRole: string } | null>(null);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -46,7 +55,15 @@ export const BackofficeHub: React.FC<BackofficeHubProps> = ({ onBack }) => {
 
     const handleChangeRole = async (userId: string, currentRole: string, email?: string) => {
         const newRole = currentRole === 'admin' ? 'user' : 'admin';
-        if (!window.confirm(`Apakah Anda yakin ingin mengubah role pengguna ini menjadi ${newRole}?`)) return;
+        setRoleChangeRequest({ userId, currentRole, email, newRole });
+    };
+
+    const confirmChangeRole = async () => {
+        if (!roleChangeRequest) return;
+        const { userId, currentRole, email, newRole } = roleChangeRequest;
+        setRoleChangeRequest(null);
+        setNotice(null);
+        if (!(await requireAdminPin('ubah role'))) return;
 
         try {
             if (newRole === 'admin') {
@@ -56,30 +73,33 @@ export const BackofficeHub: React.FC<BackofficeHubProps> = ({ onBack }) => {
                 const res = await removeUserRole(userId);
                 if (!res.success) throw new Error(res.message);
             }
-            alert(`Role berhasil diubah menjadi ${newRole}`);
+            await auditService.logAction({ action: 'ROLE_CHANGE', target_type: 'user', target_id: userId, metadata: { from: currentRole, to: newRole, email } });
+            setNotice({ type: 'success', text: `Role berhasil diubah menjadi ${newRole}.` });
             fetchUsers();
         } catch (err: any) {
-            alert(`Gagal mengubah role: ${err.message}`);
+            setNotice({ type: 'error', text: `Gagal mengubah role: ${err.message}` });
         }
     };
 
     const handleChangeTier = async (userId: string, currentTier: string) => {
         const newTier = prompt('Masukkan tier baru (free, basic, c2):', currentTier);
         if (!newTier || newTier === currentTier) return;
+        if (!(await requireAdminPin('ubah tier'))) return;
 
         try {
             const response = await apiClient.patch(`/api/admin/users/${userId}/tier`, { tier: newTier });
             if (response.error) {
                 if (response.error.status === 403 || response.error.error?.includes('super_admin')) {
-                    alert('Hanya super_admin yang dapat mengubah tier.');
+                    setNotice({ type: 'error', text: 'Hanya super_admin yang dapat mengubah tier.' });
                     return;
                 }
                 throw new Error(response.error.error || 'Gagal mengubah tier');
             }
-            alert(`Tier berhasil diubah menjadi ${newTier}`);
+            await auditService.logAction({ action: 'TIER_CHANGE', target_type: 'user', target_id: userId, metadata: { from: currentTier, to: newTier } });
+            setNotice({ type: 'success', text: `Tier berhasil diubah menjadi ${newTier}.` });
             fetchUsers();
         } catch (err: any) {
-            alert(`Gagal mengubah tier: ${err.message}`);
+            setNotice({ type: 'error', text: `Gagal mengubah tier: ${err.message}` });
         }
     };
 
@@ -118,7 +138,41 @@ export const BackofficeHub: React.FC<BackofficeHubProps> = ({ onBack }) => {
                 >
                     System Health
                 </button>
+                <button
+                    className={`pb-2 px-1 text-sm font-medium transition-colors border-b-2 ${
+                        activeTab === 'moderation'
+                            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                            : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                    }`}
+                    onClick={() => setActiveTab('moderation')}
+                >
+                    Moderation
+                </button>
+                {[
+                    ['audit', 'Audit Logs'],
+                    ['creator', 'Creator'],
+                    ['questions', 'Questions'],
+                    ['media', 'Media'],
+                ].map(([key, label]) => (
+                    <button
+                        key={key}
+                        className={`pb-2 px-1 text-sm font-medium transition-colors border-b-2 ${
+                            activeTab === key
+                                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                        }`}
+                        onClick={() => setActiveTab(key as any)}
+                    >
+                        {label}
+                    </button>
+                ))}
             </div>
+
+            {notice && (
+                <div role="status" aria-live="polite" className={`p-4 rounded-lg mb-6 ${notice.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                    {notice.text}
+                </div>
+            )}
 
             {error && activeTab === 'users' && (
                 <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-6">
@@ -195,8 +249,30 @@ export const BackofficeHub: React.FC<BackofficeHubProps> = ({ onBack }) => {
                         </table>
                     </div>
                 )
-            ) : (
+            ) : activeTab === 'health' ? (
                 <SystemHealth />
+            ) : activeTab === 'moderation' ? (
+                <ModerationQueueTab />
+            ) : activeTab === 'audit' ? (
+                <AuditLogTab />
+            ) : activeTab === 'creator' ? (
+                <CreatorEconomyTab />
+            ) : activeTab === 'questions' ? (
+                <QuestionBankAdminTab />
+            ) : (
+                <MediaAssetsTab />
+            )}
+            {roleChangeRequest && (
+                <div className="fixed inset-0 z-50 bg-slate-950/40 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="role-change-title">
+                    <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 p-5 shadow-2xl border border-slate-100 dark:border-slate-800">
+                        <h3 id="role-change-title" className="text-lg font-bold text-slate-900 dark:text-white mb-2">Ubah role pengguna?</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">Role akan diubah menjadi <strong>{roleChangeRequest.newRole}</strong>. Aksi ini akan dicatat di audit log.</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setRoleChangeRequest(null)} className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200">Batal</button>
+                            <button onClick={confirmChangeRole} className="flex-1 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white">Ubah</button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

@@ -19,8 +19,10 @@ const LazyCefrSimulationView = React.lazy(() => import('../components/CefrSimula
 const LazySocialHub = React.lazy(() => import('../components/SocialHub').then(m => ({ default: m.SocialHub })));
 const LazyMoreHub = React.lazy(() => import('../components/MoreHub').then(m => ({ default: m.MoreHub })));
 const LazyProfile = React.lazy(() => import('../components/Profile').then(m => ({ default: m.Profile })));
+const LazyPublicProfileView = React.lazy(() => import('../components/PublicProfileView').then(m => ({ default: m.PublicProfileView })));
 const LazySettings = React.lazy(() => import('../components/Settings').then(m => ({ default: m.Settings })));
 const LazyLearningPath = React.lazy(() => import('../components/LearningPath').then(m => ({ default: m.LearningPath })));
+const LazyLeaderboard = React.lazy(() => import('../components/LeaderboardView').then(m => ({ default: m.LeaderboardView })));
 const LazyWritingGymHub = React.lazy(() => import('../components/writingGym/WritingGymHub').then(m => ({ default: m.WritingGymHub })));
 const LazyMasonLevel = React.lazy(() => import('../components/writingGym/MasonLevel').then(m => ({ default: m.MasonLevel })));
 const LazyLogicWeaverLevel = React.lazy(() => import('../components/writingGym/LogicWeaverLevel').then(m => ({ default: m.LogicWeaverLevel })));
@@ -44,9 +46,138 @@ const LazyBlogSkillPickerView = React.lazy(() => import('../components/blog/Blog
 const LazySkillModuleList = React.lazy(() => import('../components/modules/SkillModuleList').then(m => ({ default: m.SkillModuleList })));
 const LazySkillModuleReader = React.lazy(() => import('../components/modules/SkillModuleReader').then(m => ({ default: m.SkillModuleReader })));
 const LazyTtsBenchmark = React.lazy(() => import('../components/TtsBenchmark').then(m => ({ default: m.TtsBenchmark })));
+const LazyAuthCallback = React.lazy(() => import('../components/AuthCallback').then(m => ({ default: m.AuthCallback })));
+
+const DEV_ONLY_VIEWS = new Set<AppView>([AppView.TTS_BENCHMARK]);
+
+export const isDevOnlyView = (view: AppView): boolean => DEV_ONLY_VIEWS.has(view);
+
+export const isRouteAvailable = (view: AppView, includeDev = import.meta.env.DEV): boolean => {
+    return includeDev || !isDevOnlyView(view);
+};
+
+export const PRIMARY_TAB_VIEWS: AppView[] = [
+    AppView.DASHBOARD,
+    AppView.PRACTICE_HUB,
+    AppView.SOCIAL_HUB,
+    AppView.MORE_HUB,
+    AppView.BLOG,
+    AppView.TTS_BENCHMARK,
+];
+
+export const getPrimaryTabViews = (includeDev = import.meta.env.DEV): AppView[] => {
+    return PRIMARY_TAB_VIEWS.filter(view => isRouteAvailable(view, includeDev));
+};
+
+export const isPrimaryTabView = (view: AppView, includeDev = import.meta.env.DEV): boolean => {
+    return getPrimaryTabViews(includeDev).includes(view);
+};
+
+const VIEW_PATHS: Partial<Record<AppView, string>> = {
+    [AppView.DASHBOARD]: '/',
+    [AppView.PRACTICE_HUB]: '/practice',
+    [AppView.SOCIAL_HUB]: '/social',
+    [AppView.MORE_HUB]: '/more',
+    [AppView.BLOG]: '/blog',
+    [AppView.BLOG_POST]: '/blog/post',
+    [AppView.BLOG_SKILL_PICKER]: '/blog/skills',
+    [AppView.PROFILE]: '/profile',
+    [AppView.PUBLIC_PROFILE]: '/profile/public',
+    [AppView.SETTINGS]: '/settings',
+    [AppView.PDF_UPLOAD]: '/pdf-upload',
+    [AppView.BANK]: '/question-bank',
+    [AppView.ERROR_JAIL]: '/error-jail',
+    [AppView.LEARNING_PATH]: '/learning-path',
+    [AppView.LEADERBOARD]: '/leaderboard',
+    [AppView.SIMULATION]: '/simulation',
+    [AppView.CEFR_SIMULATION]: '/cefr-simulation',
+    [AppView.WRITING_GYM]: '/writing-gym',
+    [AppView.WRITING_GYM_HUB]: '/writing-gym',
+    [AppView.WRITING]: '/writing',
+    [AppView.WRITING_GYM_LEVEL_1]: '/writing-gym/mason',
+    [AppView.WRITING_GYM_LEVEL_2]: '/writing-gym/logic-weaver',
+    [AppView.WRITING_GYM_LEVEL_3]: '/writing-gym/paragraph-builder',
+    [AppView.WRITING_GYM_TASK_1]: '/writing-gym/integrated',
+    [AppView.WRITING_GYM_TASK_2]: '/writing-gym/academic-discussion',
+    [AppView.MODEL_ESSAY_LIBRARY]: '/writing-gym/model-essays',
+    [AppView.BAND9_LIBRARY]: '/writing-gym/band9',
+    [AppView.ESSAY_DOJO_HUB]: '/writing-gym/essay-dojo',
+    [AppView.COMPLEXITY_LADDER]: '/writing-gym/complexity-ladder',
+    [AppView.MASON_LEADERBOARD]: '/writing-gym/mason-leaderboard',
+    [AppView.PEER_REVIEW]: '/peer-review',
+    [AppView.DEVILS_ADVOCATE]: '/devils-advocate',
+    [AppView.ORACLE]: '/score-oracle',
+    [AppView.NOTIFICATIONS]: '/notifications',
+    [AppView.REPORT]: '/report',
+    [AppView.AUTH_CALLBACK]: '/auth/callback',
+    [AppView.SKILL_MODULE_LIST]: '/modules',
+    [AppView.SKILL_MODULE_READER]: '/modules/reader',
+    [AppView.TTS_BENCHMARK]: '/dev/tts-benchmark',
+};
+
+const PATH_VIEWS = new Map<string, AppView>(
+    Object.entries(VIEW_PATHS).map(([view, path]) => [path, view as AppView])
+);
+
+export const getPathForView = (view: AppView): string | null => {
+    const path = VIEW_PATHS[view] ?? null;
+    if (!path || !isRouteAvailable(view)) return null;
+    return path;
+};
+
+export const getViewForPath = (pathname: string): AppView | null => {
+    const normalized = pathname === '' ? '/' : pathname.replace(/\/$/, '') || '/';
+    const view = PATH_VIEWS.get(normalized) ?? null;
+    if (!view || !isRouteAvailable(view)) return null;
+    return view;
+};
+
+export const getBackTargetForView = (view: AppView, gymBackTarget: AppView): AppView | null => {
+    if (isPrimaryTabView(view)) return null;
+
+    const backTargets: Partial<Record<AppView, AppView>> = {
+        [AppView.QUIZ]: AppView.DASHBOARD,
+        [AppView.REPORT]: AppView.DASHBOARD,
+        [AppView.SIMULATION]: AppView.DASHBOARD,
+        [AppView.ANALYTICS]: AppView.MORE_HUB,
+        [AppView.ERROR_JAIL]: AppView.MORE_HUB,
+        [AppView.LEADERBOARD]: AppView.MORE_HUB,
+        [AppView.BLOG_POST]: AppView.BLOG,
+        [AppView.BLOG_SKILL_PICKER]: AppView.BLOG,
+        [AppView.WRITING_GYM]: gymBackTarget,
+        [AppView.WRITING_GYM_HUB]: gymBackTarget,
+        [AppView.WRITING]: AppView.PRACTICE_HUB,
+        [AppView.WRITING_GYM_TASK_1]: AppView.PRACTICE_HUB,
+        [AppView.WRITING_GYM_TASK_2]: AppView.PRACTICE_HUB,
+        [AppView.CEFR_SIMULATION]: AppView.PRACTICE_HUB,
+        [AppView.WRITING_GYM_LEVEL_1]: AppView.WRITING_GYM_HUB,
+        [AppView.WRITING_GYM_LEVEL_2]: AppView.WRITING_GYM_HUB,
+        [AppView.WRITING_GYM_LEVEL_3]: AppView.WRITING_GYM_HUB,
+        [AppView.SKILL_MODULE_READER]: AppView.SKILL_MODULE_LIST,
+        [AppView.SKILL_MODULE_LIST]: AppView.DASHBOARD,
+        [AppView.NOTIFICATIONS]: AppView.DASHBOARD,
+        [AppView.PROFILE]: AppView.MORE_HUB,
+        [AppView.PUBLIC_PROFILE]: AppView.SOCIAL_HUB,
+        [AppView.SETTINGS]: AppView.MORE_HUB,
+        [AppView.PDF_UPLOAD]: AppView.PRACTICE_HUB,
+        [AppView.BANK]: AppView.PRACTICE_HUB,
+        [AppView.LEARNING_PATH]: AppView.DASHBOARD,
+        [AppView.ORACLE]: AppView.MORE_HUB,
+        [AppView.PEER_REVIEW]: AppView.SOCIAL_HUB,
+        [AppView.DEVILS_ADVOCATE]: AppView.PRACTICE_HUB,
+        [AppView.MASON_LEADERBOARD]: AppView.WRITING_GYM_HUB,
+        [AppView.MODEL_ESSAY_LIBRARY]: AppView.WRITING_GYM_HUB,
+        [AppView.BAND9_LIBRARY]: AppView.WRITING_GYM_HUB,
+        [AppView.ESSAY_DOJO_HUB]: AppView.WRITING_GYM_HUB,
+        [AppView.COMPLEXITY_LADDER]: AppView.WRITING_GYM_HUB,
+        [AppView.TTS_BENCHMARK]: AppView.DASHBOARD,
+    };
+
+    return backTargets[view] ?? AppView.DASHBOARD;
+};
 
 export const getRoutes = (deps: any): RouteConfig[] => {
-    return [
+    const routes: RouteConfig[] = [
         {
             view: AppView.DASHBOARD,
             component: LazyDashboard,
@@ -165,6 +296,11 @@ export const getRoutes = (deps: any): RouteConfig[] => {
             }
         },
         {
+            view: AppView.PUBLIC_PROFILE,
+            component: LazyPublicProfileView,
+            props: { onNavigate: deps.setCurrentView }
+        },
+        {
             view: AppView.SETTINGS,
             component: LazySettings,
             props: { onNavigate: deps.setCurrentView }
@@ -196,6 +332,11 @@ export const getRoutes = (deps: any): RouteConfig[] => {
                 userId: deps.user?.id,
                 onNavigate: deps.setCurrentView
             }
+        },
+        {
+            view: AppView.LEADERBOARD,
+            component: LazyLeaderboard,
+            props: { onNavigate: deps.setCurrentView, currentUserName: deps.displayName }
         },
         {
             view: AppView.WRITING_GYM,
@@ -282,6 +423,12 @@ export const getRoutes = (deps: any): RouteConfig[] => {
             component: LazyNotificationCenter,
             props: { onNavigate: deps.setCurrentView, userId: deps.user?.id }
         },
+
+        {
+            view: AppView.AUTH_CALLBACK,
+            component: LazyAuthCallback,
+            props: { onNavigate: deps.setCurrentView }
+        },
         {
             view: AppView.REPORT,
             component: LazyReportView,
@@ -339,4 +486,6 @@ export const getRoutes = (deps: any): RouteConfig[] => {
             props: { onNavigate: deps.setCurrentView }
         }
     ];
+
+    return routes.filter(route => isRouteAvailable(route.view));
 };

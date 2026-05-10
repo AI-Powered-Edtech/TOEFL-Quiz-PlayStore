@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '../../services/apiClient';
+import { apiV2 } from '../../services/apiV2'
+import VwfdHealthCard from './VwfdHealthCard'
 
 interface HealthData {
     status: string;
@@ -61,6 +63,7 @@ export const SystemHealth: React.FC = () => {
     if (loading && !health) {
         return (
             <div className="flex justify-center items-center h-64">
+      <div className="mb-4"><VwfdHealthCard /></div>
                 <p className="text-slate-500">Memuat data sistem...</p>
             </div>
         );

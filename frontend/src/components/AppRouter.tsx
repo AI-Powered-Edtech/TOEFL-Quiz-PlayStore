@@ -1,7 +1,8 @@
 import { ArrowLeft, ShieldCheck, Share2, Loader2, AlertTriangle } from 'lucide-react';
 import React from 'react';
 
-import { getRoutes } from '../config/routes';
+import { getRoutes, isRouteAvailable } from '../config/routes';
+import { quizService } from '../services/quiz';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useNavigationStore } from '../stores/useNavigationStore';
 import { useQuizStore } from '../stores/useQuizStore';
@@ -52,11 +53,36 @@ export const AppRouter: React.FC<AppRouterProps> = ({
     } = useAuthStore();
 
     const {
-        topic, status, queue, index, answers, score, marked,
+        topic, status, queue, index, answers, draftAnswers, score, marked,
         startQuiz, answer, next, prev, jump, toggleMark, setTopic
     } = useQuizStore();
 
     const currentData = queue[index];
+    const [showLeaveQuizConfirm, setShowLeaveQuizConfirm] = React.useState(false);
+    const questionStartedAtRef = React.useRef(Date.now());
+    const recordedAnswerKeysRef = React.useRef<Set<string>>(new Set());
+
+    React.useEffect(() => {
+        questionStartedAtRef.current = Date.now();
+    }, [index, currentData?.id]);
+
+    React.useEffect(() => {
+        if (!currentData || answers[index] === undefined) return;
+
+        const answerKey = `${currentData.id || index}:${answers[index]}`;
+        if (recordedAnswerKeysRef.current.has(answerKey)) return;
+        recordedAnswerKeysRef.current.add(answerKey);
+
+        const responseTimeMs = Math.max(0, Date.now() - questionStartedAtRef.current);
+        quizService.recordAnswer({
+            correct: isCorrectOption(currentData, answers[index]),
+            section: currentData.section || 'structure',
+            skill_id: String(currentData.skill_id),
+            response_time_ms: responseTimeMs,
+        }).catch((err) => {
+            console.warn('[AppRouter] Failed to record adaptive answer metric:', err);
+        });
+    }, [answers, currentData, index]);
 
     // Helper to group reading questions (logic moved from App.tsx can be utility, but keeping here for now or passing down)
     const groupReadingQuestionsByPassage = (questions: CanonicalQuestionV1[]): CanonicalQuestionV1[] => {
@@ -74,6 +100,12 @@ export const AppRouter: React.FC<AppRouterProps> = ({
     };
 
     const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Student";
+
+    React.useEffect(() => {
+        if (!isRouteAvailable(currentView)) {
+            setCurrentView(AppView.DASHBOARD);
+        }
+    }, [currentView, setCurrentView]);
 
     const routes = getRoutes({
         handleStartSkill,
@@ -110,7 +142,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({
                 <div className="flex flex-col h-full bg-[#F5F7FA]">
                     {/* Header */}
                     <div className="px-4 py-4 flex items-center justify-between bg-white border-b border-slate-200 shrink-0 shadow-sm z-20">
-                        <button onClick={() => setCurrentView(AppView.DASHBOARD)}><ArrowLeft className="w-5 h-5 text-slate-500" /></button>
+                        <button aria-label="Leave quiz" onClick={() => setShowLeaveQuizConfirm(true)}><ArrowLeft className="w-5 h-5 text-slate-500" /></button>
                         <span className="font-bold text-sm text-slate-700">{topic || 'Skill Practice'}</span>
                         <div className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">
                             {status === 'generating' ? 'AI' : `${index + 1}/${queue.length}`}
@@ -118,6 +150,19 @@ export const AppRouter: React.FC<AppRouterProps> = ({
                     </div>
 
                     <main className="flex-1 p-4 overflow-y-auto relative pb-24">
+                        {showLeaveQuizConfirm && (
+                            <div className="fixed inset-0 z-50 bg-slate-950/40 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="leave-quiz-title">
+                                <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl border border-slate-100">
+                                    <h3 id="leave-quiz-title" className="text-lg font-bold text-slate-900 mb-2">Leave this quiz?</h3>
+                                    <p className="text-sm text-slate-500 mb-5">Your current session is saved locally when possible, but leaving now may interrupt your flow.</p>
+                                    <div className="flex gap-3">
+                                        <button onClick={() => setShowLeaveQuizConfirm(false)} className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700">Continue</button>
+                                        <button onClick={() => { setShowLeaveQuizConfirm(false); setCurrentView(AppView.DASHBOARD); }} className="flex-1 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white">Leave</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* STREAMING GENERATION ANIMATION */}
                         {status === 'generating' && (
                             <div className="absolute inset-0 z-30 bg-[#F5F7FA] flex flex-col items-center justify-center p-6">
@@ -142,8 +187,8 @@ export const AppRouter: React.FC<AppRouterProps> = ({
                         {/* QUIZ CONTENT ROUTER */}
                         {(status === 'playing' || status === 'answered') && currentData ? (
                             (() => {
-                                const isAnswered = status === 'answered' || answers[index] !== undefined;
-                                const selectedIdx = answers[index] ?? null;
+                                const isAnswered = answers[index] !== undefined;
+                                const selectedIdx = answers[index] ?? draftAnswers[index] ?? null;
                                 const isCorrectAnswer = selectedIdx !== null && isCorrectOption(currentData, selectedIdx);
 
                                 // 1. Reading Section
@@ -245,7 +290,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({
                                         className="bg-[#25D366] hover:bg-[#128C7E] text-white px-6 py-3.5 rounded-xl font-bold shadow-lg shadow-green-100 transition-all flex items-center justify-center gap-2"
                                     >
                                         {isSharing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Share2 className="w-5 h-5" />}
-                                        {isSharing ? "Creating Link..." : "Share Result to WhatsApp"}
+                                        {isSharing ? "Creating Link..." : "Copy Share Link"}
                                     </button>
 
                                     <button onClick={() => setCurrentView(AppView.ERROR_JAIL)} className="bg-orange-100 text-orange-700 hover:bg-orange-200 px-6 py-3.5 rounded-xl font-bold transition-all mt-2">
@@ -283,7 +328,8 @@ export const AppRouter: React.FC<AppRouterProps> = ({
                         <QuizNavigator
                             totalQuestions={queue.length}
                             currentIndex={index}
-                            answers={Object.keys(answers).reduce((acc, key) => ({ ...acc, [key]: 'answered' }), {})}
+                            answers={answers}
+                            draftAnswers={draftAnswers}
                             markedIndices={marked}
                             onJump={jump}
                             onMarkToggle={toggleMark}
@@ -304,10 +350,16 @@ export const AppRouter: React.FC<AppRouterProps> = ({
 
         return (
             <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-                <AlertTriangle className="w-12 h-12 text-yellow-500 mb-4" />
-                <h2 className="text-xl font-bold text-slate-800 mb-2">Under Construction</h2>
-                <p className="text-slate-500 mb-6">This feature ({currentView}) is coming soon.</p>
-                <button onClick={() => setCurrentView(AppView.DASHBOARD)} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold">Return Home</button>
+                <div className="w-20 h-20 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center mb-4">
+                    <AlertTriangle className="w-10 h-10 text-amber-500" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-800 mb-2">Feature unavailable in this release</h2>
+                <p className="text-slate-500 mb-1">This area is disabled for production until it passes QA.</p>
+                <p className="text-xs text-slate-400 mb-6 font-mono">{currentView}</p>
+                <div className="flex flex-col w-full max-w-xs gap-3">
+                    <button onClick={() => setCurrentView(AppView.PRACTICE_HUB)} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">Browse Practice</button>
+                    <button onClick={() => setCurrentView(AppView.DASHBOARD)} className="bg-white text-slate-600 border border-slate-200 px-6 py-3 rounded-xl font-bold hover:bg-slate-50 transition-all">Return Home</button>
+                </div>
             </div>
         );
     };
@@ -318,6 +370,7 @@ export const AppRouter: React.FC<AppRouterProps> = ({
             <ErrorBoundary
                 key={currentView}
                 onRetry={() => setCurrentView(AppView.DASHBOARD)}
+                onGoHome={() => setCurrentView(AppView.DASHBOARD)}
             >
                 <div className="w-full h-full flex flex-col">
                     {renderView()}

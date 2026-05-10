@@ -3,6 +3,7 @@ import { ArrowLeft, Trophy, Crown, Medal, User, Clock, Target } from 'lucide-rea
 import React, { useState, useEffect } from 'react';
 
 import { getGlobalLeaderboard } from '../services/historyService';
+import { useNavigationStore } from '../stores/useNavigationStore';
 import { AppView, QuizResult } from '../types';
 
 import { Button } from './Button';
@@ -16,6 +17,15 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ onNavigate, cu
     const [rankings, setRankings] = useState<QuizResult[]>([]);
     const [filter, setFilter] = useState<'all' | 'structure' | 'reading'>('all');
     const [loading, setLoading] = useState(true);
+    const setPublicProfileUsername = useNavigationStore((s) => s.setPublicProfileUsername);
+    const navigateToView = useNavigationStore((s) => s.setCurrentView);
+    const handleViewProfile = (name: string) => {
+        if (!name) return;
+        const sanitized = name.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
+        if (!sanitized) return;
+        setPublicProfileUsername(sanitized);
+        navigateToView(AppView.PUBLIC_PROFILE);
+    };
 
     useEffect(() => {
         const fetchLeaderboard = async () => {
@@ -89,12 +99,16 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({ onNavigate, cu
                         const isMe = result.userName === currentUserName;
                         
                         return (
-                            <div 
-                                key={result.id} 
-                                className={`relative p-4 rounded-2xl border transition-all flex items-center gap-4 ${
-                                    isMe 
-                                    ? 'bg-blue-50 border-blue-200 shadow-sm ring-1 ring-blue-200' 
-                                    : 'bg-white border-slate-100 shadow-sm'
+                            <div
+                                key={result.id}
+                                onClick={() => handleViewProfile(result.userName)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleViewProfile(result.userName); } }}
+                                className={`relative p-4 rounded-2xl border transition-all flex items-center gap-4 cursor-pointer hover:scale-[1.01] active:scale-[0.99] ${
+                                    isMe
+                                    ? 'bg-blue-50 border-blue-200 shadow-sm ring-1 ring-blue-200'
+                                    : 'bg-white border-slate-100 shadow-sm hover:bg-slate-50'
                                 }`}
                             >
                                 <div className="flex flex-col items-center justify-center w-8 shrink-0">

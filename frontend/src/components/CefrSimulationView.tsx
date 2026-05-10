@@ -49,33 +49,9 @@ async function callGroqWithRetry(
 
 export const CefrSimulationView: React.FC<CefrSimulationViewProps> = ({ onNavigate }) => {
     try {
-        useEffect(() => {
-            const hasCleared = sessionStorage.getItem('cefr_cleared_once');
-            if (!hasCleared) {
-                const keys = [
-                    'local_cefr_test_set',
-                    'cefr_phase',
-                    'cefr_reading_data',
-                    'cefr_listening_data',
-                    'cefr_writing_data',
-                    'cefr_speaking_data',
-                    'cefr_reading_ans',
-                    'cefr_listening_ans',
-                    'cefr_writing_ans',
-                    'cefr_speaking_trans',
-                    'cefr_current_part',
-                    'cefr_free_mode',
-                    'cefr_test_set_id',
-                    'cefr_timer_end_ts'
-                ];
-                keys.forEach(k => localStorage.removeItem(k));
-                sessionStorage.setItem('cefr_cleared_once', 'true');
-                window.location.reload();
-            }
-        }, []);
+
 
     const { tier, isPaid } = useSubscription();
-    console.log("useSubscription done:", isPaid);
 
     // Core Test State Hook
     const {
@@ -97,8 +73,6 @@ export const CefrSimulationView: React.FC<CefrSimulationViewProps> = ({ onNaviga
         finishSection, saveResultsToDb, saveTestSetToDb,
         clearSession,
     } = useCefrTest(isPaid, (s) => startTimer(s));
-    console.log("useCefrTest done. Phase:", phase);
-    console.log("readingData:", readingData);
 
     // Speech Recognition Hook — wired to persisted transcript state
     const {
@@ -119,7 +93,6 @@ export const CefrSimulationView: React.FC<CefrSimulationViewProps> = ({ onNaviga
             }));
         },
     });
-    console.log("useSpeechRecognition done.");
 
     const handleTimeUp = useCallback(() => {
         if (phase === 'reading') {
@@ -137,7 +110,6 @@ export const CefrSimulationView: React.FC<CefrSimulationViewProps> = ({ onNaviga
 
     // Timer Hook
     const { timeLeft, startTimer, formatTime } = useTestTimer(handleTimeUp);
-    console.log("useTestTimer done. timeLeft:", timeLeft);
 
     // ─── Grading Logic ─────────────────────────────────────────────────────────
     const performGrading = useCallback(async () => {
@@ -307,7 +279,7 @@ export const CefrSimulationView: React.FC<CefrSimulationViewProps> = ({ onNaviga
                     <button onClick={() => onNavigate(AppView.PRACTICE_HUB)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 touch-manipulation">
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <h1 className="text-xl font-bold text-slate-800">Practice Hub</h1>
+                    <h1 className="text-xl font-bold text-slate-800">CEFR Full Test</h1>
                 </div>
 
                 <div className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-lg mx-auto w-full">

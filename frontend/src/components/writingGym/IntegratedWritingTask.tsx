@@ -58,6 +58,7 @@ export const IntegratedWritingTask: React.FC<{ onNavigate: (view: AppView) => vo
     // Feedback State
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [evaluation, setEvaluation] = useState<IntegratedWritingEvaluation | null>(null);
+    const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
     // Audio State
     const [audioId, setAudioId] = useState<string | null>(null);
@@ -293,11 +294,11 @@ export const IntegratedWritingTask: React.FC<{ onNavigate: (view: AppView) => vo
             const taskType: "Task 1" | "Task 2" = 'Task 1';
 
             await submitEssay(userId, essay, fullPrompt, taskType, false);
-            alert('Essay submitted to Peer Review! You\'ll receive feedback from the community soon.');
+            setStatusMessage({ type: 'success', text: 'Essay submitted to Peer Review.' });
             onNavigate(AppView.PEER_REVIEW);
         } catch (error) {
             console.error('[IntegratedWritingSim] Submit to peer review failed:', error);
-            alert('Failed to submit essay. Please try again.');
+            setStatusMessage({ type: 'error', text: 'Failed to submit essay. Please try again.' });
         }
     };
 
@@ -353,7 +354,7 @@ export const IntegratedWritingTask: React.FC<{ onNavigate: (view: AppView) => vo
             setPhase('feedback');
         } catch (e) {
             console.error(e);
-            alert('Evaluation failed. Please try again.');
+            setStatusMessage({ type: 'error', text: 'Evaluation failed. Please try again.' });
         } finally {
             setIsSubmitting(false);
         }
@@ -425,6 +426,11 @@ export const IntegratedWritingTask: React.FC<{ onNavigate: (view: AppView) => vo
 
             {/* Main Content */}
             <div className="flex-1 overflow-hidden relative">
+                {statusMessage && (
+                    <div role="status" aria-live="polite" className={`absolute left-4 right-4 top-4 z-30 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg ${statusMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                        {statusMessage.text}
+                    </div>
+                )}
                 <AnimatePresence mode="wait">
 
                     {/* RECOVERY PROMPT PHASE */}

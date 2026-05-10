@@ -2,6 +2,7 @@
  * @deprecated Use socialService from './social.ts' instead.
  */
 import { Notification } from '../types';
+import { apiClient } from './apiClient';
 
 const NOTIFICATIONS_KEY = 'notifications_';
 
@@ -30,10 +31,10 @@ export const notificationService = {
     },
 
     async markAsRead(notificationId: string): Promise<void> {
-        const authResponse = await fetch('/api/auth/profile');
-        if (!authResponse.ok) return;
+        const authResponse = await apiClient.get<{ id?: string; user?: { id?: string } }>('/api/auth/profile');
+        if (authResponse.error) return;
 
-        const userId = (await authResponse.json())?.user?.id;
+        const userId = authResponse.data?.user?.id || authResponse.data?.id;
         if (!userId) return;
 
         const notifications = getLocalNotifications(userId);

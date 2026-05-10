@@ -1,205 +1,84 @@
-import api from './apiClient';
-import { Friend, Notification } from '../types';
-import { parseApi } from '../contracts/parse';
-import { FriendSchema, NotificationSchema } from '../contracts/schemas';
-import { mapFriendRowToFriend, mapNotificationRowToNotification } from './mappers';
+import { apiClient } from './apiClient';
 
-export interface Circle {
-  id: string;
-  code: string;
-  name: string;
-  description?: string;
-  creator_id: string;
-  is_public: boolean;
-  chat_mode?: string;
-  created_at: string;
-  member_count?: number;
+export interface FriendProfile {
+  full_name?: string | null;
+  avatar_url?: string | null;
+  xp?: number | null;
 }
 
-export interface CircleMember {
+export interface FriendRow {
   id: string;
-  circle_id: string;
   user_id: string;
-  role?: string;
-  joined_at?: string;
-  profile?: {
-    full_name?: string;
-    avatar_url?: string;
-    xp?: number;
-  };
+  friend_id: string;
+  profile?: FriendProfile | null;
+  created_at?: string | null;
 }
 
-export interface CircleMessage {
-  id: string;
-  circle_id: string;
-  user_id: string;
-  content: string;
-  is_system: boolean;
-  created_at: string;
-  profile?: {
-    full_name?: string;
-    avatar_url?: string;
-  };
+export interface FriendCodeResponse {
+  ok: boolean;
+  friend_code: string;
 }
 
-export interface LeaderboardEntry {
-  rank: number;
-  user_id: string;
-  full_name?: string;
-  avatar_url?: string;
-  xp: number;
+export interface OkResponse {
+  ok: boolean;
+  error?: string;
 }
 
-export interface Achievement {
-  id: string;
-  achievement_id: string;
-  feature?: string;
-  xp_earned: number;
-  created_at: string;
-}
-
-export interface Prediction {
-  id: string;
-  prediction_type: string;
-  predicted_value?: number;
-  actual_value?: number;
-  confidence?: number;
-  is_current: boolean;
-  created_at: string;
-}
+const normalizeFriendCode = (code: string): string => code.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16);
 
 export const socialService = {
-  async createCircle(data: {
-    name: string;
-    description?: string;
-    is_public?: boolean;
-  }): Promise<{ ok: boolean; id?: string; error?: string }> {
-    const response = await api.post<{ ok: boolean; id: string }>('/api/social/circles', data);
-    if (response.error) {
-      return { ok: false, error: response.error.error };
-    }
-    return { ok: true, id: response.data?.id };
-  },
-
-  async joinCircle(code: string): Promise<{ ok: boolean; circle_id?: string; error?: string }> {
-    const response = await api.post<{ ok: boolean; circle_id: string }>('/api/social/circles/join', { code });
-    if (response.error) {
-      return { ok: false, error: response.error.error };
-    }
-    return { ok: true, circle_id: response.data?.circle_id };
-  },
-
-  async myCircles(): Promise<Circle[]> {
-    const response = await api.get<Circle[]>('/api/social/circles/mine');
-    return response.data || [];
-  },
-
-  async sendMessage(circleId: string, content: string): Promise<{ ok: boolean; id?: string; error?: string }> {
-    const response = await api.post<{ ok: boolean; id: string }>(`/api/social/circles/${circleId}/messages`, { content });
-    if (response.error) {
-      return { ok: false, error: response.error.error };
-    }
-    return { ok: true, id: response.data?.id };
-  },
-
-  async getMessages(circleId: string): Promise<CircleMessage[]> {
-    const response = await api.get<CircleMessage[]>(`/api/social/circles/${circleId}/messages`);
-    return response.data || [];
-  },
-
-  async addFriend(friendCode: string): Promise<{ ok: boolean; error?: string }> {
-    const response = await api.post<{ ok: boolean }>('/api/social/friends/add', { friend_code: friendCode });
-    if (response.error) {
-      return { ok: false, error: response.error.error };
-    }
-    return { ok: true };
-  },
-
-  async listFriends(): Promise<Friend[]> {
-    const response = await api.get<any[]>('/api/social/friends');
-    if (!response.data) return [];
-    return response.data.map(r => parseApi(FriendSchema, mapFriendRowToFriend(r)));
-  },
-
-  async leaderboard(): Promise<LeaderboardEntry[]> {
-    const response = await api.get<LeaderboardEntry[]>('/api/social/leaderboard');
-    return response.data || [];
-  },
-
-  async getPredictions(): Promise<Prediction[]> {
-    const response = await api.get<Prediction[]>('/api/social/predictions');
-    return response.data || [];
-  },
-
-  async savePrediction(data: {
-    prediction_type: string;
-    predicted_value?: number;
-    confidence?: number;
-    breakdown?: string;
-  }): Promise<{ ok: boolean; error?: string }> {
-    const response = await api.post<{ ok: boolean }>('/api/social/predictions', data);
-    if (response.error) {
-      return { ok: false, error: response.error.error };
-    }
-    return { ok: true };
-  },
-
-  async getAchievements(): Promise<Achievement[]> {
-    const response = await api.get<Achievement[]>('/api/social/achievements');
-    return response.data || [];
-  },
-
-  async getNotifications(): Promise<Notification[]> {
-    const response = await api.get<any[]>('/api/social/notifications');
-    if (!response.data) return [];
-    return response.data.map(r => parseApi(NotificationSchema, mapNotificationRowToNotification(r)));
-  },
-
-  async markNotificationRead(id: string): Promise<{ ok: boolean; error?: string }> {
-    const response = await api.patch<{ ok: boolean }>(`/api/social/notifications/${id}/read`);
-    if (response.error) {
-      return { ok: false, error: response.error.error };
-    }
-    return { ok: true };
-  },
-
-  async getOrCreateFriendCode(_userId: string): Promise<string | null> {
-    try {
-      const response = await api.get<{ friend_code: string | null }>('/api/auth/profile');
-      if (response.data?.friend_code) {
-        return response.data.friend_code;
-      }
-      const code = 'TOEFL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-      const updateResponse = await api.patch('/api/auth/profile', { friend_code: code });
-      return updateResponse.error ? null : code;
-    } catch {
+  async getOrCreateFriendCode(_userId?: string): Promise<string | null> {
+    const response = await apiClient.get<FriendCodeResponse>('/api/social/friends/code');
+    if (response.error || !response.data?.ok) {
+      console.warn('[Social] friend code unavailable:', response.error);
       return null;
     }
+    return response.data.friend_code;
   },
 
-  async removeFriend(friendId: string): Promise<{ ok: boolean; error?: string }> {
-    const response = await api.delete<{ ok: boolean }>(`/api/social/friends/${friendId}`);
-    if (response.error) {
-      return { ok: false, error: response.error.error };
-    }
-    return { ok: true };
+  async addFriend(friendCode: string): Promise<OkResponse> {
+    const normalized = normalizeFriendCode(friendCode);
+    if (!normalized) return { ok: false, error: 'Enter a valid friend code' };
+    const response = await apiClient.post<OkResponse>('/api/social/friends/add', { friend_code: normalized });
+    if (response.error) return { ok: false, error: response.error.error || 'Failed to add friend' };
+    return response.data || { ok: true };
   },
 
-  async respondToRequest(requesterId: string, accept: boolean): Promise<{ ok: boolean; error?: string }> {
-    const response = await api.post<{ ok: boolean }>('/api/social/friends/respond', { requester_id: requesterId, accept });
-    if (response.error) {
-      return { ok: false, error: response.error.error };
+  async listFriends(): Promise<FriendRow[]> {
+    const response = await apiClient.get<FriendRow[]>('/api/social/friends');
+    if (response.error || !response.data) {
+      console.warn('[Social] friends unavailable:', response.error);
+      return [];
     }
-    return { ok: true };
+    return response.data;
   },
 
-  async createNotification(data: any): Promise<void> {
-    try {
-      await api.post('/api/social/notifications', data);
-    } catch {
-      // Ignored for now
+  async removeFriend(friendId: string): Promise<OkResponse> {
+    const response = await apiClient.delete<OkResponse>(`/api/social/friends/${encodeURIComponent(friendId)}`);
+    if (response.error) return { ok: false, error: response.error.error || 'Failed to remove friend' };
+    return response.data || { ok: true };
+  },
+
+  async respondToRequest(requesterId: string, accept: boolean): Promise<OkResponse> {
+    const response = await apiClient.post<OkResponse>('/api/social/friends/respond', { requester_id: requesterId, accept });
+    if (response.error) return { ok: false, error: response.error.error || 'Failed to respond to request' };
+    return response.data || { ok: true };
+  },
+
+  async getNotifications(): Promise<any[]> {
+    const response = await apiClient.get<any[]>('/api/social/notifications');
+    if (response.error || !response.data) {
+      console.warn('[Social] notifications unavailable:', response.error);
+      return [];
     }
-  }
+    return response.data;
+  },
+
+  async markNotificationRead(id: string): Promise<OkResponse> {
+    const response = await apiClient.patch<OkResponse>(`/api/social/notifications/${encodeURIComponent(id)}/read`);
+    if (response.error) return { ok: false, error: response.error.error || 'Failed to mark notification read' };
+    return response.data || { ok: true };
+  },
 };
 
 export default socialService;

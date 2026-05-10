@@ -1,0 +1,24 @@
+# TOEFL Quiz — VWFD-only runtime image
+# Pre-built VIL 0.4.0 provisionable server (VSAL, ~50 MB distroless).
+# This image runs ONLY the VWFD workflows in /app/workflows/.
+# For the full Rust backend, see Dockerfile.backend.
+FROM vilfounder/vil:0.4.0-slim
+
+WORKDIR /app
+
+# Mount workflow definitions (YAML)
+COPY workflows/ /app/workflows/
+
+# Optional: shared static assets (frontend dist) for combined deploy
+# COPY frontend/dist/ /app/static/
+
+EXPOSE 8083
+
+# Provisionable defaults — override via env or docker-compose:
+#   VIL_BIND_ADDR=0.0.0.0:8083
+#   VIL_WORKFLOWS_DIR=/app/workflows
+#   VIL_PROVISION_KEY=<set-to-enable-runtime-upload>
+#   VIL_LOG_LEVEL=info
+ENV VIL_BIND_ADDR=0.0.0.0:8083 \\
+    VIL_WORKFLOWS_DIR=/app/workflows \\
+    VIL_LOG_LEVEL=info

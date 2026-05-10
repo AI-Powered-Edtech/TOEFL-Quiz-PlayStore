@@ -8,6 +8,7 @@ import {
 import { generateCircleCode } from '../utils/secureCodeGenerator';
 
 import { socialRateLimiter } from './socialRateLimiter';
+import { listCircleMessagesV2, sendCircleMessageV2, CircleMessageV2 } from './circleMessagesV2';
 
 export class CircleError extends Error {
     constructor(message: string, public code: string) {
@@ -40,6 +41,24 @@ const getUserId = (): string | null => {
         return stored;
     } catch { return null; }
 };
+
+const mapV2Message = (m: CircleMessageV2): any => ({
+    id: m.id,
+    circleId: m.circle_id,
+    userId: m.sender_id,
+    content: m.message,
+    isSystem: m.sender_id === 'system',
+    createdAt: m.created_at,
+    senderName: m.sender_id === 'system' ? 'System' : (m.sender_id === getUserId() ? 'You' : m.sender_id),
+    senderAvatar: null,
+});
+
+const mergeMessages = (local: any[], remote: any[]): any[] => {
+    const byId = new Map<string, any>();
+    [...local, ...remote].forEach((m) => byId.set(String(m.id), m));
+    return Array.from(byId.values()).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+};
+
 
 export const circleService = {
 
@@ -216,6 +235,9 @@ export const circleService = {
 
         messages.push(message);
         localStorage.setItem(messagesKey, JSON.stringify(messages));
+        sendCircleMessageV2(circleId, userId, messageValidation.sanitized || content).catch((e) => {
+            console.warn('[Circle] v2 send failed, kept local message:', e);
+        });
 
         return message;
     },
@@ -240,8 +262,16 @@ export const circleService = {
 
     async getMessages(circleId: string, limit = 50): Promise<any[]> {
         const messagesKey = getMessagesKey(circleId);
-        const messages: any[] = JSON.parse(localStorage.getItem(messagesKey) || '[]');
-        return messages.slice(-limit);
+        const local: any[] = JSON.parse(localStorage.getItem(messagesKey) || '[]');
+        try {
+            const remote = (await listCircleMessagesV2(circleId)).map(mapV2Message);
+            const merged = mergeMessages(local, remote).slice(-Math.max(limit, 100));
+            localStorage.setItem(messagesKey, JSON.stringify(merged));
+            return merged.slice(-limit);
+        } catch (e) {
+            console.warn('[Circle] v2 messages fetch failed, using local fallback:', e);
+            return local.slice(-limit);
+        }
     },
 
     async deleteMessage(messageId: string): Promise<void> {
@@ -276,8 +306,24 @@ export const circleService = {
         localStorage.removeItem(getMessagesKey(circleId));
     },
 
-    subscribeToMessages(_circleId: string, _callback: (message: any) => void): { unsubscribe: () => void } {
-        return { unsubscribe: () => {} };
+    subscribeToMessages(circleId: string, callback: (message: any) => void): { unsubscribe: () => void } {
+        let lastSeen = new Set<string>();
+        this.getMessages(circleId, 100).then((messages) => {
+            lastSeen = new Set(messages.map((m: any) => String(m.id)));
+        }).catch(() => {});
+        const timer = window.setInterval(async () => {
+            try {
+                const messages = await this.getMessages(circleId, 100);
+                for (const m of messages) {
+                    const id = String(m.id);
+                    if (!lastSeen.has(id)) {
+                        lastSeen.add(id);
+                        callback(m);
+                    }
+                }
+            } catch { /* polling fallback is best-effort */ }
+        }, 7000);
+        return { unsubscribe: () => window.clearInterval(timer) };
     },
 
     async promoteMember(circleId: string, targetUserId: string): Promise<void> {

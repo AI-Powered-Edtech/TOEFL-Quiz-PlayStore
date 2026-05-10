@@ -12,6 +12,7 @@ export const AcademicDiscussionTask: React.FC<{ onNavigate: (view: AppView) => v
     const [essay, setEssay] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [feedback, setFeedback] = useState<EssaySubmission['ai_feedback'] | null>(null);
+    const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
     const prompt = "Do you agree or disagree with the following statement? Grades encourage students to learn.";
     const student1 = "I agree. Grades give us a goal to aim for. Without them, I wouldn't study as hard.";
@@ -25,7 +26,7 @@ export const AcademicDiscussionTask: React.FC<{ onNavigate: (view: AppView) => v
             setFeedback(result);
         } catch (e) {
             console.error(e);
-            alert("Evaluation failed.");
+            setStatusMessage({ type: 'error', text: 'Evaluation failed. Please try again.' });
         } finally {
             setIsSubmitting(false);
         }
@@ -42,11 +43,11 @@ export const AcademicDiscussionTask: React.FC<{ onNavigate: (view: AppView) => v
             const fullPrompt = `Academic Discussion Task\n\nProfessor: ${prompt}\n\nStudent A: ${student1}\n\nStudent B: ${student2}`;
 
             await submitEssay(userId, essay, fullPrompt, 'Task 2', false);
-            alert('Essay submitted to Peer Review! You\'ll receive feedback from the community soon.');
+            setStatusMessage({ type: 'success', text: 'Essay submitted to Peer Review.' });
             onNavigate(AppView.PEER_REVIEW);
         } catch (error) {
             console.error('[AcademicDiscussionTask] Submit to peer review failed:', error);
-            alert('Failed to submit essay. Please try again.');
+            setStatusMessage({ type: 'error', text: 'Failed to submit essay. Please try again.' });
         }
     };
 
@@ -63,6 +64,11 @@ export const AcademicDiscussionTask: React.FC<{ onNavigate: (view: AppView) => v
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 pb-28">
                 <div className="max-w-3xl mx-auto">
                     <div className="space-y-6">
+                        {statusMessage && (
+                            <div role="status" aria-live="polite" className={`rounded-xl px-4 py-3 text-sm font-semibold ${statusMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                                {statusMessage.text}
+                            </div>
+                        )}
                         {/* Prompt Card */}
                         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
                             <div className="flex items-center gap-3 mb-4">

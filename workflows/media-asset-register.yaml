@@ -1,0 +1,42 @@
+version: "3.0"
+metadata:
+  id: media-asset-register
+  name: "Media asset registry"
+  description: "POST /api/v2/media/assets/register. Registers avatar/audio URLs; binary upload still requires storage/Rust endpoint."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/media/assets/register, method: POST }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: insert
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: execute
+      input_mappings:
+        - target: sql
+          source:
+            language: vil-expr
+            source: "\"INSERT INTO user_media_assets (id, owner_id, asset_type, url, label, mime_type, created_at) VALUES (lower(hex(randomblob(16))), '\" + trigger_payload.body.owner_id + \"', '\" + trigger_payload.body.asset_type + \"', '\" + trigger_payload.body.url + \"', '\" + trigger_payload.body.label + \"', '\" + trigger_payload.body.mime_type + \"', datetime('now'))\""
+      output_variable: insert_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"ok": true, "rows_affected": insert_result.rows_affected, "registered_at": now()}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: insert } }
+    - { id: f2, from: { node: insert }, to: { node: respond } }
+    - { id: f3, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: insert_result, type: object }

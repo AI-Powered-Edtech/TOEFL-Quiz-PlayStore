@@ -5,7 +5,8 @@ import React, { useState, useMemo } from 'react';
 interface QuizNavigatorProps {
     totalQuestions: number;
     currentIndex: number;
-    answers: Record<number, string>; // Map of index -> answer
+    answers: Record<number, number>; // Map of index -> submitted answer index
+    draftAnswers?: Record<number, number>;
     markedIndices: number[];
     onJump: (index: number) => void;
     onMarkToggle: () => void;
@@ -17,6 +18,7 @@ export const QuizNavigator: React.FC<QuizNavigatorProps> = React.memo(({
     totalQuestions,
     currentIndex,
     answers,
+    draftAnswers = {},
     markedIndices,
     onJump,
     onMarkToggle,
@@ -25,11 +27,14 @@ export const QuizNavigator: React.FC<QuizNavigatorProps> = React.memo(({
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const isMarked = markedIndices.includes(currentIndex);
+    const hasSubmittedCurrent = answers[currentIndex] !== undefined;
+    const hasDraftCurrent = draftAnswers[currentIndex] !== undefined;
 
     // Memoize the grid items to prevent unnecessary re-renders of the whole grid list
     const gridItems = useMemo(() => {
         return Array.from({ length: totalQuestions }).map((_, idx) => {
-            const isAnswered = !!answers[idx];
+            const isAnswered = answers[idx] !== undefined;
+            const isDraft = draftAnswers[idx] !== undefined;
             const isCurrent = idx === currentIndex;
             const isIdxMarked = markedIndices.includes(idx);
 
@@ -40,6 +45,8 @@ export const QuizNavigator: React.FC<QuizNavigatorProps> = React.memo(({
                 stateClasses = "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 z-10 scale-105";
             } else if (isAnswered) {
                 stateClasses = "border-transparent bg-slate-100 text-slate-700 hover:bg-slate-200";
+            } else if (isDraft) {
+                stateClasses = "border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100";
             } else {
                 stateClasses = "border-slate-200 border-dashed text-slate-400 hover:border-slate-300 hover:text-slate-600";
             }
@@ -59,13 +66,13 @@ export const QuizNavigator: React.FC<QuizNavigatorProps> = React.memo(({
                             <Flag className="w-3 h-3 text-orange-500 fill-orange-500 drop-shadow-sm" />
                         </div>
                     )}
-                    {isAnswered && !isCurrent && (
-                        <div className="absolute bottom-1 w-1 h-1 rounded-full bg-slate-400"></div>
+                    {(isAnswered || isDraft) && !isCurrent && (
+                        <div className={`absolute bottom-1 w-1 h-1 rounded-full ${isAnswered ? 'bg-slate-400' : 'bg-blue-400'}`}></div>
                     )}
                 </button>
             );
         });
-    }, [totalQuestions, currentIndex, answers, markedIndices, onJump]);
+    }, [totalQuestions, currentIndex, answers, draftAnswers, markedIndices, onJump]);
 
     return (
         <>
@@ -144,14 +151,15 @@ export const QuizNavigator: React.FC<QuizNavigatorProps> = React.memo(({
                     </button>
                     <button
                         onClick={onNext}
+                        disabled={!hasSubmittedCurrent && !hasDraftCurrent}
                         className="p-2.5 sm:px-4 sm:py-2 bg-blue-600 text-white text-xs font-bold rounded-xl shadow-md hover:bg-blue-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed min-w-[80px]"
                     >
                         <span className="hidden sm:inline">
-                            {currentIndex === totalQuestions - 1 ? 'Finish' : 'Next'}
+                            {!hasSubmittedCurrent ? 'Submit' : (currentIndex === totalQuestions - 1 ? 'Finish' : 'Next')}
                         </span>
                         {/* We hide the text on very thin mobile screens but 'Finish' might be better kept visible, let's just use the icon + text consistently or adapt the icon */}
                         <span className="sm:hidden text-[10px] uppercase">
-                            {currentIndex === totalQuestions - 1 ? 'Finish' : <ChevronUp className="w-5 h-5 rotate-90" />}
+                            {!hasSubmittedCurrent ? 'Submit' : (currentIndex === totalQuestions - 1 ? 'Finish' : <ChevronUp className="w-5 h-5 rotate-90" />)}
                         </span>
                     </button>
                 </div>

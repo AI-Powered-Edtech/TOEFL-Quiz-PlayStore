@@ -46,6 +46,7 @@ async fn main() {
         .endpoint(Method::POST, "/refresh", post(auth::refresh_token))
         .endpoint(Method::GET, "/profile", get(auth::get_profile))
         .endpoint(Method::PATCH, "/profile", patch(auth::update_profile))
+        .endpoint(Method::DELETE, "/account", delete(auth::delete_account))
         .endpoint(Method::POST, "/oauth/init", post(oauth::init_oauth))
         .endpoint(Method::POST, "/oauth/callback", post(oauth::oauth_callback))
         .endpoint(Method::POST, "/oauth/rotate", post(oauth::rotate_tokens))
@@ -95,6 +96,7 @@ async fn main() {
 
     let purchases_svc = ServiceProcess::new("purchases")
         .endpoint(Method::POST, "/verify", post(purchases::verify))
+        .endpoint(Method::GET, "/entitlement", get(purchases::entitlement))
         .state(state.clone());
 
     let writing_svc = ServiceProcess::new("writing")
@@ -121,6 +123,7 @@ async fn main() {
         .endpoint(Method::GET, "/circles/:id/messages", get(social::get_messages))
         .endpoint(Method::POST, "/friends/add", post(social::add_friend))
         .endpoint(Method::GET, "/friends", get(social::list_friends))
+        .endpoint(Method::GET, "/friends/code", get(social::my_friend_code))
         .endpoint(Method::DELETE, "/friends/:friend_id", delete(social::remove_friend))
         .endpoint(Method::POST, "/friends/respond", post(social::respond_friend_request))
         .endpoint(Method::GET, "/leaderboard", get(social::leaderboard))

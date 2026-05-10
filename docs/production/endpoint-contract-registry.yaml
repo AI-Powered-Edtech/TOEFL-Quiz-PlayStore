@@ -1,0 +1,495 @@
+# Production-0 endpoint contract registry lock
+rust_8082:
+  - service: auth
+    method: POST
+    path: /api/auth/register
+    category: canonical-server-backed
+  - service: auth
+    method: POST
+    path: /api/auth/login
+    category: canonical-server-backed
+  - service: auth
+    method: POST
+    path: /api/auth/refresh
+    category: canonical-server-backed
+  - service: auth
+    method: GET
+    path: /api/auth/profile
+    category: canonical-server-backed
+  - service: auth
+    method: PATCH
+    path: /api/auth/profile
+    category: canonical-server-backed
+  - service: auth
+    method: POST
+    path: /api/auth/oauth/init
+    category: canonical-server-backed
+  - service: auth
+    method: POST
+    path: /api/auth/oauth/callback
+    category: canonical-server-backed
+  - service: auth
+    method: POST
+    path: /api/auth/oauth/rotate
+    category: canonical-server-backed
+  - service: admin
+    method: GET
+    path: /api/admin/users
+    category: canonical-server-backed
+  - service: admin
+    method: PATCH
+    path: /api/admin/users/:user_id/tier
+    category: canonical-server-backed
+  - service: admin
+    method: POST
+    path: /api/admin/roles
+    category: canonical-server-backed
+  - service: admin
+    method: DELETE
+    path: /api/admin/roles/:user_id
+    category: canonical-server-backed
+  - service: admin
+    method: POST
+    path: /api/admin/verify-pin
+    category: canonical-server-backed
+  - service: admin
+    method: GET
+    path: /api/admin/audit-logs
+    category: canonical-server-backed
+  - service: quiz
+    method: GET
+    path: /api/quiz/questions
+    category: canonical-server-backed
+  - service: quiz
+    method: GET
+    path: /api/quiz/simulation
+    category: canonical-server-backed
+  - service: quiz
+    method: POST
+    path: /api/quiz/results
+    category: canonical-server-backed
+  - service: quiz
+    method: POST
+    path: /api/quiz/reports
+    category: canonical-server-backed
+  - service: quiz
+    method: GET
+    path: /api/quiz/reports/:id
+    category: canonical-server-backed
+  - service: quiz
+    method: GET
+    path: /api/quiz/history
+    category: canonical-server-backed
+  - service: quiz
+    method: GET
+    path: /api/quiz/progress
+    category: canonical-server-backed
+  - service: quiz
+    method: GET
+    path: /api/quiz/bank/count
+    category: canonical-server-backed
+  - service: quiz
+    method: GET
+    path: /api/quiz/bank/questions
+    category: canonical-server-backed
+  - service: quiz
+    method: POST
+    path: /api/quiz/generate
+    category: canonical-server-backed
+  - service: quiz
+    method: GET
+    path: /api/quiz/bank/questions/skill
+    category: canonical-server-backed
+  - service: quiz
+    method: GET
+    path: /api/quiz/bank/:id
+    category: canonical-server-backed
+  - service: quiz
+    method: POST
+    path: /api/quiz/bank
+    category: canonical-server-backed
+  - service: quiz
+    method: PATCH
+    path: /api/quiz/bank/:id
+    category: canonical-server-backed
+  - service: quiz
+    method: DELETE
+    path: /api/quiz/bank/:id
+    category: canonical-server-backed
+  - service: quiz
+    method: GET
+    path: /api/quiz/passages/:id
+    category: canonical-server-backed
+  - service: quiz
+    method: POST
+    path: /api/quiz/passages
+    category: canonical-server-backed
+  - service: quiz
+    method: GET
+    path: /api/quiz/adaptive-metrics
+    category: canonical-server-backed
+  - service: quiz
+    method: POST
+    path: /api/quiz/record-answer
+    category: canonical-server-backed
+  - service: profile
+    method: GET
+    path: /api/profile/:user_id
+    category: canonical-server-backed
+  - service: profile
+    method: PATCH
+    path: /api/profile/:user_id
+    category: canonical-server-backed
+  - service: ai
+    method: POST
+    path: /api/ai/generate
+    category: canonical-server-backed
+  - service: ai
+    method: POST
+    path: /api/ai/tts
+    category: canonical-server-backed
+  - service: ai
+    method: GET
+    path: /api/ai/token-usage
+    category: canonical-server-backed
+  - service: purchases
+    method: POST
+    path: /api/purchases/verify
+    category: canonical-server-backed
+  - service: writing
+    method: GET
+    path: /api/writing/progress
+    category: canonical-server-backed
+  - service: writing
+    method: POST
+    path: /api/writing/progress
+    category: canonical-server-backed
+  - service: writing
+    method: GET
+    path: /api/writing/sessions
+    category: canonical-server-backed
+  - service: writing
+    method: POST
+    path: /api/writing/sessions
+    category: canonical-server-backed
+  - service: writing
+    method: POST
+    path: /api/writing/exercise
+    category: canonical-server-backed
+  - service: writing
+    method: POST
+    path: /api/writing/evaluate
+    category: canonical-server-backed
+  - service: writing
+    method: GET
+    path: /api/writing/model-essays
+    category: canonical-server-backed
+  - service: writing
+    method: GET
+    path: /api/writing/vocabulary
+    category: canonical-server-backed
+  - service: writing
+    method: POST
+    path: /api/writing/vocabulary
+    category: canonical-server-backed
+  - service: writing
+    method: POST
+    path: /api/writing/devils-advocate
+    category: canonical-server-backed
+  - service: writing
+    method: POST
+    path: /api/writing/peer-review/submissions
+    category: canonical-server-backed
+  - service: writing
+    method: GET
+    path: /api/writing/peer-review/queue
+    category: canonical-server-backed
+  - service: writing
+    method: POST
+    path: /api/writing/peer-review/reviews
+    category: canonical-server-backed
+  - service: social
+    method: POST
+    path: /api/social/circles
+    category: canonical-server-backed
+  - service: social
+    method: POST
+    path: /api/social/circles/join
+    category: canonical-server-backed
+  - service: social
+    method: GET
+    path: /api/social/circles/mine
+    category: canonical-server-backed
+  - service: social
+    method: POST
+    path: /api/social/circles/:id/messages
+    category: canonical-server-backed
+  - service: social
+    method: GET
+    path: /api/social/circles/:id/messages
+    category: canonical-server-backed
+  - service: social
+    method: POST
+    path: /api/social/friends/add
+    category: canonical-server-backed
+  - service: social
+    method: GET
+    path: /api/social/friends
+    category: canonical-server-backed
+  - service: social
+    method: DELETE
+    path: /api/social/friends/:friend_id
+    category: canonical-server-backed
+  - service: social
+    method: POST
+    path: /api/social/friends/respond
+    category: canonical-server-backed
+  - service: social
+    method: GET
+    path: /api/social/leaderboard
+    category: canonical-server-backed
+  - service: social
+    method: GET
+    path: /api/social/predictions
+    category: canonical-server-backed
+  - service: social
+    method: POST
+    path: /api/social/predictions
+    category: canonical-server-backed
+  - service: social
+    method: GET
+    path: /api/social/achievements
+    category: canonical-server-backed
+  - service: social
+    method: GET
+    path: /api/social/notifications
+    category: canonical-server-backed
+  - service: social
+    method: POST
+    path: /api/social/notifications
+    category: canonical-server-backed
+  - service: social
+    method: PATCH
+    path: /api/social/notifications/:id/read
+    category: canonical-server-backed
+  - service: creator
+    method: POST
+    path: /api/creator/register
+    category: canonical-server-backed
+  - service: creator
+    method: GET
+    path: /api/creator/profile
+    category: canonical-server-backed
+  - service: creator
+    method: POST
+    path: /api/creator/bites
+    category: canonical-server-backed
+  - service: creator
+    method: GET
+    path: /api/creator/bites
+    category: canonical-server-backed
+  - service: creator
+    method: POST
+    path: /api/creator/bites/:id/view
+    category: canonical-server-backed
+  - service: creator
+    method: POST
+    path: /api/creator/bites/:id/tip
+    category: canonical-server-backed
+  - service: creator
+    method: POST
+    path: /api/creator/payouts
+    category: canonical-server-backed
+  - service: creator
+    method: GET
+    path: /api/creator/stats
+    category: canonical-server-backed
+  - service: monitoring
+    method: POST
+    path: /api/monitoring/logs/batch
+    category: canonical-server-backed
+  - service: monitoring
+    method: POST
+    path: /api/monitoring/metrics/batch
+    category: canonical-server-backed
+  - service: monitoring
+    method: POST
+    path: /api/monitoring/moderation/reports
+    category: canonical-server-backed
+  - service: storage
+    method: POST
+    path: /api/storage/avatars
+    category: canonical-server-backed
+  - service: storage
+    method: GET
+    path: /api/storage/avatars/:filename
+    category: canonical-server-backed
+  - service: storage
+    method: POST
+    path: /api/storage/audio
+    category: canonical-server-backed
+  - service: storage
+    method: GET
+    path: /api/storage/audio/:filename
+    category: canonical-server-backed
+  - service: blog
+    method: GET
+    path: /api/blog/posts
+    category: canonical-server-backed
+  - service: blog
+    method: GET
+    path: /api/blog/posts/:skill_id
+    category: canonical-server-backed
+  - service: blog
+    method: POST
+    path: /api/blog/admin/posts
+    category: canonical-server-backed
+  - service: blog
+    method: DELETE
+    path: /api/blog/admin/posts/:skill_id
+    category: canonical-server-backed
+  - service: admin-monitoring
+    method: GET
+    path: /api/admin-monitoring/health
+    category: canonical-server-backed
+  - service: admin-monitoring
+    method: GET
+    path: /api/admin-monitoring/errors
+    category: canonical-server-backed
+  - service: admin-monitoring
+    method: GET
+    path: /api/admin-monitoring/feature-flags
+    category: canonical-server-backed
+  - service: admin-monitoring
+    method: PATCH
+    path: /api/admin-monitoring/feature-flags/:id
+    category: canonical-server-backed
+  - service: admin-monitoring
+    method: GET
+    path: /api/admin-monitoring/moderation/reports
+    category: canonical-server-backed
+  - service: admin-monitoring
+    method: PATCH
+    path: /api/admin-monitoring/moderation/reports/:id
+    category: canonical-server-backed
+  - service: oracle
+    method: GET
+    path: /api/oracle/predict
+    category: canonical-server-backed
+vwfd_8083:
+  - workflow: admin-audit-list.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: admin-audit-log.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: admin-cleanup-claims.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: admin-cleanup-logs.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: blog-public-list.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: circle-message-send.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: circle-messages-list.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: creator-dashboard.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: creator-payout-request.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: creator-register.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: email-validate.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: health.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: leaderboard-public.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: media-asset-register.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: media-assets-list.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: moderation-report-resolve.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: moderation-report-submit.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: moderation-reports-admin-list.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: moderation-reports-my-list.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: oracle-prediction-save.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: oracle-predictions-history.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: oracle-public-summary.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: question-bank-admin-delete.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: question-bank-admin-list.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: question-bank-admin-upsert.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: quiz-token-cost.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: social-profile-public.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - workflow: uuid-gen.yaml
+    category: legacy-adapter
+    owner: vwfd-companion
+  - service: auth
+    method: DELETE
+    path: /api/auth/account
+    category: canonical-server-backed
+  - service: purchases
+    method: GET
+    path: /api/purchases/entitlement
+    category: canonical-server-backed
+  - service: admin-monitoring
+    method: GET
+    path: /api/admin-monitoring/health
+    category: canonical-server-backed
+  - service: admin-monitoring
+    method: GET
+    path: /api/admin-monitoring/errors
+    category: canonical-server-backed
+  - service: admin-monitoring
+    method: GET
+    path: /api/admin-monitoring/feature-flags
+    category: canonical-server-backed
+  - service: admin-monitoring
+    method: PATCH
+    path: /api/admin-monitoring/feature-flags/:id
+    category: canonical-server-backed
+  - service: admin-monitoring
+    method: GET
+    path: /api/admin-monitoring/moderation/reports
+    category: canonical-server-backed
+  - service: admin-monitoring
+    method: PATCH
+    path: /api/admin-monitoring/moderation/reports/:id
+    category: canonical-server-backed

@@ -36,12 +36,12 @@ export const LearningPath: React.FC<LearningPathProps> = ({
   const [recommendedSkill, setRecommendedSkill] = React.useState<LearningPathRecommendation | null>(null);
 
   React.useEffect(() => {
-    const mockProgress: { skillId: string; stars: number; bestScore?: number }[] = [];
-    const mockWeakAreas: { section: string; score: number; questionCount: number }[] = [];
+    const starterProgress: { skillId: string; stars: number; bestScore?: number }[] = [];
+    const starterWeakAreas: { section: string; score: number; questionCount: number }[] = [];
     
     const recommendations = learningPathService.getRecommendedSkills(
-      mockProgress,
-      mockWeakAreas,
+      starterProgress,
+      starterWeakAreas,
       50
     );
     if (recommendations.length > 0) {

@@ -25,7 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17 (Temurin)
+      - name: Set up JDK 21 (Temurin)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -36,7 +36,7 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
 
-      - name: Set up Node.js 20
+      - name: Set up Node.js 22 (track Node 24 action runtime)
         uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -51,6 +51,9 @@ jobs:
       - name: Install frontend deps
         working-directory: frontend
         run: npm ci
+
+      - name: Run Rust quality smoke
+        run: cargo test --locked
 
       - name: Decode keystore from secret
         id: keystore
@@ -68,9 +71,9 @@ jobs:
 
       - name: Write keystore.properties
         env:
-          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           for var in STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
             if [ -z "${!var}" ]; then
@@ -86,6 +89,32 @@ jobs:
           } > frontend/android/keystore.properties
           echo "keystore.properties written ($(wc -c < frontend/android/keystore.properties) bytes)"
 
+      - name: Verify production upload certificate fingerprint
+        env:
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          EXPECTED_UPLOAD_CERT_SHA256: ${{ secrets.ANDROID_UPLOAD_CERT_SHA256 }}
+        run: |
+          DEV_CERT_SHA256="83:33:2C:8C:83:9D:A0:F5:A0:B6:7E:5F:FE:66:59:1D:56:2F:A2:DC:FA:BF:85:32:A7:C5:39:EC:C3:E1:54:29"
+          if [ -z "${EXPECTED_UPLOAD_CERT_SHA256}" ]; then
+            echo "::error::ANDROID_UPLOAD_CERT_SHA256 secret is required for Play Store production bundles"
+            exit 1
+          fi
+          CERT_SHA256=$(keytool -list -v -keystore frontend/android/app/release.keystore -storepass "${STORE_PASSWORD}" -alias "${KEY_ALIAS}" 2>/dev/null | awk -F': ' '/SHA256:/{print $2; exit}')
+          if [ -z "${CERT_SHA256}" ]; then
+            echo "::error::could not read upload certificate SHA-256"
+            exit 1
+          fi
+          echo "Upload certificate SHA-256: ${CERT_SHA256}"
+          if [ "${CERT_SHA256^^}" = "${DEV_CERT_SHA256^^}" ]; then
+            echo "::error::dev keystore detected; generate and configure a Play Store production upload key"
+            exit 1
+          fi
+          if [ "${CERT_SHA256^^}" != "${EXPECTED_UPLOAD_CERT_SHA256^^}" ]; then
+            echo "::error::upload certificate fingerprint does not match ANDROID_UPLOAD_CERT_SHA256"
+            exit 1
+          fi
+
       - name: Write frontend/.env.production
         run: |
           cat > frontend/.env.production <<'ENVEOF'
@@ -94,8 +123,10 @@ jobs:
           ENVEOF
           echo "wrote frontend/.env.production ($(wc -c < frontend/.env.production) bytes)"
 
-      - name: Run release-gate (build + sync + bundleRelease)
+      - name: Run release-gate (quality + build + sync + bundleRelease)
         env:
+          RUN_FRONTEND_LINT: '1'
+          RUN_FRONTEND_TESTS: '1'
           RUN_ANDROID_BUNDLE: '1'
         run: bash scripts/android-release-gate.sh
 
@@ -154,5 +185,5 @@ jobs:
               echo "${NOTES}"
             fi
             echo ""
-            echo "> NOTE: if the keystore is the Android debug keystore, this AAB cannot be uploaded to Play Store production."
+            echo "> Upload-key fingerprint was verified against `ANDROID_UPLOAD_CERT_SHA256`; this artifact is intended for Play Store upload-key controlled release."
           } >> "$GITHUB_STEP_SUMMARY"

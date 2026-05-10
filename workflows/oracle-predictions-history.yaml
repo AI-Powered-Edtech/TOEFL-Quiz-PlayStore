@@ -1,0 +1,42 @@
+version: "3.0"
+metadata:
+  id: oracle-predictions-history
+  name: "Oracle: prediction history by user"
+  description: "POST /api/v2/oracle/predictions/history. Body {user_id}; returns latest 50 rows, frontend filters by test_type if needed."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/oracle/predictions/history, method: POST }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: query
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: select
+      input_mappings:
+        - target: sql
+          source:
+            language: vil-expr
+            source: "\"SELECT id, user_id, test_type, predicted_score, breakdown_json, confidence_level, data_points, created_at FROM oracle_prediction_history WHERE user_id = '\" + trigger_payload.body.user_id + \"' ORDER BY created_at DESC LIMIT 50\""
+      output_variable: query_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"history": query_result.rows, "count": query_result.row_count, "queried_at": now()}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: query } }
+    - { id: f2, from: { node: query }, to: { node: respond } }
+    - { id: f3, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: query_result, type: object }

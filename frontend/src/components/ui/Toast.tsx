@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { CheckCircle, XCircle, Info, AlertCircle, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
@@ -17,6 +17,7 @@ interface ToastProps {
 }
 
 const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
+    const prefersReducedMotion = useReducedMotion();
     useEffect(() => {
         const timer = setTimeout(() => {
             onClose();
@@ -53,9 +54,9 @@ const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            initial={prefersReducedMotion ? false : { opacity: 0, x: 300 }}
+            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
+            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 300 }}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg ${getColorClasses()} min-w-[300px] max-w-md`}
         >
             <div className="flex-shrink-0">

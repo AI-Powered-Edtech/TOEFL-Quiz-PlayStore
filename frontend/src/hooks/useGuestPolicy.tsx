@@ -58,8 +58,8 @@ export const useGuestPolicy = (feature: string, customPolicy?: Partial<GuestPoli
     }, [isAuthenticated]);
 
     const checkPolicy = useCallback(async (): Promise<PolicyCheckResult> => {
-        // HARDCODE BYPASS FOR E2E TESTING
-        return { allowed: true };
+        const bypassPolicy = import.meta.env.DEV && import.meta.env.VITE_E2E_BYPASS_PAYWALL === '1';
+        if (bypassPolicy) return { allowed: true };
 
         const isGuest = !isAuthenticated;
         const featureLimit = FEATURE_GUEST_LIMITS[feature];
@@ -123,8 +123,8 @@ export const useGuestPolicy = (feature: string, customPolicy?: Partial<GuestPoli
     }, [checkPolicy]);
 
     const canGuestUse = useCallback((action: string): boolean => {
-        // HARDCODE BYPASS FOR E2E TESTING
-        return true;
+        const bypassPolicy = import.meta.env.DEV && import.meta.env.VITE_E2E_BYPASS_PAYWALL === '1';
+        if (bypassPolicy) return true;
 
         if (isAuthenticated) return true;
         
@@ -139,11 +139,10 @@ export const useGuestPolicy = (feature: string, customPolicy?: Partial<GuestPoli
         checkPolicy,
         enforcePolicy,
         canGuestUse,
-        isGuest: false, // HARDCODE BYPASS FOR E2E TESTING
+        isGuest: !isAuthenticated,
         guestStats,
         renderGuestFallback: () => {
-            // HARDCODE BYPASS FOR E2E TESTING
-            return null;
+            if (import.meta.env.DEV && import.meta.env.VITE_E2E_BYPASS_PAYWALL === '1') return null;
             return (
                 <div className="flex flex-col items-center justify-center p-8 text-center">
                     <AlertCircle className="w-12 h-12 text-yellow-500 mb-4" />
@@ -162,8 +161,7 @@ export const useGuestPolicy = (feature: string, customPolicy?: Partial<GuestPoli
 };
 
 export const checkFeatureAccess = async (feature: string, isAuthenticated: boolean): Promise<FeatureAccess> => {
-    // HARDCODE BYPASS FOR E2E TESTING
-    return { allowed: true };
+    if (import.meta.env.DEV && import.meta.env.VITE_E2E_BYPASS_PAYWALL === '1') return { allowed: true };
 
     if (!isAuthenticated) {
         const guestLimit = FEATURE_GUEST_LIMITS[feature];

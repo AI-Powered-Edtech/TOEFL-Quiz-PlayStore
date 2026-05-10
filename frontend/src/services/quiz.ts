@@ -4,6 +4,34 @@ import { parseApi } from '../contracts/parse';
 import { QuizReportDataSchema } from '../contracts/schemas';
 import { mapQuizReportResponseToQuizReportData } from './mappers';
 
+
+const makeLocalReportId = (): string => {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+  return `local_report_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+};
+
+const saveLocalQuizReport = (data: any): string => {
+  const id = data.id || makeLocalReportId();
+  const report: QuizReportData = {
+    id,
+    student_name: data.studentName || 'Guest User',
+    quiz_topic: data.topic || 'Practice Quiz',
+    score: data.score || 0,
+    total_questions: data.total || 0,
+    correct_count: data.correct || 0,
+    created_at: new Date().toISOString(),
+    answers_snapshot: data.answers || [],
+  };
+
+  const stored = localStorage.getItem('quiz_reports');
+  const reports = stored ? JSON.parse(stored) : [];
+  const next = [report, ...reports.filter((r: any) => r.id !== id)].slice(0, 50);
+  localStorage.setItem('quiz_reports', JSON.stringify(next));
+  return id;
+};
+
 export interface Question {
   id: string;
   skill_id: number;
@@ -178,9 +206,9 @@ export const quizService = {
       if (response.data?.id) {
         return response.data.id;
       }
-      return null;
+      return saveLocalQuizReport(data);
     } catch {
-      return null;
+      return saveLocalQuizReport(data);
     }
   }
 };

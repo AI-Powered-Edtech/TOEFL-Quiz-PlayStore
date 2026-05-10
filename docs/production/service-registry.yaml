@@ -1,0 +1,271 @@
+# Production-0 service registry lock
+# Generated from frontend/src/services. Categories are maturity hints; tighten per feature as migrations continue.
+services:
+  - path: frontend/src/services/adminPinService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/adminService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/ai.ts
+    category: legacy-adapter
+  - path: frontend/src/services/aiProvider.ts
+    category: legacy-adapter
+  - path: frontend/src/services/analytics/devilsAdvocateAnalytics.ts
+    category: dev-only
+  - path: frontend/src/services/apiClient.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/apiV2.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/audioCacheService.ts
+    category: offline-cache-only
+  - path: frontend/src/services/audioIndexedDBCache.ts
+    category: offline-cache-only
+  - path: frontend/src/services/audioStorageService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/auditService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/auth.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/avatarService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/band9CollectionService.ts
+    category: static-content
+  - path: frontend/src/services/band9LibraryService.ts
+    category: static-content
+  - path: frontend/src/services/blogService.ts
+    category: static-content
+  - path: frontend/src/services/cacheService.ts
+    category: offline-cache-only
+  - path: frontend/src/services/circleMessagesV2.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/circleService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/core/apiErrors.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/core/authHeaders.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/core/endpointRegistry.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/core/httpClient.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/core/offlinePolicy.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/core/retryPolicy.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/creator.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/devilsAdvocateService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/errorJailService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/errors.ts
+    category: legacy-adapter
+  - path: frontend/src/services/essayEvaluationService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/essayMetricsService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/essayMultiPassService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/essayTaskCache.ts
+    category: offline-cache-only
+  - path: frontend/src/services/extractor.ts
+    category: legacy-adapter
+  - path: frontend/src/services/featureFlagService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/friendActivityService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/friendService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/circuitBreaker.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/client.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/complexityLadderGenerator.ts
+    category: static-content
+  - path: frontend/src/services/groq/compoundClient.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/config.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/devilsAdvocateGenerator.ts
+    category: static-content
+  - path: frontend/src/services/groq/essayGenerator.ts
+    category: static-content
+  - path: frontend/src/services/groq/generators.ts
+    category: static-content
+  - path: frontend/src/services/groq/helpers.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/index.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/listeningQuizEngine.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/groq/prompts/common.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/prompts/complexityLadderPrompts.ts
+    category: static-content
+  - path: frontend/src/services/groq/prompts/compoundPrompts.ts
+    category: static-content
+  - path: frontend/src/services/groq/prompts/essayPrompts.ts
+    category: static-content
+  - path: frontend/src/services/groq/prompts/index.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/prompts/integratedWritingPrompts.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/groq/prompts/listening.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/prompts/logicWeaverLevels.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/prompts/reading.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/prompts/readingPrompts.ts
+    category: static-content
+  - path: frontend/src/services/groq/prompts/structure.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/prompts/taskSpecificPrompts.ts
+    category: static-content
+  - path: frontend/src/services/groq/prompts/writingGym.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/groq/prompts/written.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/quizEngineCore.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/groq/quizGenerator.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/groq/readingGenerator.ts
+    category: static-content
+  - path: frontend/src/services/groq/readingQuizEngine.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/groq/structureQuizEngine.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/groq/utils/jsonParser.ts
+    category: legacy-adapter
+  - path: frontend/src/services/groq/writingGymGenerator.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/groq/writtenQuizEngine.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/helpfulnessTrackingService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/historyService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/hybridQuizGenerator.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/integratedWritingService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/jailService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/kittenTtsService.ts
+    category: dev-only
+  - path: frontend/src/services/leaderboardService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/learningPathService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/loggingService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/mappers.ts
+    category: static-content
+  - path: frontend/src/services/masonProgressService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/masonSessionService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/mediaRegistryService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/metricsService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/moderationApiV2.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/moderationService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/notificationService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/offlineQueue.ts
+    category: offline-cache-only
+  - path: frontend/src/services/offlineQueueService.ts
+    category: offline-cache-only
+  - path: frontend/src/services/offlineSyncService.ts
+    category: offline-cache-only
+  - path: frontend/src/services/offlineWritingService.ts
+    category: offline-cache-only
+  - path: frontend/src/services/oracleDataService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/oracleHistoryV2.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/oracleScoringEngine.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/oracleService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/pdfQuizService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/pdfService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/peerReviewQueueService.ts
+    category: offline-cache-only
+  - path: frontend/src/services/peerReviewService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/publicProfileService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/purchaseService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/pushNotificationService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/qualificationService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/qualityService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/questionBankAdminV2.ts
+    category: legacy-adapter
+  - path: frontend/src/services/questionBankService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/quiz.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/quizRepository.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/reportService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/reviewerTierService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/securityUtils.ts
+    category: legacy-adapter
+  - path: frontend/src/services/sessionPersistenceService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/sherpaNativeService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/social.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/socialRateLimiter.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/socraticPromptingService.ts
+    category: static-content
+  - path: frontend/src/services/subscriptionService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/supabase.ts
+    category: legacy-adapter
+  - path: frontend/src/services/syncQueueService.ts
+    category: offline-cache-only
+  - path: frontend/src/services/todaysFocusService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/ttsManager.ts
+    category: legacy-adapter
+  - path: frontend/src/services/ttsMetrics.ts
+    category: legacy-adapter
+  - path: frontend/src/services/ttsService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/userQuestionHistoryService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/validationService.ts
+    category: legacy-adapter
+  - path: frontend/src/services/validators/baseValidator.ts
+    category: static-content
+  - path: frontend/src/services/validators/index.ts
+    category: legacy-adapter
+  - path: frontend/src/services/validators/listeningValidator.ts
+    category: static-content
+  - path: frontend/src/services/validators/readingValidator.ts
+    category: static-content
+  - path: frontend/src/services/validators/structureValidator.ts
+    category: static-content
+  - path: frontend/src/services/validators/writtenExpressionValidator.ts
+    category: static-content
+  - path: frontend/src/services/writing.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/writingGymProgressService.ts
+    category: canonical-server-backed
+  - path: frontend/src/services/writingGymService.ts
+    category: canonical-server-backed

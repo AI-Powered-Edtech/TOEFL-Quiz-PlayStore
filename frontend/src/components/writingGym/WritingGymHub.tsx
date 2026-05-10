@@ -60,12 +60,10 @@ export const WritingGymHub: React.FC<WritingGymHubProps> = ({ onNavigate, onBack
     const [showHistory, setShowHistory] = useState(false);
 
     useEffect(() => {
-        // Automatically unlock all levels for testing/demo purposes
-        setUnlockedLevels(['mason', 'logic_weaver', 'ielts_paragraph', 'complexity_ladder']);
-        
         if (isAuthenticated) {
             loadProgress();
         } else {
+            setUnlockedLevels(['mason']);
             setLoading(false);
         }
     }, [isAuthenticated]);
@@ -76,8 +74,10 @@ export const WritingGymHub: React.FC<WritingGymHubProps> = ({ onNavigate, onBack
             const data = await writingGymService.getProgress(userId);
             setProgress(data);
 
-            // Unlock all levels for now
-            const unlocked: WritingGymLevel[] = ['mason', 'logic_weaver', 'ielts_paragraph', 'complexity_ladder'];
+            const hasMasonProgress = data.some(p => p.level === 'mason' && (p.exercises_completed > 0 || p.stars_earned > 0));
+            const unlocked: WritingGymLevel[] = ['mason'];
+            if (hasMasonProgress || isPaid) unlocked.push('logic_weaver', 'ielts_paragraph');
+            if (isPaid) unlocked.push('complexity_ladder');
             setUnlockedLevels(unlocked);
 
             const [totalStars, nextSkill] = await Promise.all([
@@ -258,7 +258,7 @@ export const WritingGymHub: React.FC<WritingGymHubProps> = ({ onNavigate, onBack
                 <div>
                     <div className="flex justify-between items-end mb-3">
                         <h3 className="font-bold text-slate-900 dark:text-white text-lg">Training Programs</h3>
-                        <span className="text-xs text-slate-500 font-medium">View All</span>
+                        <span className="text-xs text-slate-500 font-medium">{unlockedLevels.length} unlocked</span>
                     </div>
 
                     <div className="space-y-3">

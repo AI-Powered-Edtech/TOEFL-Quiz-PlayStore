@@ -68,7 +68,9 @@ const appendLocalHistory = (result: QuizResult): void => {
         xpEarned: result.xpEarned
     };
 
-    const next = [payload, ...existing.map(h => ({
+    const dedupedExisting = existing.filter(h => h.id !== payload.id);
+
+    const next = [payload, ...dedupedExisting.map(h => ({
         id: h.id,
         userName: h.userName,
         date: h.date,

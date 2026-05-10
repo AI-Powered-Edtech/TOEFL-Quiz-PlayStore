@@ -35,7 +35,7 @@ export const FeatureTourModal: React.FC<FeatureTourModalProps> = ({ isOpen, onCl
             {
                 title: 'Writing Gym & Essay Dojo',
                 content:
-                    'Writing Gym membangun muscle memory (latihan bertahap). Essay Dojo memberi evaluasi dan feedback lebih detail.',
+                    'Writing Gym membangun muscle memory untuk grammar dan writing TOEFL. Essay Dojo adalah lab lanjutan untuk evaluasi writing yang lebih detail.',
                 icon: <Wand2 className="w-5 h-5 text-amber-600 dark:text-amber-400" />,
             },
             {
@@ -57,14 +57,14 @@ export const FeatureTourModal: React.FC<FeatureTourModalProps> = ({ isOpen, onCl
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full overflow-hidden shadow-2xl">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full overflow-hidden shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="feature-tour-title">
                 <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                             {current.icon}
                         </div>
                         <div>
-                            <div className="font-bold text-slate-800 dark:text-white">Feature Tour</div>
+                            <div id="feature-tour-title" className="font-bold text-slate-800 dark:text-white">Feature Tour</div>
                             <div className="text-xs text-slate-500">
                                 {step + 1} / {steps.length}
                             </div>

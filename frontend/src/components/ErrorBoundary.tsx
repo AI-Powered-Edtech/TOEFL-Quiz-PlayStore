@@ -31,6 +31,7 @@ interface Props {
     fallback?: ReactNode;
     onError?: (error: Error, errorInfo: ErrorInfo) => void;
     onRetry?: () => void;
+    onGoHome?: () => void;
     showDetails?: boolean;
 }
 
@@ -111,6 +112,12 @@ export class ErrorBoundary extends Component<Props, State> {
     };
 
     private handleGoHome = (): void => {
+        if (this.props.onGoHome) {
+            this.setState({ hasError: false, error: null, errorInfo: null });
+            this.props.onGoHome();
+            return;
+        }
+
         window.location.href = '/';
     };
 

@@ -1,0 +1,31 @@
+# TOEFL Quiz — Full Rust backend (VIL 0.4.0)
+# Multi-stage: builds with rust toolchain, runs on distroless cc.
+FROM rust:1.93-slim AS builder
+WORKDIR /build
+RUN apt-get update && apt-get install -y --no-install-recommends \\
+    pkg-config libssl-dev ca-certificates git \\
+  && rm -rf /var/lib/apt/lists/*
+
+# Copy manifests first for better layer caching
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir -p src && echo 'fn main() {}' > src/main.rs && \\
+    cargo build --release --bin toefl-quiz-backend 2>/dev/null || true
+
+# Now copy real source
+RUN rm -rf src
+COPY src ./src
+COPY .sqlx ./.sqlx
+RUN cargo build --release --bin toefl-quiz-backend
+
+FROM gcr.io/distroless/cc-debian12:nonroot
+WORKDIR /app
+COPY --from=builder /build/target/release/toefl-quiz-backend /usr/local/bin/toefl-quiz-backend
+COPY --from=builder /build/src/db/migrations /app/migrations
+# Runtime SQLite needs writable volume mounted at /data
+ENV DATABASE_URL=sqlite:/data/toefl.db?mode=rwc \\
+    PORT=8082 \\
+    RUST_LOG=info
+EXPOSE 8082
+USER nonroot:nonroot
+VOLUME ["/data"]
+ENTRYPOINT ["/usr/local/bin/toefl-quiz-backend"]

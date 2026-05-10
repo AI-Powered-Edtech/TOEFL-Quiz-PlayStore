@@ -1,0 +1,42 @@
+version: "3.0"
+metadata:
+  id: question-bank-admin-upsert
+  name: "Admin: question bank upsert"
+  description: "POST /api/v2/admin/questions/upsert. Client sanitizes strings and enum allow-lists."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/admin/questions/upsert, method: POST }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: upsert
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: execute
+      input_mappings:
+        - target: sql
+          source:
+            language: vil-expr
+            source: "\"INSERT INTO question_bank_admin (id, skill_id, section, interaction, prompt, choices_json, correct_response_json, cefr_target, difficulty_score, stimulus_json, metadata_json, created_at, updated_at) VALUES ('\" + trigger_payload.body.id + \"', \" + trigger_payload.body.skill_id + \", '\" + trigger_payload.body.section + \"', '\" + trigger_payload.body.interaction + \"', '\" + trigger_payload.body.prompt + \"', '\" + trigger_payload.body.choices_json + \"', '\" + trigger_payload.body.correct_response_json + \"', '\" + trigger_payload.body.cefr_target + \"', \" + trigger_payload.body.difficulty_score + \", '\" + trigger_payload.body.stimulus_json + \"', '\" + trigger_payload.body.metadata_json + \"', datetime('now'), datetime('now')) ON CONFLICT(id) DO UPDATE SET skill_id=excluded.skill_id, section=excluded.section, interaction=excluded.interaction, prompt=excluded.prompt, choices_json=excluded.choices_json, correct_response_json=excluded.correct_response_json, cefr_target=excluded.cefr_target, difficulty_score=excluded.difficulty_score, stimulus_json=excluded.stimulus_json, metadata_json=excluded.metadata_json, updated_at=datetime('now')\""
+      output_variable: upsert_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"ok": true, "rows_affected": upsert_result.rows_affected, "saved_at": now()}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: upsert } }
+    - { id: f2, from: { node: upsert }, to: { node: respond } }
+    - { id: f3, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: upsert_result, type: object }

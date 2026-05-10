@@ -57,11 +57,12 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
     const [addFriendCode, setAddFriendCode] = useState('');
     const [addingFriend, setAddingFriend] = useState(false);
     const [friendError, setFriendError] = useState<string | null>(null);
+    const [friendNotice, setFriendNotice] = useState<string | null>(null);
+    const [friendToRemove, setFriendToRemove] = useState<Friend | null>(null);
 
     const [friendActivities, setFriendActivities] = useState<FriendActivity[]>([]);
     const [loadingActivities, setLoadingActivities] = useState(false);
 
-    const friendCode = 'TOEFL-' + (currentUserId?.slice(0, 6).toUpperCase() || 'GUEST1');
     const [realFriendCode, setRealFriendCode] = useState<string | null>(null);
 
     // Initial Data Fetch
@@ -115,12 +116,13 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
             if (result.ok) {
                 setAddFriendCode('');
                 fetchFriends(); // refresh list
-                alert('Friend added successfully!');
+                setFriendNotice('Friend added successfully.');
             } else {
                 setFriendError(result.error || 'Failed to add friend');
             }
         } catch (e) {
             setFriendError('An unexpected error occurred');
+            setFriendNotice(null);
         } finally {
             setAddingFriend(false);
         }
@@ -220,6 +222,14 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
+    };
+
+    const confirmRemoveFriend = async () => {
+        if (!friendToRemove) return;
+        await socialService.removeFriend(friendToRemove.friend_id);
+        setFriendNotice('Friend removed.');
+        setFriendToRemove(null);
+        fetchFriends();
     };
 
     const getRankIcon = (index: number) => {
@@ -460,6 +470,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                                                 onChange={(e) => {
                                                     setAddFriendCode(e.target.value.toUpperCase());
                                                     setFriendError(null);
+                                                    setFriendNotice(null);
                                                 }}
                                                 placeholder="ENTER CODE"
                                                 disabled={addingFriend}
@@ -476,6 +487,9 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                                     </div>
                                     {friendError && (
                                         <p className="text-xs text-red-500 mt-2 bg-red-50 dark:bg-red-900/20 p-2 rounded-lg">{friendError}</p>
+                                    )}
+                                    {friendNotice && (
+                                        <p role="status" aria-live="polite" className="text-xs text-emerald-600 mt-2 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg">{friendNotice}</p>
                                     )}
                                 </div>
 
@@ -521,12 +535,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                                                 </div>
 
                                                 <button
-                                                    onClick={async () => {
-                                                        if (confirm(`Remove ${friend.profile?.full_name || 'Friend'} from friends?`)) {
-                                                            await socialService.removeFriend(friend.friend_id);
-                                                            fetchFriends();
-                                                        }
-                                                    }}
+                                                    onClick={() => setFriendToRemove(friend)}
                                                     className="text-slate-300 hover:text-red-500 p-2"
                                                     title="Remove Friend"
                                                 >
@@ -664,6 +673,19 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                     </div>
                 </div>
             </div>
+
+            {friendToRemove && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="remove-friend-title">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm p-6 shadow-xl">
+                        <h2 id="remove-friend-title" className="text-xl font-bold text-slate-900 dark:text-white mb-2">Remove friend?</h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">{friendToRemove.profile?.full_name || 'This friend'} will be removed from your friend list.</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setFriendToRemove(null)} className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200">Cancel</button>
+                            <button onClick={confirmRemoveFriend} className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white">Remove</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Create Circle Modal */}
             {showCreateModal && (

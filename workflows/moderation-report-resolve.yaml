@@ -1,0 +1,55 @@
+version: "3.0"
+metadata:
+  id: moderation-report-resolve
+  name: "Admin: resolve moderation report"
+  description: "POST /api/v2/admin/moderation/reports/resolve. Body: {id,status,resolved_by,resolution_note}. Frontend validates id/status and escapes note before POST."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/admin/moderation/reports/resolve, method: POST }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: update
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: execute
+      input_mappings:
+        - target: sql
+          source:
+            language: vil-expr
+            source: "\"UPDATE moderation_reports SET status = '\" + trigger_payload.body.status + \"', resolved_by = '\" + trigger_payload.body.resolved_by + \"', resolution_note = '\" + trigger_payload.body.resolution_note + \"', resolved_at = datetime('now') WHERE id = '\" + trigger_payload.body.id + \"'\""
+      output_variable: update_result
+    - id: audit
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: execute
+      input_mappings:
+        - target: sql
+          source:
+            language: vil-expr
+            source: "\"INSERT INTO audit_logs (id, actor_id, action, target_type, target_id, metadata, created_at) VALUES (lower(hex(randomblob(16))), '\" + trigger_payload.body.resolved_by + \"', 'MODERATION_REPORT_' + trigger_payload.body.status, 'moderation_report', '\" + trigger_payload.body.id + \"', '\" + trigger_payload.body.resolution_note + \"', datetime('now'))\""
+      output_variable: audit_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"ok": true, "rows_affected": update_result.rows_affected, "audited": audit_result.rows_affected, "resolved_at": now()}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: update } }
+    - { id: f2, from: { node: update }, to: { node: audit } }
+    - { id: f3, from: { node: audit }, to: { node: respond } }
+    - { id: f4, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: update_result, type: object }
+    - { name: audit_result, type: object }

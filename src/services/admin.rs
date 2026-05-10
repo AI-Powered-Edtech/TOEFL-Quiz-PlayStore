@@ -8,6 +8,20 @@ use vil::prelude::*;
 use vil::auth::VilPassword;
 use serde::{Deserialize, Serialize};
 
+fn validate_subscription_tier(tier: &str) -> Result<(), AppError> {
+    match tier {
+        "free" | "basic" | "c2" => Ok(()),
+        _ => Err(AppError::Validation("Invalid subscription tier".into())),
+    }
+}
+
+fn validate_admin_role(role: &str) -> Result<(), AppError> {
+    match role {
+        "admin" | "super_admin" => Ok(()),
+        _ => Err(AppError::Validation("Invalid admin role".into())),
+    }
+}
+
 #[derive(Debug, Serialize, sqlx::FromRow)]
 pub struct UserWithRole {
     pub id: String,
@@ -25,15 +39,34 @@ pub async fn list_admins(
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
     require_admin(&claims)?;
     
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS accounts (
+            id TEXT PRIMARY KEY,
+            username TEXT NOT NULL UNIQUE,
+            full_name TEXT,
+            avatar_url TEXT,
+            bio TEXT,
+            password_hash TEXT,
+            subscription_tier TEXT NOT NULL DEFAULT 'free',
+            public_profile_id INTEGER,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )",
+    )
+    .execute(state.pool.inner())
+    .await
+    .map_err(|e| AppError::Internal(e.to_string()))?;
+
     let users = sqlx::query_as::<_, UserWithRole>(r#"
-        SELECT 
-            p.id,
-            p.username,
+        SELECT
+            ac.id,
+            ac.username,
             a.email,
             COALESCE(a.role, 'user') as role,
-            p.subscription_tier
-        FROM profiles p
-        LEFT JOIN admin_users a ON p.id = a.user_id
+            ac.subscription_tier
+        FROM accounts ac
+        LEFT JOIN admin_users a ON ac.id = a.user_id
+        ORDER BY ac.created_at DESC
     "#)
     .fetch_all(state.pool.inner())
     .await?;
@@ -56,13 +89,14 @@ pub async fn change_tier(
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
     require_super_admin(&claims)?;
     let req: ChangeTierRequest = body.json().map_err(|_| AppError::Validation("Invalid body".into()))?;
+    validate_subscription_tier(&req.tier)?;
 
-    crate::models::profile::Profile::q()
-        .update()
-        .set("subscription_tier", req.tier)
-        .where_eq("id", &user_id)
+    sqlx::query("UPDATE accounts SET subscription_tier = ?, updated_at = datetime('now') WHERE id = ?")
+        .bind(&req.tier)
+        .bind(&user_id)
         .execute(state.pool.inner())
-        .await?;
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))?;
 
     // Audit log
     let audit_id = uuid::Uuid::new_v4().to_string();
@@ -86,6 +120,10 @@ pub async fn assign_role(
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
     require_super_admin(&claims)?;
     let req: AssignRoleRequest = body.json().map_err(|_| AppError::Validation("Invalid body".into()))?;
+    validate_admin_role(&req.role)?;
+    if req.user_id == claims.sub && req.role != "super_admin" {
+        return Err(AppError::Validation("Super admin cannot downgrade their own role".into()));
+    }
 
     AdminUser::q()
         .insert_columns(&["user_id", "email", "role"])
@@ -119,6 +157,9 @@ pub async fn remove_role(
 ) -> Result<VilResponse<OkResponse>, AppError> {
     let state = ctx.state::<crate::AppState>().map_err(|_| AppError::Internal("state".into()))?;
     require_super_admin(&claims)?;
+    if user_id == claims.sub {
+        return Err(AppError::Validation("Super admin cannot remove their own role".into()));
+    }
     AdminUser::delete(state.pool.inner(), &user_id).await?;
 
     let audit_id = uuid::Uuid::new_v4().to_string();

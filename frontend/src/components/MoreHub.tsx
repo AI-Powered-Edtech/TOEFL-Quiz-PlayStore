@@ -274,7 +274,7 @@ export const MoreHub: React.FC<MoreHubProps> = ({ onNavigate, onSignOut, user, p
                     <div className="mt-8 flex flex-col items-center justify-center opacity-40">
                         <div className="flex items-center gap-1.5 mb-1">
                             <Shield className="w-3 h-3 text-slate-400" />
-                            <span className="text-[10px] font-black text-slate-500 tracking-widest">TOEFL MASTER AI</span>
+                            <span className="text-[10px] font-black text-slate-500 tracking-widest">TOEFL QUIZ AI</span>
                         </div>
                         <p className="text-[10px] text-slate-400">v2.4.0 • Production Build</p>
                     </div>

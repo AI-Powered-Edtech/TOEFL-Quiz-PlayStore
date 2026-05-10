@@ -1,3 +1,4 @@
+pub mod account_profile;
 pub mod auth;
 pub mod admin;
 pub mod oauth;

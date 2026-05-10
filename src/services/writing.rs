@@ -1,8 +1,8 @@
 use crate::error::AppError;
 use crate::middleware::auth::Claims;
 use crate::models::ai::AiTokenUsage;
-use crate::models::profile::Profile;
 use crate::models::responses::*;
+use crate::services::account_profile::award_public_xp;
 use crate::models::views::*;
 use crate::models::writing::*;
 use vil::prelude::*;
@@ -48,7 +48,7 @@ pub async fn save_progress(
     // XP award for writing gym completion
     if req.stars_earned > 0 {
         let xp = req.stars_earned * 10;
-        Profile::update_where(state.pool.inner(), &format!("xp = xp + {}", xp), "id = ?", &[&claims.sub]).await?;
+        award_public_xp(&state.pool, &claims.sub, xp).await?;
     }
 
     Ok(VilResponse::ok(OkResponse { ok: true }))
@@ -555,7 +555,7 @@ pub async fn submit_review(
     PeerReviewSubmission::update_where(state.pool.inner(), "status = 'completed'", "id = ?", &[&req.submission_id]).await?;
 
     // XP for reviewer
-    Profile::update_where(state.pool.inner(), "xp = xp + 25", "id = ?", &[&claims.sub]).await?;
+    award_public_xp(&state.pool, &claims.sub, 25).await?;
 
     Ok(VilResponse::created(ReviewResponse { ok: true, id, overall_band: band }))
 }

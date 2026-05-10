@@ -1,4 +1,5 @@
 import api from './apiClient';
+import authService from './auth';
 
 export type SubscriptionTier = 'free' | 'basic' | 'c2';
 
@@ -39,19 +40,45 @@ const TIER_LIMITS: Record<SubscriptionTier, number> = {
 let cachedTier: SubscriptionTier = 'free';
 let cachedUsage: TokenUsage | null = null;
 
-export const getUserTier = async (): Promise<SubscriptionTier> => {
+interface ServerEntitlement {
+  ok: boolean;
+  tier: SubscriptionTier;
+  is_active: boolean;
+  expiry_date?: string | null;
+  source: string;
+}
+
+export const getServerEntitlement = async (): Promise<ServerEntitlement | null> => {
+  if (!authService.isAuthenticated()) return null;
   try {
-    const res = await api.get<any>('/api/ai/token-usage');
-    if (res.data && res.data.tier) {
-      return res.data.tier as SubscriptionTier;
-    }
+    const res = await api.get<ServerEntitlement>('/api/purchases/entitlement');
+    return res.data || null;
   } catch (err) {
-    console.warn('[subscriptionService] Failed to fetch tier:', err);
+    console.warn('[subscriptionService] Failed to fetch entitlement:', err);
+    return null;
   }
+};
+
+export const getUserTier = async (): Promise<SubscriptionTier> => {
+  if (!authService.isAuthenticated()) {
+    cachedTier = 'free';
+    return 'free';
+  }
+
+  const entitlement = await getServerEntitlement();
+  if (entitlement?.tier && entitlement.is_active) {
+    cachedTier = entitlement.tier;
+    return entitlement.tier;
+  }
+
+  cachedTier = 'free';
   return 'free';
 };
 
 export const getTokenUsage = async (): Promise<TokenUsage> => {
+  if (!authService.isAuthenticated()) {
+    return { tokens_used: 0, tokens_limit: TIER_LIMITS.free, remaining: TIER_LIMITS.free, percentage: 0 };
+  }
   try {
     const res = await api.get<any>('/api/ai/token-usage');
     if (res.data) {
@@ -106,7 +133,7 @@ export const canAccessFeature = async (feature: GatedFeature): Promise<FeatureAc
   };
 };
 
-export const consumeToken = async (feature?: string, _options?: { strict: boolean }): Promise<{ allowed: boolean; usage: TokenUsage }> => {
+export const checkTokenBudget = async (feature?: string, _options?: { strict: boolean }): Promise<{ allowed: boolean; usage: TokenUsage }> => {
   const usage = await getTokenUsage();
   const tier = await getUserTier();
   const limit = TIER_LIMITS[tier];
@@ -117,6 +144,8 @@ export const consumeToken = async (feature?: string, _options?: { strict: boolea
 
   return { allowed: true, usage };
 };
+
+export const consumeToken = checkTokenBudget;
 
 export const recordFeatureUsage = async (feature: string): Promise<void> => {
   try {

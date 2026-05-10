@@ -1,0 +1,56 @@
+# TOEFL Quiz — full stack with VIL 0.4.0
+# Profiles:
+#   docker compose --profile backend up   # Rust backend only (port 8082)
+#   docker compose --profile vwfd up      # VWFD workflow runtime (port 8083)
+#   docker compose --profile all up       # Both + frontend nginx (port 8080)
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: toeflquiz/backend:0.2.1-vil040
+    profiles: ["backend", "all"]
+    ports:
+      - "8082:8082"
+    env_file:
+      - .env
+    volumes:
+      - toefl-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/toefl-quiz-backend", "--health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  vwfd:
+    build:
+      context: .
+      dockerfile: Dockerfile.vwfd
+    image: toeflquiz/vwfd:0.4.0
+    profiles: ["vwfd", "all"]
+    ports:
+      - "8083:8083"
+    environment:
+      VIL_BIND_ADDR: 0.0.0.0:8083
+      VIL_WORKFLOWS_DIR: /app/workflows
+      VIL_LOG_LEVEL: info
+      # VIL_PROVISION_KEY: ${VIL_PROVISION_KEY:-}  # uncomment to enable runtime upload
+    volumes:
+      - ./workflows:/app/workflows:ro
+    restart: unless-stopped
+
+  frontend:
+    image: nginx:1.27-alpine
+    profiles: ["all"]
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  toefl-data:

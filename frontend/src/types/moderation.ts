@@ -6,7 +6,7 @@
 export interface ContentReport {
     id: string;
     reporter_id: string;
-    content_type: 'submission' | 'review';
+    content_type: 'submission' | 'review' | 'profile';
     content_id: string;
     reason: ReportReason;
     description?: string;
@@ -35,7 +35,7 @@ export interface ModerationAction {
 
 export interface ModerationQueueItem {
     id: string;
-    content_type: 'submission' | 'review';
+    content_type: 'submission' | 'review' | 'profile';
     content_id: string;
     content_preview: string;
     author_id: string;

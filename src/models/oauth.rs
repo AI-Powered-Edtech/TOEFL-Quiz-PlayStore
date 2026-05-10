@@ -5,6 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OAuthStateData {
     pub code_challenge: String,
+    pub redirect_uri: String,
     pub created_at: i64,
 }
 

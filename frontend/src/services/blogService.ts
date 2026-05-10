@@ -1,5 +1,23 @@
 import api from './apiClient';
+import { apiV2 } from './apiV2';
 import { BlogPost, BLOG_POSTS } from '../data/blogPosts';
+
+
+// Try the new declarative VWFD endpoint first; fall back to the imperative
+// Rust handler if VWFD is unreachable or returns an error.
+// UX impact: when VWFD is healthy, public blog list is served by the
+// declarative runtime (cacheable, no JWT). When it is down, users still get
+// the same data from the original /api/blog/posts handler — zero regression.
+async function fetchBlogPostsList<T>(): Promise<T> {
+    try {
+        return await apiV2.get<T>('/api/v2/blog/posts');
+    } catch (e) {
+        // Falling back silently — surface the original error if fallback also fails.
+        const r = await api.get<T>('/api/blog/posts');
+        if (r.error) throw new Error(r.error.error || 'Failed to fetch blog posts');
+        return (r.data as T);
+    }
+}
 
 export interface InteractiveExample {
     question: string;
@@ -124,7 +142,8 @@ export async function fetchBlogPostsBySection(
     section: 'structure' | 'written' | 'listening' | 'reading'
 ): Promise<BlogPost[]> {
     try {
-        const response = await api.get<PostListRow[]>('/api/blog/posts');
+        const data = await fetchBlogPostsList<PostListRow[]>();
+        const response = { data, error: null as any };
         if (response.data && response.data.length > 0) {
             return response.data
                 .filter(p => p.section === section)
@@ -139,7 +158,8 @@ export async function fetchBlogPostsBySection(
 
 export async function fetchFeaturedPosts(): Promise<BlogPost[]> {
     try {
-        const response = await api.get<PostListRow[]>('/api/blog/posts');
+        const data = await fetchBlogPostsList<PostListRow[]>();
+        const response = { data, error: null as any };
         if (response.data && response.data.length > 0) {
             return response.data
                 .filter(p => p.is_featured === 1)
@@ -158,7 +178,8 @@ export async function incrementBlogPostViews(skillId: string): Promise<void> {
 
 export async function adminFetchAllPosts(): Promise<BlogPostDB[]> {
     try {
-        const response = await api.get<PostListRow[]>('/api/blog/posts');
+        const data = await fetchBlogPostsList<PostListRow[]>();
+        const response = { data, error: null as any };
         if (response.data) {
             return response.data.map(p => ({
                 id: p.id,

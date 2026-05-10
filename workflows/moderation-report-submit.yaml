@@ -1,0 +1,42 @@
+version: "3.0"
+metadata:
+  id: moderation-report-submit
+  name: "Submit content moderation report"
+  description: "POST /api/v2/moderation/reports. Frontend MUST validate enums (content_type, reason) and sanitize description (escape ' to '', strip newlines, max 500 chars) before POST. Stores in moderation_reports with status=pending. ID generated server-side via lower(hex(randomblob(16)))."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/moderation/reports, method: POST }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: insert
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: execute
+      input_mappings:
+        - target: sql
+          source:
+            language: vil-expr
+            source: "\"INSERT INTO moderation_reports (id, reporter_id, content_type, content_id, reason, description, status, created_at) VALUES (lower(hex(randomblob(16))), '\" + trigger_payload.body.reporter_id + \"', '\" + trigger_payload.body.content_type + \"', '\" + trigger_payload.body.content_id + \"', '\" + trigger_payload.body.reason + \"', '\" + trigger_payload.body.description + \"', 'pending', datetime('now'))\""
+      output_variable: insert_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"ok": true, "rows_affected": insert_result.rows_affected, "submitted_at": now()}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: insert } }
+    - { id: f2, from: { node: insert }, to: { node: respond } }
+    - { id: f3, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: insert_result, type: object }

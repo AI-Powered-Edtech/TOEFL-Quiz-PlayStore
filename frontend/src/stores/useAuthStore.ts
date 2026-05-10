@@ -3,6 +3,7 @@ import authService, { Profile } from '../services/auth';
 import { UserProgress } from '../types';
 import { trackEmailLogin, trackEmailRegister, trackLogout, trackGuestLogin } from '../utils/authAnalytics';
 import { secureStorage } from '../utils/secureStorage';
+import { clearTierCache } from '../services/subscriptionService';
 
 interface AuthStore {
     user: Profile | null;
@@ -17,8 +18,9 @@ interface AuthStore {
     updateProfile: (updates: { full_name?: string; bio?: string; avatar_url?: string }) => Promise<{ ok: boolean; error?: string }>;
     signInWithGoogle: () => Promise<void>;
     signOut: () => void;
+    deleteAccount: () => Promise<{ ok: boolean; error?: string }>;
 
-    setAuthState: (state: Partial<Omit<AuthStore, 'setAuthState' | 'login' | 'register' | 'logout' | 'refreshProfile' | 'updateProfile' | 'signInWithGoogle' | 'signOut'>>) => void;
+    setAuthState: (state: Partial<Omit<AuthStore, 'setAuthState' | 'login' | 'register' | 'logout' | 'refreshProfile' | 'updateProfile' | 'signInWithGoogle' | 'signOut' | 'deleteAccount'>>) => void;
 }
 
 const DEFAULT_PROGRESS: UserProgress = {
@@ -78,6 +80,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
                     user: profile,
                     isAuthenticated: true,
                     isLoading: false,
+                    progress: profile ? {
+                        ...DEFAULT_PROGRESS,
+                        xp: profile.xp,
+                    } : DEFAULT_PROGRESS,
                 });
                 await trackEmailRegister(true, profile?.id);
             } else {
@@ -95,6 +101,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     logout: () => {
         const userId = get().user?.id;
         authService.logout();
+        clearTierCache();
         set({
             user: null,
             isAuthenticated: false,
@@ -118,6 +125,29 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     signOut: () => {
         get().logout();
+    },
+
+    deleteAccount: async () => {
+        set({ isLoading: true });
+        try {
+            const result = await authService.deleteAccount();
+            if (result.ok) {
+                clearTierCache();
+                set({
+                    user: null,
+                    isAuthenticated: false,
+                    isLoading: false,
+                    progress: DEFAULT_PROGRESS,
+                    unreadCount: 0,
+                });
+            } else {
+                set({ isLoading: false });
+            }
+            return result;
+        } catch (error) {
+            set({ isLoading: false });
+            return { ok: false, error: 'Network error' };
+        }
     },
 
     refreshProfile: async () => {
@@ -153,3 +183,23 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     setAuthState: (state) => set(state),
 }));
+
+
+let authSessionListenerStarted = false;
+
+export const initAuthSessionListener = () => {
+    if (authSessionListenerStarted || typeof window === 'undefined') return;
+    authSessionListenerStarted = true;
+    window.addEventListener('auth:session_expired', () => {
+        clearTierCache();
+        useAuthStore.setState({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+            progress: DEFAULT_PROGRESS,
+            unreadCount: 0,
+        });
+    });
+};
+
+initAuthSessionListener();

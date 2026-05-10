@@ -15,6 +15,12 @@ interface NotificationCenterProps {
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNavigate, userId }) => {
+    const [notice, setNotice] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const showNotice = (type: 'success' | 'error', text: string) => {
+        setNotice({ type, text });
+        window.setTimeout(() => setNotice(null), 3000);
+    };
+
     const {
         notifications,
         loading,
@@ -30,7 +36,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
 
                 if (action === 'accept') {
                     await socialService.respondToRequest(requesterId, true);
-                    alert('Friend request accepted!');
+                    showNotice('success', 'Friend request accepted.');
                 } else {
                     await socialService.respondToRequest(requesterId, false);
                 }
@@ -40,7 +46,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
 
                 if (action === 'accept') {
                     await circleService.joinCircle(circleCode);
-                    alert('Joined circle!');
+                    showNotice('success', 'Joined circle.');
                     onNavigate(AppView.SOCIAL_HUB);
                 }
             }
@@ -49,7 +55,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
             markAsRead(notification.id);
         } catch (error) {
             console.error('Action failed:', error);
-            alert('Failed to process action.');
+            showNotice('error', 'Failed to process action.');
         }
     };
 
@@ -77,6 +83,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNaviga
                     </button>
                 )}
             </div>
+
+            {notice && (
+                <div role="status" aria-live="polite" className={`mx-4 mt-3 rounded-xl px-4 py-3 text-sm font-semibold ${notice.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                    {notice.text}
+                </div>
+            )}
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto">

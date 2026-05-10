@@ -259,7 +259,6 @@ class OfflineQueueService {
     const serviceMap: Record<string, unknown> = {
       quiz: () => import('./quiz'),
       auth: () => import('./auth'),
-      progress: () => import('./progressService'),
       peerReview: () => import('./peerReviewService'),
     };
 

@@ -31,6 +31,16 @@ Sentry.init({
   // 10% in production to control cost & overhead. Full sampling in dev for debugging.
   tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
   environment: import.meta.env.MODE,
+  release: import.meta.env.VITE_SENTRY_RELEASE || import.meta.env.VITE_APP_VERSION,
+  dist: import.meta.env.VITE_BUILD_NUMBER,
+  sendDefaultPii: false,
+  beforeSend(event) {
+    if (event.request?.headers) {
+      delete event.request.headers.Authorization;
+      delete event.request.headers.Cookie;
+    }
+    return event;
+  },
 });
 
 const rootElement = document.getElementById('root');

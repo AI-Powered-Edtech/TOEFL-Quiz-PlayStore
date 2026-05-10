@@ -132,7 +132,7 @@ export const PracticeHubView: React.FC<PracticeHubViewProps> = ({ onNavigate }) 
             id: 'simulation',
             category: 'CORE',
             title: 'Full Simulation',
-            description: 'Realistic TOEFL Structure & Written Expression test environment.',
+            description: 'Full TOEFL-style mock flow across Reading, Listening, Structure, and Written Expression.',
             icon: ShieldCheck,
             theme: 'purple',
             badge: '40 Questions',
@@ -210,7 +210,7 @@ export const PracticeHubView: React.FC<PracticeHubViewProps> = ({ onNavigate }) 
                                 <Zap className="w-4 h-4" />
                             </div>
                             <div>
-                                <div className="text-lg font-bold text-white leading-none">7</div>
+                                <div className="text-lg font-bold text-white leading-none">{practiceItems.length}</div>
                                 <div className="text-[10px] text-blue-100 uppercase tracking-wider font-semibold">Activities</div>
                             </div>
                         </div>

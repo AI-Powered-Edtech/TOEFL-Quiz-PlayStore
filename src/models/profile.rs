@@ -1,29 +1,9 @@
-use serde::{Deserialize, Serialize};
-use vil_orm_derive::VilEntity;
+// Request structs for auth/profile endpoints.
+// NOTE: rich `Profile` VilEntity + `AuthResponse` removed in Gate-2.5 cleanup.
+// The live `profiles` table is a 6-col public projection only; auth uses
+// `accounts` directly via raw SQL in src/services/auth.rs (AuthProfileView).
 
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow, VilEntity)]
-#[vil_entity(table = "profiles")]
-pub struct Profile {
-    #[vil_entity(pk)]
-    pub id: String,
-    #[vil_entity(unique)]
-    pub username: Option<String>,
-    pub full_name: Option<String>,
-    pub avatar_url: Option<String>,
-    pub bio: Option<String>,
-    pub friend_code: Option<String>,
-    pub hearts_count: i64,
-    pub xp: i64,
-    pub subscription_tier: String,
-    pub fcm_token: Option<String>,
-    #[serde(skip_serializing)]
-    pub password_hash: Option<String>,
-    pub peer_review_prefs: Option<String>, // JSON
-    #[vil_entity(auto_now_add)]
-    pub created_at: String,
-    #[vil_entity(auto_now)]
-    pub updated_at: String,
-}
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct RegisterRequest {
@@ -38,19 +18,12 @@ pub struct LoginRequest {
     pub password: String,
 }
 
-#[derive(Debug, Serialize)]
-pub struct AuthResponse {
-    pub ok: bool,
-    pub access_token: String,
-    pub refresh_token: String,
-    pub profile: Profile,
-}
-
 #[derive(Debug, Deserialize)]
 pub struct UpdateProfileRequest {
     pub full_name: Option<String>,
     pub bio: Option<String>,
     pub avatar_url: Option<String>,
+    pub fcm_token: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

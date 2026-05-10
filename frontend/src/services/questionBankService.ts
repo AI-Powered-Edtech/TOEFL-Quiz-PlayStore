@@ -1,5 +1,6 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { CanonicalQuestionV1, SectionType } from '../types';
+import { validateCanonicalQuestion } from './validationService';
 
 interface QuestionBankDB extends DBSchema {
     questions: {
@@ -37,6 +38,27 @@ interface QuestionBankDB extends DBSchema {
 
 const DB_NAME = 'toefl-question-bank';
 const DB_VERSION = 1;
+
+const makeQuestionId = (): string => {
+    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+        return crypto.randomUUID();
+    }
+    return `question_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+};
+
+const normalizeQuestionForCache = (question: CanonicalQuestionV1): CanonicalQuestionV1 | null => {
+    const normalized = {
+        ...question,
+        id: question.id || makeQuestionId(),
+        stimulus: question.stimulus && typeof question.stimulus === 'object' ? question.stimulus : {},
+        metadata: {
+            ...(question.metadata || {}),
+            source: ['ai', 'db', 'pdf'].includes(question.metadata?.source || '') ? question.metadata!.source : 'ai',
+        },
+    } as CanonicalQuestionV1;
+
+    return validateCanonicalQuestion(normalized) ? normalized : null;
+};
 
 class QuestionBankService {
     private _dbPromise: Promise<IDBPDatabase<QuestionBankDB>>;
@@ -77,16 +99,24 @@ class QuestionBankService {
         const tx = db.transaction('questions', 'readwrite');
         const now = Date.now();
 
+        let savedCount = 0;
         for (const question of questions) {
+            const normalized = normalizeQuestionForCache(question);
+            if (!normalized) {
+                console.warn('[QuestionBank] Skipped invalid question cache entry:', question?.id || question?.prompt);
+                continue;
+            }
+
             await tx.store.put({
-                ...question,
+                ...normalized,
                 cachedAt: now,
                 accessCount: 0,
             } as any);
+            savedCount += 1;
         }
 
         await tx.done;
-        console.log(`[QuestionBank] Saved ${questions.length} questions to IndexedDB`);
+        console.log(`[QuestionBank] Saved ${savedCount}/${questions.length} questions to IndexedDB`);
     }
 
     async getQuestions(params: {

@@ -1,0 +1,42 @@
+version: "3.0"
+metadata:
+  id: question-bank-admin-list
+  name: "Admin: question bank list"
+  description: "GET /api/v2/admin/questions - latest 200 admin-authored DB questions. Local IndexedDB bank remains as offline fallback."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/admin/questions, method: GET }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: query
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: select
+      input_mappings:
+        - target: sql
+          source:
+            language: literal
+            source: "SELECT id, skill_id, section, interaction, prompt, choices_json, correct_response_json, cefr_target, difficulty_score, stimulus_json, metadata_json, created_at, updated_at FROM question_bank_admin ORDER BY updated_at DESC LIMIT 200"
+      output_variable: query_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"questions": query_result.rows, "count": query_result.row_count, "queried_at": now()}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: query } }
+    - { id: f2, from: { node: query }, to: { node: respond } }
+    - { id: f3, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: query_result, type: object }

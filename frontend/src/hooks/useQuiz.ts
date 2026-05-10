@@ -63,8 +63,7 @@ export const useQuiz = (): UseQuizReturn => {
   // Save state whenever it changes
   useEffect(() => {
     if (quizState.status === 'playing' || quizState.status === 'answered') {
-      const { queue, ...lightweightState } = quizState;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(lightweightState));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(quizState));
       setHasSavedSession(true);
     } else if (quizState.status === 'idle') {
       localStorage.removeItem(STORAGE_KEY);
@@ -92,10 +91,13 @@ export const useQuiz = (): UseQuizReturn => {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as QuizState;
-        setQuizState({
-          ...parsed,
-          queue: parsed.queue || [] // queue was excluded to save space
-        });
+        if (!parsed.queue || parsed.queue.length === 0) {
+          localStorage.removeItem(STORAGE_KEY);
+          setHasSavedSession(false);
+          return null;
+        }
+
+        setQuizState(parsed);
         return parsed.topic || null;
       }
     } catch (e) {

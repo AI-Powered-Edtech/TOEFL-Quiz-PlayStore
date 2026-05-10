@@ -21,6 +21,8 @@ export const ErrorJailView: React.FC<ErrorJailViewProps> = ({ onNavigate, onStar
     const [stats, setStats] = useState<Record<string, number>>({});
     const [selectedSection, setSelectedSection] = useState<string>('all');
     const [isLoading, setIsLoading] = useState(false);
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
+    const [notice, setNotice] = useState<string | null>(null);
 
     // Fetch jailed questions when user or section changes
     useEffect(() => {
@@ -44,20 +46,23 @@ export const ErrorJailView: React.FC<ErrorJailViewProps> = ({ onNavigate, onStar
         fetchJail();
     }, [user, selectedSection]);
 
-    const handleClear = async () => {
-        const currentUserId = user?.id || 'guest';
+    const handleClear = () => {
+        setNotice(null);
+        setShowClearConfirm(true);
+    };
 
-        if (confirm("Are you sure you want to release all questions without reviewing them?")) {
-            try {
-                await clearErrorJail(currentUserId, selectedSection);
-                setJailedQuestions([]);
-                // Refresh stats
-                const newStats = await getJailStats(currentUserId);
-                setStats(newStats.bySection);
-            } catch (error) {
-                console.error('[ErrorJailView] Failed to clear:', error);
-                alert('Failed to clear jail. Please try again.');
-            }
+    const confirmClear = async () => {
+        const currentUserId = user?.id || 'guest';
+        setShowClearConfirm(false);
+        try {
+            await clearErrorJail(currentUserId, selectedSection);
+            setJailedQuestions([]);
+            const newStats = await getJailStats(currentUserId);
+            setStats(newStats.bySection);
+            setNotice('Error Jail cleared. You can continue practicing from the dashboard.');
+        } catch (error) {
+            console.error('[ErrorJailView] Failed to clear:', error);
+            setNotice('Failed to clear Error Jail. Please try again.');
         }
     };
 
@@ -136,6 +141,12 @@ export const ErrorJailView: React.FC<ErrorJailViewProps> = ({ onNavigate, onStar
 
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 <div className="px-6 pb-6 max-w-2xl mx-auto">
+
+                    {notice && (
+                        <div role="status" aria-live="polite" className="mb-4 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+                            {notice}
+                        </div>
+                    )}
 
                     {/* Hero Card */}
                     <div className="bg-gradient-to-br from-orange-500 to-amber-600 rounded-[2.5rem] shadow-xl shadow-orange-200 p-8 text-center text-white mb-8 relative overflow-hidden">
@@ -251,6 +262,19 @@ export const ErrorJailView: React.FC<ErrorJailViewProps> = ({ onNavigate, onStar
 
                 </div>
             </div>
+
+            {showClearConfirm && (
+                <div className="fixed inset-0 z-50 bg-slate-950/40 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="clear-error-jail-title">
+                    <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl border border-orange-100">
+                        <h3 id="clear-error-jail-title" className="text-lg font-bold text-slate-900 mb-2">Release all questions?</h3>
+                        <p className="text-sm text-slate-500 mb-5">This removes the selected mistakes from Error Jail without reviewing them. Use this only when you are sure.</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowClearConfirm(false)} className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700">Cancel</button>
+                            <button onClick={confirmClear} className="flex-1 rounded-xl bg-orange-600 px-4 py-3 text-sm font-bold text-white">Release</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -1,3 +1,19 @@
+// Resolve TTS endpoint at runtime: respects VITE_TTS_URL, then window.localStorage('toefl.ttsUrl'), then disabled (returns null → caller falls back to web TTS).
+function getKittenTtsUrl(): string {
+  const env = (import.meta as any).env || {};
+  const fromEnv = env.VITE_TTS_URL as string | undefined;
+  if (fromEnv && fromEnv.length > 0) return fromEnv;
+
+  // Localhost TTS is a dev-only feature flag. Production builds must not silently call localhost.
+  if (env.DEV && typeof window !== 'undefined') {
+    const fromLocal = window.localStorage?.getItem('toefl.ttsUrl');
+    if (fromLocal) return fromLocal;
+    return 'http://localhost:3333/generate';
+  }
+
+  return '';
+}
+
 /**
  * Kitten TTS Service — Python Backend Client
  *
@@ -89,7 +105,9 @@ async function generateSegment(
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-        const response = await fetch('http://localhost:3333/generate', {
+        const endpoint = getKittenTtsUrl();
+        if (!endpoint) throw new Error('Kitten TTS disabled in production unless VITE_TTS_URL is configured.');
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text, sid: speakerId, speed }),
@@ -438,7 +456,9 @@ export const kittenSynthesize = async (
 
     // Optimized: Create AudioElement directly from the pre-encoded backend ArrayBuffer if no chunking
     if (validChunks.length === 1) {
-        const response = await fetch('http://localhost:3333/generate', {
+        const endpoint = getKittenTtsUrl();
+        if (!endpoint) throw new Error('Kitten TTS disabled in production unless VITE_TTS_URL is configured.');
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text: validChunks[0], sid: speakerId, speed })

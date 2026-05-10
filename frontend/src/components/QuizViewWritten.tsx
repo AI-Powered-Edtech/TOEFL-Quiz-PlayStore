@@ -130,10 +130,10 @@ export const QuizViewWritten: React.FC<QuizViewWrittenProps> = ({
                         }
 
                         return (
-                            <span key={i} className="inline-block relative mx-0.5 cursor-pointer group" onClick={() => !showExplanation && onAnswer(idx)}>
+                            <button key={i} type="button" disabled={showExplanation} aria-pressed={isSelected} aria-label={`Select part ${letter}: ${content}`} className="inline-block relative mx-0.5 cursor-pointer group bg-transparent p-0 align-baseline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 rounded" onClick={() => !showExplanation && onAnswer(idx)}>
                                 <span className={labelClass}>{letter}</span>
                                 <span className={underlineClass}>{content}</span>
-                            </span>
+                            </button>
                         );
                     }
                     return <span key={i}>{part}</span>;

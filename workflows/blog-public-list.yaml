@@ -1,0 +1,42 @@
+version: "3.0"
+metadata:
+  id: blog-public-list
+  name: "Public Blog Posts List"
+  description: "Read-only public blog index. Mirrors src/services/blog.rs::list_posts but filters drafts."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/blog/posts, method: GET }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: query
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: select
+      input_mappings:
+        - target: sql
+          source:
+            language: literal
+            source: "SELECT skill_id, title, summary, hero_image, updated_at FROM blog_posts WHERE published = 1 ORDER BY updated_at DESC LIMIT 100"
+      output_variable: query_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"posts": query_result.rows, "row_count": query_result.row_count}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: query } }
+    - { id: f2, from: { node: query }, to: { node: respond } }
+    - { id: f3, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: query_result, type: object }

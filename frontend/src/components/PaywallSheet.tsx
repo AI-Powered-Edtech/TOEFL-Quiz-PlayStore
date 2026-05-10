@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import React, { useState, useCallback } from 'react';
 
-import { purchaseSubscription, restorePurchases, type ProductId } from '../services/purchaseService';
+import { getAvailableProducts, purchaseSubscription, restorePurchases, type ProductId } from '../services/purchaseService';
 import { type SubscriptionTier, type GatedFeature, getTierPrice, clearTierCache } from '../services/subscriptionService';
 
 interface PaywallSheetProps {
@@ -81,6 +81,23 @@ const PaywallSheet: React.FC<PaywallSheetProps> = ({
     const [selectedPlan, setSelectedPlan] = useState<'basic' | 'c2'>('basic');
     const [isLoading, setIsLoading] = useState(false);
     const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [productPrices, setProductPrices] = useState<Partial<Record<ProductId, string>>>({});
+
+    React.useEffect(() => {
+        if (!isOpen) return;
+        let mounted = true;
+        getAvailableProducts().then((products) => {
+            if (!mounted) return;
+            const prices: Partial<Record<ProductId, string>> = {};
+            products.forEach((product) => {
+                if (product.id === 'basic_monthly' || product.id === 'c2_monthly') {
+                    prices[product.id] = product.price;
+                }
+            });
+            setProductPrices(prices);
+        });
+        return () => { mounted = false; };
+    }, [isOpen]);
 
     const handlePurchase = useCallback(async () => {
         const productId: ProductId = selectedPlan === 'basic' ? 'basic_monthly' : 'c2_monthly';
@@ -92,6 +109,7 @@ const PaywallSheet: React.FC<PaywallSheetProps> = ({
 
             if (result.success) {
                 setStatusMsg({ type: 'success', text: `🎉 Berhasil upgrade ke ${result.tier === 'basic' ? 'Basic' : 'C2 Pro'}!` });
+                window.dispatchEvent(new CustomEvent('subscription:changed'));
                 // Notify parent if callback provided
                 onPurchase?.(selectedPlan);
                 // Auto-close after 1.5s
@@ -117,6 +135,7 @@ const PaywallSheet: React.FC<PaywallSheetProps> = ({
             const result = await restorePurchases();
             if (result.success) {
                 setStatusMsg({ type: 'success', text: `✅ Langganan ${result.tier === 'basic' ? 'Basic' : 'C2 Pro'} dipulihkan!` });
+                window.dispatchEvent(new CustomEvent('subscription:changed'));
                 onRestore?.();
                 setTimeout(() => onClose(), 1500);
             } else {
@@ -173,6 +192,10 @@ const PaywallSheet: React.FC<PaywallSheetProps> = ({
                     animation: 'slideUp 0.3s ease',
                     padding: '0 0 env(safe-area-inset-bottom, 16px) 0',
                 }}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="paywall-title"
+                aria-describedby="paywall-description"
             >
                 {/* Handle bar */}
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
@@ -215,10 +238,10 @@ const PaywallSheet: React.FC<PaywallSheetProps> = ({
                     }}>
                         <Crown size={28} color="white" />
                     </div>
-                    <h2 style={{ color: 'white', fontSize: 22, fontWeight: 700, margin: '0 0 8px' }}>
+                    <h2 id="paywall-title" style={{ color: 'white', fontSize: 22, fontWeight: 700, margin: '0 0 8px' }}>
                         Upgrade ke Premium
                     </h2>
-                    <p style={{
+                    <p id="paywall-description" style={{
                         color: '#94a3b8',
                         fontSize: 14,
                         margin: 0,
@@ -253,7 +276,7 @@ const PaywallSheet: React.FC<PaywallSheetProps> = ({
                         <Gem size={24} color="#3b82f6" style={{ marginBottom: 6 }} />
                         <div style={{ color: 'white', fontSize: 16, fontWeight: 700 }}>Basic</div>
                         <div style={{ color: '#3b82f6', fontSize: 18, fontWeight: 800, margin: '4px 0' }}>
-                            Rp 16.5rb
+                            {productPrices.basic_monthly || 'Rp 16.5rb'}
                         </div>
                         <div style={{ color: '#64748b', fontSize: 11 }}>/bulan</div>
                     </button>
@@ -291,7 +314,7 @@ const PaywallSheet: React.FC<PaywallSheetProps> = ({
                         <Crown size={24} color="#f59e0b" style={{ marginBottom: 6 }} />
                         <div style={{ color: 'white', fontSize: 16, fontWeight: 700 }}>C2 Pro</div>
                         <div style={{ color: '#f59e0b', fontSize: 18, fontWeight: 800, margin: '4px 0' }}>
-                            Rp 165rb
+                            {productPrices.c2_monthly || 'Rp 165rb'}
                         </div>
                         <div style={{ color: '#64748b', fontSize: 11 }}>/bulan</div>
                     </button>
@@ -362,7 +385,7 @@ const PaywallSheet: React.FC<PaywallSheetProps> = ({
                         fontSize: 13,
                         fontWeight: 600,
                         textAlign: 'center',
-                    }}>
+                    }} role="status" aria-live="polite">
                         {statusMsg.text}
                     </div>
                 )}
@@ -399,7 +422,7 @@ const PaywallSheet: React.FC<PaywallSheetProps> = ({
                         ) : (
                             <>
                                 <Star size={18} />
-                                Langganan {selectedPlan === 'basic' ? 'Basic' : 'C2 Pro'} — {getTierPrice(selectedPlan)}
+                                Langganan {selectedPlan === 'basic' ? 'Basic' : 'C2 Pro'} — {productPrices[selectedPlan === 'basic' ? 'basic_monthly' : 'c2_monthly'] || getTierPrice(selectedPlan)}
                                 <ArrowRight size={18} />
                             </>
                         )}
@@ -409,11 +432,11 @@ const PaywallSheet: React.FC<PaywallSheetProps> = ({
                 {/* Legal / Disclosure */}
                 <div style={{ padding: '0 20px 8px', textAlign: 'center' }}>
                     <p style={{ color: '#475569', fontSize: 10, lineHeight: 1.4, margin: '0 0 8px' }}>
-                        Langganan diperpanjang otomatis setiap bulan. Pembatalan bisa dilakukan kapan saja melalui Google Play Store.
+                        Langganan diperpanjang otomatis setiap bulan. Pembatalan bisa dilakukan kapan saja melalui Google Play Store. Unlimited mengikuti kebijakan pemakaian wajar untuk menjaga kualitas layanan.
                         Dengan berlangganan, kamu menyetujui{' '}
-                        <a href="#" style={{ color: '#64748b', textDecoration: 'underline' }}>Syarat & Ketentuan</a>
+                        <a href={import.meta.env.VITE_TERMS_URL || "https://toeflquiz.app/terms"} target="_blank" rel="noopener noreferrer" style={{ color: '#64748b', textDecoration: 'underline' }}>Syarat & Ketentuan</a>
                         {' '}dan{' '}
-                        <a href="#" style={{ color: '#64748b', textDecoration: 'underline' }}>Kebijakan Privasi</a>.
+                        <a href={import.meta.env.VITE_PRIVACY_URL || "https://toeflquiz.app/privacy"} target="_blank" rel="noopener noreferrer" style={{ color: '#64748b', textDecoration: 'underline' }}>Kebijakan Privasi</a>.
                     </p>
 
                     {/* Restore button */}

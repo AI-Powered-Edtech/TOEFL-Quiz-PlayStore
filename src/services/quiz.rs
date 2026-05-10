@@ -1,9 +1,8 @@
 use crate::error::AppError;
 use crate::middleware::auth::Claims;
-use crate::models::profile::Profile;
 use crate::models::quiz::*;
 use crate::models::responses::*;
-use vil_orm::vil_args;
+use crate::services::account_profile::award_public_xp;
 use vil::prelude::*;
 use crate::services::quiz_prompts::get_system_prompt;
 use vil::ai::{ChatMessage as VilChat, LlmProvider, OpenAiConfig, OpenAiProvider};
@@ -84,14 +83,7 @@ pub async fn save_result(
         .execute(state.pool.inner())
         .await?;
 
-    let user_id = claims.sub.clone();
-    Profile::update_v(
-        state.pool.inner(),
-        "xp = xp + ?",
-        "id = ?",
-        vil_args![xp, user_id],
-    )
-    .await?;
+    award_public_xp(&state.pool, &claims.sub, xp).await?;
 
     // Update UserPerformanceMetrics
     let mut row = UserPerformanceMetrics::find_where(

@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+    darkMode: 'class',
     content: [
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",
@@ -20,6 +21,21 @@ export default {
                 "background-light": "#f8f9fa",
                 "background-dark": "#101622",
                 "surface-white": "#ffffff",
+                surface: {
+                    app: "var(--color-surface-app)",
+                    card: "var(--color-surface-card)",
+                    muted: "var(--color-surface-muted)",
+                },
+                content: {
+                    primary: "var(--color-content-primary)",
+                    secondary: "var(--color-content-secondary)",
+                },
+                semantic: {
+                    brand: "var(--color-brand-primary)",
+                    danger: "var(--color-danger)",
+                    success: "var(--color-success)",
+                    warning: "var(--color-warning)",
+                },
                 blue: {
                     soft: '#eff6ff',
                     primary: '#2563eb',

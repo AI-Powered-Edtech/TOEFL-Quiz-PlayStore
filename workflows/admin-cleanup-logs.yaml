@@ -1,0 +1,42 @@
+version: "3.0"
+metadata:
+  id: admin-cleanup-logs
+  name: "Admin: Delete Old Resolved App Logs"
+  description: "Mirror of tasks::cleanup_old_logs; deletes resolved app_logs older than 30 days."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/admin/cron/cleanup-logs, method: POST }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: purge
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: execute
+      input_mappings:
+        - target: sql
+          source:
+            language: literal
+            source: "DELETE FROM app_logs WHERE resolved = 1 AND created_at < datetime('now', '-30 days')"
+      output_variable: purge_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"task": "cleanup_old_logs", "rows_affected": purge_result.rows_affected}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: purge } }
+    - { id: f2, from: { node: purge }, to: { node: respond } }
+    - { id: f3, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: purge_result, type: object }

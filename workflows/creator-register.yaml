@@ -1,0 +1,55 @@
+version: "3.0"
+metadata:
+  id: creator-register
+  name: "Creator Economy: register creator"
+  description: "POST /api/v2/creator/register. Minimal Play Store-safe creator profile with pending status and 70/30 revenue share."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/creator/register, method: POST }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: upsert
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: execute
+      input_mappings:
+        - target: sql
+          source:
+            language: vil-expr
+            source: "\"INSERT INTO creator_profiles (id, user_id, display_name, revenue_share_bps, status, created_at, updated_at) VALUES (lower(hex(randomblob(16))), '\" + trigger_payload.body.user_id + \"', '\" + trigger_payload.body.display_name + \"', 7000, 'pending', datetime('now'), datetime('now')) ON CONFLICT(user_id) DO UPDATE SET display_name=excluded.display_name, updated_at=datetime('now')\""
+      output_variable: upsert_result
+    - id: audit
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: execute
+      input_mappings:
+        - target: sql
+          source:
+            language: vil-expr
+            source: "\"INSERT INTO audit_logs (id, actor_id, action, target_type, target_id, metadata, created_at) VALUES (lower(hex(randomblob(16))), '\" + trigger_payload.body.user_id + \"', 'CREATOR_REGISTER', 'creator_profile', '\" + trigger_payload.body.user_id + \"', '\" + trigger_payload.body.display_name + \"', datetime('now'))\""
+      output_variable: audit_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"ok": true, "rows_affected": upsert_result.rows_affected, "status": "pending", "revenue_share_bps": 7000}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: upsert } }
+    - { id: f2, from: { node: upsert }, to: { node: audit } }
+    - { id: f3, from: { node: audit }, to: { node: respond } }
+    - { id: f4, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: upsert_result, type: object }
+    - { name: audit_result, type: object }

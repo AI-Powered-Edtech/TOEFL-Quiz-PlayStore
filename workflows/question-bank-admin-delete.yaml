@@ -1,0 +1,55 @@
+version: "3.0"
+metadata:
+  id: question-bank-admin-delete
+  name: "Admin: question bank delete"
+  description: "POST /api/v2/admin/questions/delete. Body {id,actor_id}; guarded by Admin PIN in frontend before call."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/admin/questions/delete, method: POST }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: delete
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: execute
+      input_mappings:
+        - target: sql
+          source:
+            language: vil-expr
+            source: "\"DELETE FROM question_bank_admin WHERE id = '\" + trigger_payload.body.id + \"'\""
+      output_variable: delete_result
+    - id: audit
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: execute
+      input_mappings:
+        - target: sql
+          source:
+            language: vil-expr
+            source: "\"INSERT INTO audit_logs (id, actor_id, action, target_type, target_id, metadata, created_at) VALUES (lower(hex(randomblob(16))), '\" + trigger_payload.body.actor_id + \"', 'QUESTION_DELETE', 'question', '\" + trigger_payload.body.id + \"', '', datetime('now'))\""
+      output_variable: audit_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"ok": true, "rows_affected": delete_result.rows_affected, "deleted_at": now()}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: delete } }
+    - { id: f2, from: { node: delete }, to: { node: audit } }
+    - { id: f3, from: { node: audit }, to: { node: respond } }
+    - { id: f4, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: delete_result, type: object }
+    - { name: audit_result, type: object }

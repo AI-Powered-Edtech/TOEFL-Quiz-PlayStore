@@ -1,0 +1,42 @@
+version: "3.0"
+metadata:
+  id: leaderboard-public
+  name: "Public Leaderboard (Top 50)"
+  description: "Unauthenticated leaderboard for guest landing pages. Excludes friend codes / emails."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/social/leaderboard/public, method: GET }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: query
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: select
+      input_mappings:
+        - target: sql
+          source:
+            language: literal
+            source: "SELECT username, avatar_url, total_xp, current_streak FROM profiles WHERE is_public = 1 ORDER BY total_xp DESC LIMIT 50"
+      output_variable: query_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"entries": query_result.rows, "row_count": query_result.row_count}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: query } }
+    - { id: f2, from: { node: query }, to: { node: respond } }
+    - { id: f3, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: query_result, type: object }

@@ -27,9 +27,9 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({ currentView, onNavig
     const isActive = (tab: 'home' | 'blog' | 'practice' | 'study' | 'more') => {
         if (tab === 'home') return currentView === AppView.DASHBOARD;
         if (tab === 'blog') return currentView === AppView.BLOG || currentView === AppView.BLOG_POST;
-        if (tab === 'practice') return currentView === AppView.PRACTICE_HUB || [AppView.SIMULATION, AppView.WRITING_GYM, AppView.WRITING, AppView.SHADOWING, AppView.PARAPHRASE_PRACTICE, AppView.QUIZ].includes(currentView);
-        if (tab === 'study') return currentView === AppView.SOCIAL_HUB || [AppView.VOCAB_HUB, AppView.LEXICAL_LAB, AppView.LANGUAGE_DOJO, AppView.FLASHCARDS, AppView.LEADERBOARD].includes(currentView);
-        return currentView === AppView.MORE_HUB || [AppView.ERROR_JAIL, AppView.TUTORING, AppView.PROFILE, AppView.SETTINGS, AppView.PDF_UPLOAD, AppView.AI_CHAT, AppView.SOCRATIC, AppView.DEVILS_ADVOCATE, AppView.PEER_REVIEW, AppView.ORACLE].includes(currentView);
+        if (tab === 'practice') return currentView === AppView.PRACTICE_HUB || [AppView.SIMULATION, AppView.WRITING_GYM, AppView.WRITING, AppView.QUIZ].includes(currentView);
+        if (tab === 'study') return currentView === AppView.SOCIAL_HUB || [AppView.VOCAB_HUB, AppView.LEADERBOARD, AppView.PUBLIC_PROFILE].includes(currentView);
+        return currentView === AppView.MORE_HUB || [AppView.ERROR_JAIL, AppView.PROFILE, AppView.SETTINGS, AppView.PDF_UPLOAD, AppView.DEVILS_ADVOCATE, AppView.PEER_REVIEW, AppView.ORACLE].includes(currentView);
     };
 
     const tabs = [
@@ -42,7 +42,8 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({ currentView, onNavig
 
     return (
         <nav 
-            id="mobile-tab-bar" 
+            id="mobile-tab-bar"
+            aria-label="Primary navigation"
             className="fixed left-4 right-4 z-50 bg-white/90 backdrop-blur-md shadow-xl shadow-slate-200/50 border border-white/50 rounded-2xl md:w-fit md:left-1/2 md:-translate-x-1/2 md:px-6"
             style={{ bottom: 'calc(1rem + var(--sab))' }}
         >
@@ -56,8 +57,9 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({ currentView, onNavig
                             <button
                                 key={tab.id}
                                 aria-label={tab.label}
+                                aria-current={active ? 'page' : undefined}
                                 onClick={() => handleTabClick(tab.id)}
-                                className={`flex flex-col items-center justify-center p-1 transition-all duration-300 min-w-[56px] group relative ${active ? 'scale-110' : 'hover:scale-105'}`}
+                                className={`flex flex-col items-center justify-center p-1 transition-all duration-300 min-w-[56px] min-h-[48px] rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 group relative ${active ? 'scale-110' : 'hover:scale-105'}`}
                                 data-testid={`tab-${tab.id}`}
                             >
                                 {active && (

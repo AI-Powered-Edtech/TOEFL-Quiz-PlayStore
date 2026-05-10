@@ -1,0 +1,210 @@
+# Production-0 route/view registry lock
+views:
+  - view: DASHBOARD
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: QUIZ
+    category: canonical-server-backed
+    data_source: rust-8082
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: PRACTICE_HUB
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: VOCAB_HUB
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: MORE_HUB
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: ANALYTICS
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: ERROR_JAIL
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: BANK
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: TUTORING
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: PROFILE
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: PUBLIC_PROFILE
+    category: legacy-adapter
+    data_source: mixed
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: SETTINGS
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: PDF_UPLOAD
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: AI_CHAT
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: SOCRATIC
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: DEVILS_ADVOCATE
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: SOCIAL_HUB
+    category: legacy-adapter
+    data_source: mixed
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: PEER_REVIEW
+    category: legacy-adapter
+    data_source: mixed
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: ORACLE
+    category: legacy-adapter
+    data_source: mixed
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: SIMULATION
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: CEFR_SIMULATION
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: WRITING_GYM
+    category: canonical-server-backed
+    data_source: rust-8082
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: WRITING
+    category: canonical-server-backed
+    data_source: rust-8082
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: SHADOWING
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: PARAPHRASE_PRACTICE
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: LEXICAL_LAB
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: LANGUAGE_DOJO
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: FLASHCARDS
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: LEADERBOARD
+    category: legacy-adapter
+    data_source: mixed
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: FRIEND_LIST
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: LEARNING_PATH
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: REPORT
+    category: legacy-adapter
+    data_source: mixed
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: WRITING_GYM_HUB
+    category: canonical-server-backed
+    data_source: rust-8082
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: WRITING_GYM_LEVEL_1
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: WRITING_GYM_LEVEL_2
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: WRITING_GYM_LEVEL_3
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: WRITING_GYM_TASK_1
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: WRITING_GYM_TASK_2
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: MODEL_ESSAY_LIBRARY
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: ESSAY_DOJO_HUB
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: BAND9_LIBRARY
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: BAND9_READER
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: COMPLEXITY_LADDER
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: MASON_LEADERBOARD
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: MASON_SKILL_MAP
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: NOTIFICATIONS
+    category: offline-cache-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: BLOG
+    category: static-content
+    data_source: static
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: BLOG_POST
+    category: static-content
+    data_source: static
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: BLOG_SKILL_PICKER
+    category: static-content
+    data_source: static
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: SKILL_MODULE_LIST
+    category: static-content
+    data_source: static
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: SKILL_MODULE_READER
+    category: static-content
+    data_source: static
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.
+  - view: TTS_BENCHMARK
+    category: dev-only
+    data_source: local-cache
+    ux_impact: Makes fallback/source-of-truth visible before Play Store hardening.

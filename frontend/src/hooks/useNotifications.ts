@@ -13,7 +13,7 @@ export const useNotifications = (userId?: string) => {
         try {
             const data = await socialService.getNotifications();
             setNotifications(data);
-            setUnreadCount(data.filter(n => !n.is_read).length);
+            setUnreadCount(data.filter((n: Notification) => !n.is_read).length);
         } catch (error) {
             console.error(error);
         } finally {

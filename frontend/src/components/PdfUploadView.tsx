@@ -742,7 +742,7 @@ export const PdfUploadView: React.FC<PdfUploadViewProps> = ({ onNavigate, onQuiz
         <div className="flex flex-col items-center justify-center h-full max-w-lg mx-auto p-6 animate-in fade-in zoom-in-95">
             <div className="text-center mb-6">
                 <h2 className="text-xl font-bold text-slate-800">Processing PDF</h2>
-                <p className="text-slate-500 text-sm mt-1">StreamQuiz AI is analyzing your document</p>
+                <p className="text-slate-500 text-sm mt-1">TOEFL Quiz AI is analyzing your document</p>
             </div>
 
             <div className="w-full bg-slate-900 rounded-xl overflow-hidden shadow-2xl border border-slate-800 font-mono text-xs md:text-sm relative">

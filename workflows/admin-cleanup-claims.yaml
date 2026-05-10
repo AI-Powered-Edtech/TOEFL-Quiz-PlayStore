@@ -1,0 +1,42 @@
+version: "3.0"
+metadata:
+  id: admin-cleanup-claims
+  name: "Admin: Release Expired Peer-Review Claims"
+  description: "Mirror of tasks::cleanup_expired_claims; can be invoked manually by admin or via external cron."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/admin/cron/cleanup-claims, method: POST }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: release
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: execute
+      input_mappings:
+        - target: sql
+          source:
+            language: literal
+            source: "UPDATE peer_review_submissions SET claimed_by = NULL, claimed_at = NULL, status = 'pending' WHERE status = 'in_review' AND claimed_at < datetime('now', '-30 minutes')"
+      output_variable: release_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"task": "cleanup_expired_claims", "rows_affected": release_result.rows_affected}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: release } }
+    - { id: f2, from: { node: release }, to: { node: respond } }
+    - { id: f3, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: release_result, type: object }

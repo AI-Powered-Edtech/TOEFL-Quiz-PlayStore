@@ -7,7 +7,7 @@
 import { CanonicalQuestionV1, SectionType } from "../types";
 
 import { TokenLimitError } from './errors';
-import { consumeToken } from './subscriptionService';
+import { consumeToken as checkTokenBudget } from './subscriptionService';
 
 export type AIProvider = 'groq';
 
@@ -86,8 +86,8 @@ export const generateQuizUnified = async (
 ): Promise<CanonicalQuestionV1[]> => {
     console.log(`[AIProvider] Generating ${count} questions via Groq for ${topic} (${section}), skillIdOverride=${skillIdOverride ?? 'none'}`);
 
-    // Check token budget before making API call
-    const tokenCheck = await consumeToken('quiz_generation', { strict: true });
+    // Preflight only: this checks quota without charging usage before backend generation succeeds.
+    const tokenCheck = await checkTokenBudget('quiz_generation', { strict: true });
     if (!tokenCheck.allowed) {
         console.warn(`[AIProvider] Token limit reached (${tokenCheck.usage.tokens_used}/${tokenCheck.usage.tokens_limit}).`);
         throw new TokenLimitError(tokenCheck.usage.tokens_used, tokenCheck.usage.tokens_limit);
@@ -114,7 +114,7 @@ export const generateDistractorsUnified = async (
     options: AIProviderOptions = DEFAULT_OPTIONS
 ): Promise<string[]> => {
     // Check token budget for distractor generation
-    const tokenCheck = await consumeToken('distractor_generation', { strict: true });
+    const tokenCheck = await checkTokenBudget('distractor_generation', { strict: true });
     if (!tokenCheck.allowed) {
         console.warn('[AIProvider] Token limit reached for distractors.');
         throw new TokenLimitError(tokenCheck.usage.tokens_used, tokenCheck.usage.tokens_limit);

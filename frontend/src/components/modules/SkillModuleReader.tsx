@@ -377,9 +377,19 @@ export const SkillModuleReader: React.FC<SkillModuleReaderProps> = ({
                         <p className="text-slate-500 text-sm">Loading content...</p>
                     </div>
                 ) : !post ? (
-                    <div className="text-center py-20 text-slate-500 font-sans">
-                        <BookA className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                        <p>Content for {skillTitle} is coming soon.</p>
+                    <div className="text-center py-16 px-6 font-sans">
+                        <div className="w-20 h-20 mx-auto rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-5">
+                            <BookA className="w-10 h-10 text-blue-400" />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-800 mb-2">Module content is being prepared</h3>
+                        <p className="text-sm text-slate-500 mb-6">We are still writing the lesson for <span className="font-semibold text-slate-700">{skillTitle}</span>. Practice the skill with AI-generated questions instead.</p>
+                        <button
+                            onClick={() => onNavigate(AppView.PRACTICE_HUB)}
+                            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-blue-200 transition-all"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            Practice with AI Quiz
+                        </button>
                     </div>
                 ) : (
                     <>

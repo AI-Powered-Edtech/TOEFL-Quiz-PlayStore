@@ -533,7 +533,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, progress, onNavigate, on
                                         value={authFullName}
                                         onChange={(e) => setAuthFullName(e.target.value)}
                                         className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        placeholder="QA Tester"
+                                        placeholder="Your full name"
                                     />
                                 </div>
                             )}
@@ -544,7 +544,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, progress, onNavigate, on
                                     value={authUsername}
                                     onChange={(e) => setAuthUsername(e.target.value)}
                                     className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    placeholder="qa_tester"
+                                    placeholder="your_username"
                                     autoCapitalize="none"
                                     autoCorrect="off"
                                 />
@@ -557,7 +557,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, progress, onNavigate, on
                                     onChange={(e) => setAuthPassword(e.target.value)}
                                     type="password"
                                     className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    placeholder="qatest123"
+                                    placeholder="Minimum 8 characters"
                                 />
                             </div>
 

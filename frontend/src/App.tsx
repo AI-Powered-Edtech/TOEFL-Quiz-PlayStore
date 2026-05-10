@@ -22,6 +22,7 @@ import { trackGuestLogin, trackOAuthLoginSuccess } from './utils/authAnalytics';
 import { isCorrectOption } from './utils/quizCorrectness';
 import { useNavigationStore } from './stores/useNavigationStore';
 import { useQuizStore } from './stores/useQuizStore';
+import { getBackTargetForView, getPrimaryTabViews, getPathForView, getViewForPath, isRouteAvailable } from './config/routes';
 import { AppView, SectionType } from './types';
 
 const OfflineIndicator = () => {
@@ -30,7 +31,7 @@ const OfflineIndicator = () => {
     if (isOnline) return null;
 
     return (
-        <div className="fixed top-0 left-0 right-0 bg-red-500 text-white text-[10px] md:text-sm font-semibold flex items-center justify-center gap-2 py-1.5 md:py-2 z-[9999] shadow-md animate-slide-down">
+        <div role="status" aria-live="polite" className="shrink-0 bg-red-500 text-white text-[10px] md:text-sm font-semibold flex items-center justify-center gap-2 py-1.5 md:py-2 z-50 shadow-md animate-slide-down">
             <WifiOff className="w-3 h-3 md:w-4 md:h-4" />
             <span>You are offline. Progress will be saved locally and synced later.</span>
         </div>
@@ -47,6 +48,7 @@ const App: React.FC = () => {
     const { currentView, setCurrentView, gymBackTarget } = useNavigationStore();
     const { setAuthState } = useAuthStore();
     const quiz = useQuizStore();
+    const isRestoringHistoryRef = useRef(false);
 
     useEffect(() => {
         setAuthState({ user, isAuthenticated, unreadCount });
@@ -65,44 +67,43 @@ const App: React.FC = () => {
         if (Capacitor.isNativePlatform()) {
             backListener = CapacitorApp.addListener('backButton', () => {
                 const { currentView: prevView, gymBackTarget, setCurrentView } = useNavigationStore.getState();
-                const rootViews = [
-                    AppView.DASHBOARD,
-                    AppView.PRACTICE_HUB,
-                    AppView.SOCIAL_HUB,
-                    AppView.MORE_HUB,
-                    AppView.BLOG
-                ];
+                const backTarget = getBackTargetForView(prevView, gymBackTarget);
 
-                if (rootViews.includes(prevView)) {
+                if (backTarget === null) {
                     CapacitorApp.exitApp();
-                } else if (prevView === AppView.QUIZ || prevView === AppView.REPORT || prevView === AppView.SIMULATION) {
-                    setCurrentView(AppView.DASHBOARD);
-                } else if (prevView === AppView.ANALYTICS || prevView === AppView.ERROR_JAIL || prevView === AppView.LEADERBOARD) {
-                    setCurrentView(AppView.MORE_HUB);
-                } else if (prevView === AppView.BLOG_POST) {
-                    setCurrentView(AppView.BLOG);
-                } else if (prevView === AppView.WRITING_GYM) {
-                    setCurrentView(gymBackTarget);
-                } else if (prevView === AppView.WRITING || prevView === AppView.WRITING_GYM_TASK_1 || prevView === AppView.WRITING_GYM_TASK_2) {
-                    setCurrentView(AppView.PRACTICE_HUB);
-                } else if (prevView === AppView.CEFR_SIMULATION) {
-                    setCurrentView(AppView.PRACTICE_HUB);
-                } else if (prevView === AppView.WRITING_GYM_LEVEL_1) {
-                    setCurrentView(AppView.DASHBOARD);
-                } else if (prevView === AppView.SKILL_MODULE_READER) {
-                    setCurrentView(AppView.DASHBOARD);
                 } else {
-                    setCurrentView(AppView.DASHBOARD);
+                    setCurrentView(backTarget);
                 }
             });
         }
 
+        const handlePopState = () => {
+            const nextView = getViewForPath(window.location.pathname);
+            if (nextView && isRouteAvailable(nextView)) {
+                isRestoringHistoryRef.current = true;
+                useNavigationStore.getState().setCurrentView(nextView);
+            }
+        };
+        window.addEventListener('popstate', handlePopState);
+
         return () => {
-            CapacitorApp.removeAllListeners();
             if (backListener) backListener.remove();
             window.removeEventListener('featuretour:open', openHandler);
+            window.removeEventListener('popstate', handlePopState);
         };
     }, []);
+
+    useEffect(() => {
+        if (isRestoringHistoryRef.current) {
+            isRestoringHistoryRef.current = false;
+            return;
+        }
+
+        const nextPath = getPathForView(currentView);
+        if (!nextPath || window.location.pathname === nextPath) return;
+
+        window.history.pushState({ view: currentView }, '', nextPath);
+    }, [currentView]);
 
     useEffect(() => {
         if (localStorage.getItem(FEATURE_TOUR_KEY) === '1') return;
@@ -200,7 +201,8 @@ const App: React.FC = () => {
             quizStore.setTopic(topicToUse);
             setCurrentView(AppView.QUIZ);
 
-            const questions = await generateQuizUnified(topicToUse, sect, 5, numericSkillId);
+            const requestedQuestionCount = 5;
+            const questions = await generateQuizUnified(topicToUse, sect, requestedQuestionCount, numericSkillId);
 
             if (questions.length === 0) {
                 quizStore.setStatus('idle');
@@ -209,18 +211,23 @@ const App: React.FC = () => {
                 return;
             }
 
+            if (questions.length < requestedQuestionCount) {
+                showError(`Only ${questions.length} valid questions were generated, so this practice set is shorter than usual.`);
+            }
+
+            const questionsWithIds = questions.map(q => ({
+                ...q,
+                id: q.id || ((crypto.randomUUID && crypto.randomUUID()) || Math.random().toString(36).slice(2))
+            }));
+
             try {
                 const { default: questionBank } = await import('./services/questionBankService');
-                const questionsWithIds = questions.map(q => ({
-                    ...q,
-                    id: q.id || crypto.randomUUID()
-                }));
                 await questionBank.saveQuestions(questionsWithIds);
             } catch (err) {
                 console.warn('[App] Failed to save questions to Question Bank:', err);
             }
 
-            quizStore.startQuiz(questions);
+            quizStore.startQuiz(questionsWithIds);
 
         } catch (error) {
             console.error('[App] Failed to start skill:', error);
@@ -236,7 +243,7 @@ const App: React.FC = () => {
 
     useEffect(() => {
         const saveResultOnFinish = async () => {
-            const { status, queue, answers, score, topic } = useQuizStore.getState();
+            const { status, queue, answers, score, topic, sessionId } = useQuizStore.getState();
             if (status === 'finished' && queue.length > 0) {
                 const correctCount = queue.reduce((acc, q, idx) => {
                     const choiceIdx = answers[idx];
@@ -246,7 +253,7 @@ const App: React.FC = () => {
                 const sectionFromQuestion = queue[0]?.section || currentSection.toLowerCase();
 
                 await saveQuizResult({
-                    id: (crypto.randomUUID && crypto.randomUUID()) || Math.random().toString(36).substring(2, 15),
+                    id: sessionId || ((crypto.randomUUID && crypto.randomUUID()) || Math.random().toString(36).substring(2, 15)),
                     userName: user?.full_name || 'Guest',
                     date: new Date().toISOString(),
                     topic,
@@ -368,7 +375,11 @@ const App: React.FC = () => {
         }
     };
 
-    if (!window.location.search.includes('benchmark=true') && (loading || isAppInitialLoading)) {
+    const benchmarkMode = import.meta.env.DEV && window.location.search.includes('benchmark=true');
+
+    const shouldShowMobileTabs = getPrimaryTabViews().includes(currentView);
+
+    if (!benchmarkMode && (loading || isAppInitialLoading)) {
         return (
             <div className="h-screen w-full bg-slate-900 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
@@ -380,10 +391,12 @@ const App: React.FC = () => {
     }
 
     return (
-        <div className="h-[100dvh] bg-[#F5F5FA] dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans w-full relative flex flex-col overflow-hidden">
-            <button id="debug-tts-benchmark" style={{ display: 'none' }} onClick={() => setCurrentView(AppView.TTS_BENCHMARK)}>
-                Benchmark
-            </button>
+        <div className="min-h-[100dvh] bg-[#F5F5FA] dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans w-full relative flex flex-col overflow-x-hidden">
+            {import.meta.env.DEV && (
+                <button id="debug-tts-benchmark" style={{ display: 'none' }} onClick={() => setCurrentView(AppView.TTS_BENCHMARK)}>
+                    Benchmark
+                </button>
+            )}
 
             <OfflineIndicator />
             <FeatureTourModal
@@ -398,7 +411,7 @@ const App: React.FC = () => {
                 }}
             />
 
-            <div className={`flex-1 relative overflow-hidden transition-all duration-300 ${isSharing ? 'blur-md pointer-events-none' : ''}`}>
+            <div id="main-content" role="main" tabIndex={-1} className={`flex-1 relative overflow-y-auto overflow-x-hidden transition-all duration-300 ${shouldShowMobileTabs ? 'pb-safe-nav' : ''} ${isSharing ? 'blur-md pointer-events-none' : ''}`}>
                 <AppRouter
                     handleStartSkill={handleStartSkill}
                     handleShareResult={handleShareResult}
@@ -407,14 +420,7 @@ const App: React.FC = () => {
                 />
             </div>
 
-            {[
-                AppView.DASHBOARD,
-                AppView.PRACTICE_HUB,
-                AppView.SOCIAL_HUB,
-                AppView.MORE_HUB,
-                AppView.BLOG,
-                AppView.TTS_BENCHMARK,
-            ].includes(currentView) && (
+            {shouldShowMobileTabs && (
                     <MobileTabBar
                         currentView={currentView}
                         onNavigate={setCurrentView}

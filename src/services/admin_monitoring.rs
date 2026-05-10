@@ -2,7 +2,6 @@ use crate::error::AppError;
 use crate::middleware::admin::require_admin;
 use crate::middleware::auth::Claims;
 use crate::models::monitoring::*;
-use crate::models::profile::Profile;
 use crate::models::quiz::QuizResult;
 use crate::models::responses::*;
 use crate::models::views::*;
@@ -26,9 +25,10 @@ pub async fn system_health(
         state.pool.inner(), "COUNT(*)", "level = 'warn' AND created_at > datetime('now', '-1 hour')", vil_args![],
     ).await?;
 
-    let total_users = Profile::scalar_v::<i64>(
-        state.pool.inner(), "COUNT(*)", "1=1", vil_args![],
-    ).await?;
+    let total_users: i64 = sqlx::query_scalar("SELECT CAST(COUNT(*) AS INTEGER) FROM accounts")
+        .fetch_one(state.pool.inner())
+        .await
+        .unwrap_or(0);
 
     let active_24h = QuizResult::scalar_v::<i64>(
         state.pool.inner(), "COUNT(DISTINCT user_id)", "date > datetime('now', '-24 hours')", vil_args![],

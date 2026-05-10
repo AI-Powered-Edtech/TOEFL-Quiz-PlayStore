@@ -89,10 +89,14 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                             }
 
                             return (
-                                <span
+                                <button
                                     key={i}
+                                    type="button"
+                                    aria-pressed={isSelected}
+                                    aria-label={`Select part ${letter}: ${content}`}
                                     onClick={() => !isAnswered && onAnswer(idx)}
-                                    className={`inline-block mx-1.5 relative group cursor-pointer ${isAnswered ? '' : 'hover:-translate-y-0.5 transition-transform'}`}
+                                    disabled={isAnswered}
+                                    className={`inline-block mx-1.5 relative group cursor-pointer bg-transparent p-0 align-baseline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 rounded ${isAnswered ? '' : 'hover:-translate-y-0.5 transition-transform'}`}
                                 >
                                     <span className={`text-[11px] font-black absolute -top-5 left-1/2 -translate-x-1/2 select-none ${isAnswered && isTheCorrectOne ? 'text-green-600 font-bold' :
                                             isAnswered && isSelected ? 'text-red-500 font-bold' : 'text-blue-600/70'
@@ -102,7 +106,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                                     <span className={styleClass}>
                                         {content}
                                     </span>
-                                </span>
+                                </button>
                             );
                         }
                         return <span key={i} className="text-slate-700">{part}</span>;
@@ -243,7 +247,11 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                                             {choiceText === optionLabel ? `Part ${optionLabel}` : choiceText}
                                         </span>
                                         {!isAnswered && (
-                                            <div
+                                            <span
+                                                role="button"
+                                                tabIndex={0}
+                                                aria-label={`Eliminate option ${optionLabel}`}
+                                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleElimination(e as any, idx); }}
                                                 onClick={(e) => toggleElimination(e, idx)}
                                                 className={`p-2 rounded-full transition-all ${isEliminated
                                                     ? 'text-orange-500 bg-orange-50 hover:bg-orange-100'
@@ -251,7 +259,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                                                     }`}
                                             >
                                                 <Ban className="w-4 h-4" />
-                                            </div>
+                                            </span>
                                         )}
                                     </button>
                                 );

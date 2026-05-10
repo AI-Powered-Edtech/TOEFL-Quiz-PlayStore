@@ -17,6 +17,7 @@ import {
     generateRecommendations,
 } from './oracleScoringEngine';
 import { apiClient } from './apiClient';
+import { fetchPredictionHistoryV2, savePredictionHistoryV2 } from './oracleHistoryV2';
 
 function isValidUUID(id: string): boolean {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -106,7 +107,7 @@ export const oracleService = {
         saveLocalPrediction(userId, prediction);
 
         const history = getLocalHistory(userId);
-        history.unshift({
+        const historyItem: PredictionHistoryItem = {
             id: crypto.randomUUID(),
             user_id: userId,
             test_type: 'toefl_ibt',
@@ -115,15 +116,31 @@ export const oracleService = {
             confidence_level: prediction.confidence_level as any,
             data_points: prediction.data_points,
             created_at: new Date().toISOString(),
-        });
+        };
+        history.unshift(historyItem);
 
         if (history.length > 50) history.splice(50);
         saveLocalHistory(userId, history);
+        savePredictionHistoryV2(historyItem).catch((e) => {
+            console.warn('[Oracle] v2 history save failed, kept local fallback:', e);
+        });
 
         return prediction;
     },
 
     async getPredictionHistory(userId: string, limit: number = 10): Promise<PredictionHistoryItem[]> {
+        try {
+            const remote = await fetchPredictionHistoryV2(userId, limit);
+            if (remote.length > 0) {
+                const merged = [...remote, ...getLocalHistory(userId)]
+                    .filter((item, idx, arr) => arr.findIndex(x => x.id === item.id) === idx)
+                    .slice(0, 50);
+                saveLocalHistory(userId, merged);
+                return merged.slice(0, limit);
+            }
+        } catch (e) {
+            console.warn('[Oracle] v2 history fetch failed, using local fallback:', e);
+        }
         const history = getLocalHistory(userId);
         return history.slice(0, limit);
     },

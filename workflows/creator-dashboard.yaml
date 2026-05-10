@@ -1,0 +1,55 @@
+version: "3.0"
+metadata:
+  id: creator-dashboard
+  name: "Creator Economy: dashboard"
+  description: "POST /api/v2/creator/dashboard. Body {user_id}. Returns creator status, earnings, revenue share and payout rows."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/creator/dashboard, method: POST }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: profile
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: select
+      input_mappings:
+        - target: sql
+          source:
+            language: vil-expr
+            source: "\"SELECT id, user_id, display_name, revenue_share_bps, status, total_earnings, pending_earnings, payout_method, created_at, updated_at FROM creator_profiles WHERE user_id = '\" + trigger_payload.body.user_id + \"' LIMIT 1\""
+      output_variable: profile_result
+    - id: payouts
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: select
+      input_mappings:
+        - target: sql
+          source:
+            language: vil-expr
+            source: "\"SELECT p.id, p.amount, p.status, p.requested_at, p.processed_at FROM creator_payouts p JOIN creator_profiles c ON c.id = p.creator_id WHERE c.user_id = '\" + trigger_payload.body.user_id + \"' ORDER BY p.requested_at DESC LIMIT 25\""
+      output_variable: payout_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"profile": profile_result.rows, "payouts": payout_result.rows, "found": profile_result.row_count, "queried_at": now()}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: profile } }
+    - { id: f2, from: { node: profile }, to: { node: payouts } }
+    - { id: f3, from: { node: payouts }, to: { node: respond } }
+    - { id: f4, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: profile_result, type: object }
+    - { name: payout_result, type: object }

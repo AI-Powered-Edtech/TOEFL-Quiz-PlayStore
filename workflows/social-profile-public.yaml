@@ -1,0 +1,42 @@
+version: "3.0"
+metadata:
+  id: social-profile-public
+  name: "Public Profile Lookup"
+  description: "Read-only public profile by username. POST {username}. Filters is_public=1. Frontend validates username against /^[a-zA-Z0-9_-]{1,32}$/ before POST so vil-expr SQL concat is safe."
+spec:
+  activities:
+    - id: trigger
+      activity_type: Trigger
+      trigger_config:
+        trigger_type: webhook
+        webhook_config: { path: /api/v2/social/profile/public, method: POST }
+        response_mode: buffered
+        end_activity: respond
+      output_variable: trigger_payload
+    - id: query
+      activity_type: Connector
+      connector_config:
+        connector_ref: vastar.db.sqlite
+        operation: select
+      input_mappings:
+        - target: sql
+          source:
+            language: vil-expr
+            source: "\"SELECT id, username, avatar_url, total_xp, current_streak, is_public FROM profiles WHERE is_public = 1 AND username = '\" + trigger_payload.body.username + \"' LIMIT 1\""
+      output_variable: query_result
+    - id: respond
+      activity_type: EndTrigger
+      end_trigger_config:
+        trigger_ref: trigger
+        final_response:
+          language: vil-expr
+          source: '{"profile": query_result.rows, "found": query_result.row_count, "queried_at": now()}'
+    - id: end
+      activity_type: End
+  flows:
+    - { id: f1, from: { node: trigger }, to: { node: query } }
+    - { id: f2, from: { node: query }, to: { node: respond } }
+    - { id: f3, from: { node: respond }, to: { node: end } }
+  variables:
+    - { name: trigger_payload, type: object }
+    - { name: query_result, type: object }
