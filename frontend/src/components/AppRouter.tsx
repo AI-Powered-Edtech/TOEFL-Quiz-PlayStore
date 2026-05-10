@@ -353,8 +353,8 @@ export const AppRouter: React.FC<AppRouterProps> = ({
                 <div className="w-20 h-20 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center mb-4">
                     <AlertTriangle className="w-10 h-10 text-amber-500" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-800 mb-2">Feature unavailable in this release</h2>
-                <p className="text-slate-500 mb-1">This area is disabled for production until it passes QA.</p>
+                <h2 className="text-xl font-bold text-slate-800 mb-2">This learning tool is not available yet</h2>
+                <p className="text-slate-500 mb-1">We are polishing this tool before making it part of the main TOEFL learning path.</p>
                 <p className="text-xs text-slate-400 mb-6 font-mono">{currentView}</p>
                 <div className="flex flex-col w-full max-w-xs gap-3">
                     <button onClick={() => setCurrentView(AppView.PRACTICE_HUB)} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">Browse Practice</button>

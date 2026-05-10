@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { AppView } from '../types';
+import { getViewStatus, isViewEnabledForRuntime } from './viewRegistry';
 
 export interface RouteConfig {
     view: AppView;
@@ -50,10 +51,10 @@ const LazyAuthCallback = React.lazy(() => import('../components/AuthCallback').t
 
 const DEV_ONLY_VIEWS = new Set<AppView>([AppView.TTS_BENCHMARK]);
 
-export const isDevOnlyView = (view: AppView): boolean => DEV_ONLY_VIEWS.has(view);
+export const isDevOnlyView = (view: AppView): boolean => DEV_ONLY_VIEWS.has(view) || getViewStatus(view) === 'dev-only';
 
 export const isRouteAvailable = (view: AppView, includeDev = import.meta.env.DEV): boolean => {
-    return includeDev || !isDevOnlyView(view);
+    return isViewEnabledForRuntime(view, includeDev);
 };
 
 export const PRIMARY_TAB_VIEWS: AppView[] = [
@@ -324,7 +325,7 @@ export const getRoutes = (deps: any): RouteConfig[] => {
                     const section = partToSection[skill.part || ''] || categoryToSection[String(skill.category || '').toLowerCase()] || 'STRUCTURE';
                     deps.handleStartSkill(skill.id || (skill.numeric_id ? String(skill.numeric_id) : skill.name), section);
                 },
-                onOpenOnboarding: () => console.log("Onboarding"),
+                onOpenOnboarding: () => deps.setCurrentView(AppView.BLOG),
                 onboardingStatus: 'completed',
                 onboardingProfile: { name: deps.user?.user_metadata?.full_name || 'Student', targetScore: 80 },
                 userProgress: deps.progress,
@@ -450,7 +451,11 @@ export const getRoutes = (deps: any): RouteConfig[] => {
             component: LazyBlogPostView,
             props: {
                 postId: deps.selectedPostId,
-                onNavigate: deps.setCurrentView,
+                onNavigate: (view: AppView, params?: any) => {
+                    if (params?.postId) deps.setSelectedPostId(params.postId);
+                    if (params?.selectedSkillCategory) deps.setSelectedSkillCategory(params.selectedSkillCategory);
+                    deps.setCurrentView(view);
+                },
                 onBack: () => deps.setCurrentView(AppView.BLOG),
                 onStartSkill: deps.handleStartSkill
             }
@@ -460,7 +465,11 @@ export const getRoutes = (deps: any): RouteConfig[] => {
             component: LazyBlogSkillPickerView,
             props: {
                 section: deps.selectedSkillCategory,
-                onNavigate: deps.setCurrentView,
+                onNavigate: (view: AppView, params?: any) => {
+                    if (params?.postId) deps.setSelectedPostId(params.postId);
+                    if (params?.selectedSkillCategory) deps.setSelectedSkillCategory(params.selectedSkillCategory);
+                    deps.setCurrentView(view);
+                },
                 onBack: () => deps.setCurrentView(AppView.BLOG)
             }
         },

@@ -2,7 +2,7 @@ import {
     ArrowLeft, Trophy, Crown, Medal,
     Users, UserPlus, CircleDot, Copy, Check,
     Flame, Zap, BookOpen, PenTool, FileText,
-    Plus, LogIn, X, Loader2, Activity
+    Plus, LogIn, X, Loader2, Activity, AlertCircle, RefreshCw
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
@@ -36,6 +36,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
     const [leaderboard, setLeaderboard] = useState<UnifiedLeaderboardEntry[]>([]);
     const [myRank, setMyRank] = useState<UnifiedLeaderboardEntry | null>(null);
     const [loading, setLoading] = useState(true);
+    const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
     const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'all'>('all');
     const [copied, setCopied] = useState(false);
 
@@ -132,6 +133,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
         const fetchLeaderboard = async () => {
             setLoading(true);
             try {
+                setLeaderboardError(null);
                 const data = await leaderboardService.getUnifiedLeaderboard(timeFilter, 50);
                 setLeaderboard(data);
 
@@ -142,6 +144,9 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                 }
             } catch (error) {
                 console.warn('Failed to fetch leaderboard:', error);
+                setLeaderboard([]);
+                setMyRank(null);
+                setLeaderboardError('Ringkasan komunitas belum bisa dimuat. Kamu tetap bisa memakai Social Hub dan lanjut latihan.');
             } finally {
                 setLoading(false);
             }
@@ -358,10 +363,55 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                                 </div>
 
                                 {/* Rankings */}
+                                {leaderboardError && (
+                                    <div role="alert" aria-live="polite" className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-blue-900 flex items-start gap-3">
+                                        <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                                        <div className="flex-1">
+                                            <p className="text-sm font-bold">Ringkasan AI belum tersedia</p>
+                                            <p className="text-xs mt-1 text-blue-800">Kami gagal memuat insight AI saat ini, tapi komunitas dan latihan tetap bisa digunakan.</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={async () => {
+                                                setLoading(true);
+                                                setLeaderboardError(null);
+                                                try {
+                                                    const data = await leaderboardService.getUnifiedLeaderboard(timeFilter, 50);
+                                                    setLeaderboard(data);
+                                                    if (currentUserId) {
+                                                        const me = data.find(e => e.userId === currentUserId);
+                                                        setMyRank(me || null);
+                                                    }
+                                                } catch (error) {
+                                                    console.warn('Failed to retry leaderboard:', error);
+                                                    setLeaderboard([]);
+                                                    setMyRank(null);
+                                                    setLeaderboardError('Ringkasan komunitas belum bisa dimuat. Kamu tetap bisa memakai Social Hub dan lanjut latihan.');
+                                                } finally {
+                                                    setLoading(false);
+                                                }
+                                            }}
+                                            className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-blue-700 border border-blue-100"
+                                        >
+                                            <RefreshCw className="w-3 h-3" />
+                                            Coba lagi
+                                        </button>
+                                    </div>
+                                )}
+
                                 {loading ? (
-                                    <div className="text-center py-12 text-slate-400">
-                                        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                                        Loading rankings...
+                                    <div className="space-y-3" aria-label="Loading rankings">
+                                        {[1, 2, 3].map((i) => (
+                                            <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm animate-pulse flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800" />
+                                                <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800" />
+                                                <div className="flex-1 space-y-2">
+                                                    <div className="h-3 w-32 bg-slate-200 dark:bg-slate-800 rounded" />
+                                                    <div className="h-3 w-24 bg-slate-200 dark:bg-slate-800 rounded" />
+                                                </div>
+                                                <div className="h-4 w-12 bg-slate-200 dark:bg-slate-800 rounded" />
+                                            </div>
+                                        ))}
                                     </div>
                                 ) : leaderboard.length === 0 ? (
                                     <div className="text-center py-12 text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">

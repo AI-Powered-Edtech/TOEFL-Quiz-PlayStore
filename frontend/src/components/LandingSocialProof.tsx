@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react'
+import { RefreshCw, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { apiV2 } from '../services/apiV2'
@@ -21,21 +21,75 @@ type OracleSummary = {
  */
 export default function LandingSocialProof() {
     const [data, setData] = useState<OracleSummary | null>(null)
+    const [error, setError] = useState(false)
+    const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        let cancelled = false
+    const loadSummary = () => {
+        setLoading(true)
+        setError(false)
         apiV2
             .get<OracleSummary>('/api/v2/oracle/summary')
             .then((r) => {
-                if (!cancelled) setData(r)
+                setData(r)
+                setError(false)
             })
             .catch(() => {
-                if (!cancelled) setData(null)
+                setData(null)
+                setError(true)
+            })
+            .finally(() => setLoading(false))
+    }
+
+    useEffect(() => {
+        let cancelled = false
+        setLoading(true)
+        setError(false)
+        apiV2
+            .get<OracleSummary>('/api/v2/oracle/summary')
+            .then((r) => {
+                if (!cancelled) {
+                    setData(r)
+                    setError(false)
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setData(null)
+                    setError(true)
+                }
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false)
             })
         return () => {
             cancelled = true
         }
     }, [])
+
+    if (loading) return null
+
+    if (error) {
+        return (
+            <div
+                data-testid="landing-social-proof-fallback"
+                role="status"
+                aria-live="polite"
+                className="mx-4 mt-1 mb-3 px-3 py-2 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-between gap-2 text-xs"
+            >
+                <p className="text-blue-900 leading-snug">
+                    <span className="font-semibold">Ringkasan AI belum tersedia.</span> Komunitas dan latihan tetap bisa digunakan.
+                </p>
+                <button
+                    type="button"
+                    onClick={loadSummary}
+                    className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 font-semibold text-blue-700 border border-blue-100"
+                >
+                    <RefreshCw className="w-3 h-3" />
+                    Coba lagi
+                </button>
+            </div>
+        )
+    }
 
     if (!data || !Array.isArray(data.buckets) || data.buckets.length === 0) return null
 

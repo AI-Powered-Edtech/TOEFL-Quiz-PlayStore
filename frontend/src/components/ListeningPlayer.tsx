@@ -5,6 +5,7 @@ import { isAudioCached, setCachedAudio, getCachedAudio } from '../services/audio
 import { checkEdgeTTSReady, isDialogue, SubscriptionRequiredError, warmupKittenTts, StreamingKittenPlayer } from '../services/ttsService';
 import { generateHybridAudio, preCacheHybridAudio } from '../services/ttsManager';
 import { MobileMockPlayer } from '../services/sherpaNativeService';
+import { debugLog } from '../utils/debugLogger';
 
 interface ListeningPlayerProps {
     transcript: string;
@@ -44,7 +45,7 @@ export const ListeningPlayer: React.FC<ListeningPlayerProps> = ({
     // Check if audio URL exists in database and pre-cache it
     useEffect(() => {
         if (audioUrl && audioUrl.length > 0 && transcript) {
-            console.log('🎵 Found audio URL in database:', audioUrl);
+            debugLog('ListeningPlayer', 'Found audio URL in database', audioUrl);
             // Pre-populate the memory cache with the database URL
             setCachedAudio(transcript, audioUrl);
             setHasDbAudio(true);
@@ -127,7 +128,7 @@ export const ListeningPlayer: React.FC<ListeningPlayerProps> = ({
 
         try {
             const cached = getCachedAudio(transcript);
-            console.log('🔄 Fetching audio...', cached ? (typeof cached === 'string' ? '(cached URL)' : '(active stream)') : '(new stream)');
+            debugLog('ListeningPlayer', 'Fetching audio', cached ? (typeof cached === 'string' ? '(cached URL)' : '(active stream)') : '(new stream)');
 
             if (cached && typeof cached === 'string') {
                 // Play URL (from DB or fully cached WAV)
@@ -142,7 +143,7 @@ export const ListeningPlayer: React.FC<ListeningPlayerProps> = ({
                 audioRef.current = audio;
 
                 const handleEnded = () => {
-                    console.log('⏹️ Audio ended');
+                    debugLog('ListeningPlayer', 'Audio ended');
                     setIsPlaying(false);
                     isPlayingRef.current = false;
                     setActiveText('');
@@ -180,7 +181,7 @@ export const ListeningPlayer: React.FC<ListeningPlayerProps> = ({
                         }
                     },
                     onEnded: () => {
-                        console.log('⏹️ Stream ended');
+                        debugLog('ListeningPlayer', 'Stream ended');
                         setIsPlaying(false);
                         isPlayingRef.current = false;
                         setActiveText('');

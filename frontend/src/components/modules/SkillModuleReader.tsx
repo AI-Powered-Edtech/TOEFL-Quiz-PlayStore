@@ -381,14 +381,22 @@ export const SkillModuleReader: React.FC<SkillModuleReaderProps> = ({
                         <div className="w-20 h-20 mx-auto rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-5">
                             <BookA className="w-10 h-10 text-blue-400" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-800 mb-2">Module content is being prepared</h3>
-                        <p className="text-sm text-slate-500 mb-6">We are still writing the lesson for <span className="font-semibold text-slate-700">{skillTitle}</span>. Practice the skill with AI-generated questions instead.</p>
+                        <h3 className="text-lg font-bold text-slate-800 mb-2">Starter lesson: {skillTitle}</h3>
+                        <p className="text-sm text-slate-500 mb-4">This TOEFL skill focuses on: <span className="font-semibold text-slate-700">{skill.description}</span></p>
+                        <div className="text-left bg-white border border-slate-100 rounded-2xl p-4 mb-6 shadow-sm">
+                            <p className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-2">Practice checklist</p>
+                            <ul className="text-sm text-slate-600 space-y-2">
+                                <li>• Identify the grammar pattern before reading the options.</li>
+                                <li>• Eliminate answers that break the sentence core.</li>
+                                <li>• Start a short drill to convert this lesson into mastery.</li>
+                            </ul>
+                        </div>
                         <button
                             onClick={() => onNavigate(AppView.PRACTICE_HUB)}
                             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-blue-200 transition-all"
                         >
                             <Sparkles className="w-4 h-4" />
-                            Practice with AI Quiz
+                            Start TOEFL Practice
                         </button>
                     </div>
                 ) : (

@@ -44,7 +44,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({ currentView, onNavig
         <nav 
             id="mobile-tab-bar"
             aria-label="Primary navigation"
-            className="fixed left-4 right-4 z-50 bg-white/90 backdrop-blur-md shadow-xl shadow-slate-200/50 border border-white/50 rounded-2xl md:w-fit md:left-1/2 md:-translate-x-1/2 md:px-6"
+            className="fixed left-4 right-4 z-50 bg-white/90 backdrop-blur-md shadow-xl shadow-slate-200/50 border border-white/50 rounded-2xl md:left-1/2 md:right-auto md:w-[min(40rem,calc(100vw-2rem))] md:-translate-x-1/2 md:px-6"
             style={{ bottom: 'calc(1rem + var(--sab))' }}
         >
             <div className="px-2 py-3">

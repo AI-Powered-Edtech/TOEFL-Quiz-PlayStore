@@ -5,6 +5,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { TOEFL_STRUCTURE_SKILLS, TOEFL_LISTENING_SKILLS, TOEFL_READING_SKILLS } from '../../data/skills';
 import { useAuth } from '../../hooks/useAuth';
 import { AppView, SectionType, Skill } from '../../types';
+import { hasBlogPostForSkill } from '../../services/blogService';
 
 // Combine all skills for easy lookup
 const ALL_SKILLS = [...TOEFL_STRUCTURE_SKILLS, ...TOEFL_LISTENING_SKILLS, ...TOEFL_READING_SKILLS];
@@ -19,6 +20,7 @@ export const BlogSkillPickerView: React.FC<BlogSkillPickerViewProps> = ({ sectio
     const { user } = useAuth();
     const [completedSkills, setCompletedSkills] = useState<Set<string>>(new Set());
     const [searchQuery, setSearchQuery] = useState('');
+    const [availablePosts, setAvailablePosts] = useState<Set<string>>(new Set());
 
     // Determine the skills for the current section
     const sectionSkills = useMemo(() => {
@@ -45,6 +47,17 @@ export const BlogSkillPickerView: React.FC<BlogSkillPickerViewProps> = ({ sectio
         };
         fetchProgress();
     }, [user]);
+
+    useEffect(() => {
+        let mounted = true;
+        Promise.all(sectionSkills.map(async (skill) => [skill.id, await hasBlogPostForSkill(skill.id)] as const))
+            .then(rows => {
+                if (!mounted) return;
+                setAvailablePosts(new Set(rows.filter(([, available]) => available).map(([id]) => id)));
+            })
+            .catch(() => { if (mounted) setAvailablePosts(new Set()); });
+        return () => { mounted = false; };
+    }, [sectionSkills]);
 
     const handleSelectSkill = (skill: Skill) => {
         onNavigate(AppView.BLOG_POST, { postId: skill.id });
@@ -93,7 +106,7 @@ export const BlogSkillPickerView: React.FC<BlogSkillPickerViewProps> = ({ sectio
                     </button>
                     <div className="flex-1">
                         <h1 className="text-xl font-bold font-serif text-slate-900 leading-tight">Structure Skills</h1>
-                        <p className="text-xs text-slate-500 mt-0.5">Select a skill to start reading</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Select a skill to read or practice</p>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center overflow-hidden border border-blue-100">
                         {/* Avatar placeholder */}
@@ -229,7 +242,7 @@ export const BlogSkillPickerView: React.FC<BlogSkillPickerViewProps> = ({ sectio
                                     const isLocked = !isCompleted && !isCurrent;
 
                                     if (isCurrent) {
-                                        // Current Lesson Style
+                                        // Current Skill Style
                                         return (
                                             <button
                                                 key={skill.id}
@@ -243,7 +256,7 @@ export const BlogSkillPickerView: React.FC<BlogSkillPickerViewProps> = ({ sectio
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <span className="text-[10px] font-bold text-fuchsia-600 bg-fuchsia-50 px-2 py-0.5 rounded-md">Skill {num}</span>
-                                                        <span className="text-[10px] font-bold text-fuchsia-500 uppercase tracking-wide">Current Lesson</span>
+                                                        <span className="text-[10px] font-bold text-fuchsia-500 uppercase tracking-wide">Current Skill</span>
                                                     </div>
                                                     <h4 className="font-bold font-serif text-slate-900 text-[15px] truncate">{shortName}</h4>
                                                 </div>
@@ -279,8 +292,8 @@ export const BlogSkillPickerView: React.FC<BlogSkillPickerViewProps> = ({ sectio
                                     return (
                                         <button
                                             key={skill.id}
-                                            disabled // Disable clicking for locked if you want, or let them preview
-                                            className="w-full text-left bg-white border border-slate-100 rounded-2xl p-4 flex items-center gap-4 opacity-70"
+                                            onClick={() => handleSelectSkill(skill)}
+                                            className="w-full text-left bg-white border border-slate-100 rounded-2xl p-4 flex items-center gap-4 opacity-90 active:scale-[0.98] transition-all"
                                         >
                                             <div className="w-11 h-11 rounded-full bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
                                                 <Lock className="w-4 h-4 text-slate-300" />
@@ -288,7 +301,7 @@ export const BlogSkillPickerView: React.FC<BlogSkillPickerViewProps> = ({ sectio
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">Skill {num}</span>
-                                                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Locked</span>
+                                                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Practice only</span>
                                                 </div>
                                                 <h4 className="font-bold font-serif text-slate-400 text-[15px] truncate">{shortName}</h4>
                                             </div>

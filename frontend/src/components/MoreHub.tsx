@@ -229,8 +229,8 @@ export const MoreHub: React.FC<MoreHubProps> = ({ onNavigate, onSignOut, user, p
                             />
                             <FeatureCard
                                 icon={Database}
-                                title="Question Bank"
-                                subtitle="Browse database"
+                                title="Custom Practice"
+                                subtitle="Build drills"
                                 colorClass="bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400"
                                 onClick={() => onNavigate(AppView.BANK)}
                             />

@@ -5,6 +5,7 @@ import { getAllQuestions, getUnifiedQuestionsBySkill, updateQuestion, createQues
 import { AppView, QuizData } from '../types';
 
 import { QuestionEditor } from './QuestionEditor';
+import { debugLog } from '../utils/debugLogger';
 
 interface BankViewProps {
     onNavigate: (view: AppView) => void;
@@ -169,7 +170,7 @@ export const BankView: React.FC<BankViewProps> = ({ onNavigate, onStartQuizWithQ
         // Get all selected questions from Map (preserves cross-page selections)
         const selected: QuizData[] = Array.from(selectedQuestions.values());
 
-        console.log('[BankView] Starting quiz with selected questions:', {
+        debugLog('BankView', 'Starting quiz with selected questions', {
             selectedCount: selected.length,
             sections: selected.map(q => q.section),
             skills: selected.map(q => q.skill_id)
@@ -212,7 +213,7 @@ export const BankView: React.FC<BankViewProps> = ({ onNavigate, onStartQuizWithQ
             ...grouped.listening
         ];
 
-        console.log('[BankView] Ordered questions:', orderedQuestions.length, orderedQuestions);
+        debugLog('BankView', 'Ordered questions', { count: orderedQuestions.length, orderedQuestions });
 
         if (onStartQuizWithQuestions) {
             onStartQuizWithQuestions(orderedQuestions);

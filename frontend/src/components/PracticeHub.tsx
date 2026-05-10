@@ -163,7 +163,7 @@ export const PracticeHubView: React.FC<PracticeHubViewProps> = ({ onNavigate }) 
             id: 'essay',
             category: 'SKILL',
             title: 'Essay Dojo',
-            description: 'Timed writing with AI grading.',
+            description: 'TOEFL-style timed writing with AI feedback.',
             icon: PenTool,
             theme: 'blue',
             badge: 'Writing',
@@ -188,7 +188,7 @@ export const PracticeHubView: React.FC<PracticeHubViewProps> = ({ onNavigate }) 
                         </button>
                         <div>
                             <h1 className="text-2xl font-bold text-white tracking-tight">Practice Hub</h1>
-                            <p className="text-blue-100 text-xs font-medium opacity-80">Refine your English skills</p>
+                            <p className="text-blue-100 text-xs font-medium opacity-80">Build your TOEFL score skill by skill</p>
                         </div>
                     </div>
                 </div>

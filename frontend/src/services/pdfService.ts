@@ -1,8 +1,7 @@
 
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Handle ESM/CJS interop for pdfjs-dist
-const pdfjs = (pdfjsLib as any).default || pdfjsLib;
+const pdfjs = pdfjsLib;
 
 // Initialize Worker with matching version (5.4.624) to avoid version mismatch errors
 if (typeof window !== 'undefined' && pdfjs && pdfjs.GlobalWorkerOptions) {

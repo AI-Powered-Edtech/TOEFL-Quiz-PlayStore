@@ -396,12 +396,14 @@ export const ScoreOracleView: React.FC<ScoreOracleViewProps> = ({ onNavigate, us
 
             // One retry as safety net for transient network issues
             if (retryCount < 1) {
-                console.log('[ScoreOracle] Retrying in 2s...');
+                console.warn('[ScoreOracle] Retrying in 2s...');
                 await new Promise(r => setTimeout(r, 2000));
                 return loadData(retryCount + 1);
             }
 
-            setError(e.message || 'Failed to analyze progress. Please check your connection.');
+            setPrediction(null);
+            setRecommendations([]);
+            setError('Ringkasan AI belum tersedia. Kami gagal memuat insight AI saat ini, tapi latihan manual tetap bisa digunakan.');
         } finally {
             setLoading(false);
         }
@@ -499,18 +501,28 @@ export const ScoreOracleView: React.FC<ScoreOracleViewProps> = ({ onNavigate, us
                     </div>
                 </div>
                 <div className="flex-1 flex items-center justify-center p-6">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-red-100 dark:border-red-900/30 w-full max-w-sm text-center">
-                        <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-4">
-                            <AlertCircle className="w-6 h-6 text-red-500" />
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-blue-100 dark:border-blue-900/30 w-full max-w-sm text-center">
+                        <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center mx-auto mb-4">
+                            <AlertCircle className="w-6 h-6 text-blue-500" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">Analysis Failed</h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{error}</p>
-                        <button
-                            onClick={handleRefresh}
-                            className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl active:scale-95 transition-all text-sm"
-                        >
-                            Try Again
-                        </button>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">Ringkasan AI belum tersedia</h3>
+                        <p role="alert" aria-live="assertive" className="text-sm text-slate-500 dark:text-slate-400 mb-6">{error}</p>
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={handleRefresh}
+                                disabled={refreshing}
+                                className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl active:scale-95 transition-all text-sm disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                            >
+                                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                                Coba lagi
+                            </button>
+                            <button
+                                onClick={() => onNavigate(AppView.PRACTICE_HUB)}
+                                className="px-6 py-2.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold rounded-xl active:scale-95 transition-all text-sm"
+                            >
+                                Lanjut latihan manual
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

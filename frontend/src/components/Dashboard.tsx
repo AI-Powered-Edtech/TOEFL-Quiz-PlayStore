@@ -4,7 +4,7 @@ import {
     Play, Zap, ChevronRight, ChevronDown, Sparkles,
     FileText, Lock, Dumbbell, PenTool, Mic, Layers, BookOpen, RotateCcw, Trophy
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import LandingSocialProof from './LandingSocialProof';
 import { TodaysFocusService } from '../services/todaysFocusService';
@@ -44,22 +44,32 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const [isSkillMenuOpen, setIsSkillMenuOpen] = useState(false);
     const [todaysFocus, setTodaysFocus] = useState<TodaysFocusResult | null>(null);
     const [isLoadingFocus, setIsLoadingFocus] = useState(true);
+    const [focusError, setFocusError] = useState(false);
 
-    // Fetch Today's Focus recommendation
-    useEffect(() => {
-        const fetchTodaysFocus = async () => {
-            setIsLoadingFocus(true);
-            try {
-                const result = await TodaysFocusService.getRecommendedSkill(userId || '');
-                setTodaysFocus(result);
-            } catch (error) {
-                console.error("Failed to fetch Today's Focus", error);
-            } finally {
-                setIsLoadingFocus(false);
-            }
-        };
-        fetchTodaysFocus();
+    const fetchTodaysFocus = useCallback(async () => {
+        setIsLoadingFocus(true);
+        setFocusError(false);
+        try {
+            const result = await Promise.race([
+                TodaysFocusService.getRecommendedSkill(userId || ''),
+                new Promise<never>((_, reject) => {
+                    window.setTimeout(() => reject(new Error('today_focus_timeout')), 8000);
+                }),
+            ]);
+            setTodaysFocus(result);
+        } catch (error) {
+            console.warn("[Dashboard] Today's Focus fallback shown", error);
+            setTodaysFocus(null);
+            setFocusError(true);
+        } finally {
+            setIsLoadingFocus(false);
+        }
     }, [userId]);
+
+    // Fetch Today's Focus recommendation with a hard stop so the hero never spins forever.
+    useEffect(() => {
+        fetchTodaysFocus();
+    }, [fetchTodaysFocus]);
 
     // Dynamic Theme Configuration based on section
     const getThemeConfig = (section: SectionType) => {
@@ -258,6 +268,39 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                         <div className="h-4 md:h-6 bg-white/20 rounded-md w-1/2 mb-6"></div>
                                     </div>
                                     <div className="w-32 md:w-48 h-10 md:h-14 bg-white/20 rounded-full mt-auto"></div>
+                                </div>
+                            ) : focusError ? (
+                                <div role="alert" aria-live="assertive" className="relative z-10 min-h-[160px] md:min-h-[220px] flex flex-col justify-between text-white">
+                                    <div>
+                                        <div className="inline-flex items-center gap-2 text-white/85 text-[10px] md:text-sm font-bold uppercase tracking-widest mb-2 md:mb-3">
+                                            <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                                            TODAY'S FOCUS
+                                        </div>
+                                        <h2 className="text-white text-lg md:text-3xl font-bold leading-tight mb-2 md:mb-3 font-serif">
+                                            Rekomendasi AI belum bisa dimuat
+                                        </h2>
+                                        <p className="text-white/85 text-xs md:text-base mb-4 md:mb-6 leading-relaxed max-w-md">
+                                            Koneksi AI sedang tidak stabil. Kamu tetap bisa lanjut latihan manual tanpa menunggu rekomendasi.
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={(event) => { event.stopPropagation(); fetchTodaysFocus(); }}
+                                            className="inline-flex items-center gap-2 bg-white text-blue-700 px-4 py-2 rounded-full text-xs md:text-sm font-bold shadow-md hover:shadow-lg transition-all"
+                                        >
+                                            <RotateCcw className="w-3.5 h-3.5" />
+                                            Coba lagi
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={(event) => { event.stopPropagation(); onNavigate(AppView.PRACTICE_HUB); }}
+                                            className="inline-flex items-center gap-2 bg-white/15 text-white border border-white/25 px-4 py-2 rounded-full text-xs md:text-sm font-bold hover:bg-white/20 transition-all"
+                                        >
+                                            Buka Practice
+                                            <ChevronRight className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
                                 </div>
                             ) : (
                                 <>

@@ -36,18 +36,38 @@ export const LearningPath: React.FC<LearningPathProps> = ({
   const [recommendedSkill, setRecommendedSkill] = React.useState<LearningPathRecommendation | null>(null);
 
   React.useEffect(() => {
-    const starterProgress: { skillId: string; stars: number; bestScore?: number }[] = [];
-    const starterWeakAreas: { section: string; score: number; questionCount: number }[] = [];
-    
-    const recommendations = learningPathService.getRecommendedSkills(
-      starterProgress,
-      starterWeakAreas,
-      50
-    );
-    if (recommendations.length > 0) {
-      setRecommendedSkill(recommendations[0]);
+    const localHistory = userId ? JSON.parse(localStorage.getItem(`quiz_history_${userId}`) || '[]') : [];
+    const skillStats = new Map<string, { total: number; correct: number }>();
+    const sectionStats = new Map<string, { total: number; correct: number }>();
+
+    for (const row of localHistory) {
+      const skillId = String(row.skill_id || row.skillId || 'S01');
+      const section = String(row.section || 'structure').toLowerCase();
+      const correct = row.correct === true || row.isCorrect === true || Number(row.score || 0) > 0;
+      const skill = skillStats.get(skillId) || { total: 0, correct: 0 };
+      skill.total += 1;
+      if (correct) skill.correct += 1;
+      skillStats.set(skillId, skill);
+      const sec = sectionStats.get(section) || { total: 0, correct: 0 };
+      sec.total += 1;
+      if (correct) sec.correct += 1;
+      sectionStats.set(section, sec);
     }
-  }, []);
+
+    const progressInput = Array.from(skillStats.entries()).map(([skillId, stat]) => ({
+      skillId,
+      stars: stat.total >= 3 && stat.correct / stat.total >= 0.8 ? 3 : stat.total > 0 ? 1 : 0,
+      bestScore: Math.round((stat.correct / Math.max(1, stat.total)) * 100),
+    }));
+    const weakAreas = Array.from(sectionStats.entries()).map(([section, stat]) => ({
+      section,
+      score: Math.round((stat.correct / Math.max(1, stat.total)) * 100),
+      questionCount: stat.total,
+    }));
+
+    const recommendations = learningPathService.getRecommendedSkills(progressInput, weakAreas, 50);
+    if (recommendations.length > 0) setRecommendedSkill(recommendations[0]);
+  }, [userId]);
 
   const xpProgress = Math.min(100, ((userProgress.xp % 500) / 500) * 100);
 
@@ -70,7 +90,7 @@ export const LearningPath: React.FC<LearningPathProps> = ({
               <h1 className="text-xl font-bold text-slate-900 font-serif tracking-tight flex items-center gap-2">
                 Learning Path
               </h1>
-              <p className="text-xs text-slate-500 font-medium">Master skills step-by-step</p>
+              <p className="text-xs text-slate-500 font-medium">Next skill based on your recent practice</p>
             </div>
 
             <div className="p-2 bg-white rounded-full shadow-sm border border-slate-100">

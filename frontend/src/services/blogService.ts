@@ -1,6 +1,7 @@
 import api from './apiClient';
 import { apiV2 } from './apiV2';
 import { BlogPost, BLOG_POSTS } from '../data/blogPosts';
+import { debugLog } from '../utils/debugLogger';
 
 
 // Try the new declarative VWFD endpoint first; fall back to the imperative
@@ -131,7 +132,7 @@ export async function fetchBlogPost(skillId: string): Promise<BlogPost | null> {
         if (localPost) return localPost;
         return null;
     } catch (e) {
-        console.error('[BlogService] Error fetching post', e);
+        debugLog('BlogService', 'Error fetching post', e);
         const localPost = BLOG_POSTS.find(p => p.id === skillId || p.skillId?.toString() === skillId);
         if (localPost) return localPost;
         return null;
@@ -151,7 +152,7 @@ export async function fetchBlogPostsBySection(
         }
         return BLOG_POSTS.filter(p => p.category.toLowerCase() === section.toLowerCase());
     } catch (e) {
-        console.error('[BlogService] Error fetching posts by section', e);
+        debugLog('BlogService', 'Error fetching posts by section', e);
         return BLOG_POSTS.filter(p => p.category.toLowerCase() === section.toLowerCase());
     }
 }
@@ -167,13 +168,39 @@ export async function fetchFeaturedPosts(): Promise<BlogPost[]> {
         }
         return BLOG_POSTS;
     } catch (e) {
-        console.error('[BlogService] Error fetching featured posts', e);
+        debugLog('BlogService', 'Error fetching featured posts', e);
         return BLOG_POSTS;
     }
 }
 
+
+export async function fetchAllBlogPosts(): Promise<BlogPost[]> {
+    try {
+        const data = await fetchBlogPostsList<PostListRow[]>();
+        if (data && data.length > 0) {
+            return data.map(listRowToLegacy);
+        }
+        return BLOG_POSTS;
+    } catch (e) {
+        debugLog('BlogService', 'Error fetching all public posts; using local fallback', e);
+        return BLOG_POSTS;
+    }
+}
+
+export async function hasBlogPostForSkill(skillId: string): Promise<boolean> {
+    const normalized = skillId.toLowerCase();
+    const numeric = skillId.replace(/\D/g, '');
+    const posts = await fetchAllBlogPosts();
+    return posts.some(post =>
+        post.id.toLowerCase() === normalized ||
+        String(post.skillId || '') === numeric ||
+        post.id.toLowerCase().includes(normalized) ||
+        (numeric.length > 0 && post.id.toLowerCase().includes(numeric))
+    );
+}
+
 export async function incrementBlogPostViews(skillId: string): Promise<void> {
-    console.log('[BlogService] View increment handled by backend on fetch');
+    debugLog('BlogService', `View increment handled by backend on fetch for ${skillId}`);
 }
 
 export async function adminFetchAllPosts(): Promise<BlogPostDB[]> {

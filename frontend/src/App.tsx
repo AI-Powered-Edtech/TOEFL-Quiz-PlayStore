@@ -24,6 +24,7 @@ import { useNavigationStore } from './stores/useNavigationStore';
 import { useQuizStore } from './stores/useQuizStore';
 import { getBackTargetForView, getPrimaryTabViews, getPathForView, getViewForPath, isRouteAvailable } from './config/routes';
 import { AppView, SectionType } from './types';
+import { debugLog } from './utils/debugLogger';
 
 const OfflineIndicator = () => {
     const { isOnline } = useNetworkState();
@@ -175,7 +176,7 @@ const App: React.FC = () => {
     }, [user, isAuthenticated]);
 
     const handleStartSkill = async (skillIdOrTopic: string | number, sectionVal?: SectionType) => {
-        console.log(`[App] start skill: ${skillIdOrTopic} section: ${sectionVal}`);
+        debugLog('App', `start skill: ${skillIdOrTopic} section: ${sectionVal}`);
         const quizStore = useQuizStore.getState();
         quizStore.setStatus('generating');
 
@@ -391,7 +392,8 @@ const App: React.FC = () => {
     }
 
     return (
-        <div className="min-h-[100dvh] bg-[#F5F5FA] dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans w-full relative flex flex-col overflow-x-hidden">
+        <div className="min-h-[100dvh] bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans w-full overflow-x-hidden md:px-4">
+        <div className="mx-auto min-h-[100dvh] w-full max-w-md sm:max-w-lg md:max-w-2xl relative flex flex-col overflow-x-hidden bg-[#F5F5FA] dark:bg-slate-950 shadow-sm md:shadow-2xl md:shadow-slate-900/10">
             {import.meta.env.DEV && (
                 <button id="debug-tts-benchmark" style={{ display: 'none' }} onClick={() => setCurrentView(AppView.TTS_BENCHMARK)}>
                     Benchmark
@@ -429,6 +431,7 @@ const App: React.FC = () => {
                 )}
 
             <ToastContainer toasts={toasts} onRemove={removeToast} />
+        </div>
         </div>
     );
 };
