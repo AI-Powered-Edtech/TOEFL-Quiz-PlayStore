@@ -253,7 +253,7 @@ const ToastContainer: React.FC<{
 }> = ({ toasts, onDismiss }) => {
     return (
         <div
-            className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-md w-full pointer-events-none"
+            className="fixed bottom-[calc(5.75rem+var(--sab))] left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 flex-col gap-2 pointer-events-none"
             aria-live="polite"
             aria-label="Notifications"
         >

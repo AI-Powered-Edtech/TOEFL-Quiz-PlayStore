@@ -69,9 +69,9 @@ export const QuizViewReading: React.FC<QuizViewReadingProps> = ({
     const hints = currentQuestion.metadata?.hints || [];
 
     return (
-        <div className="max-w-screen-2xl mx-auto h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] flex flex-col pb-4">
+        <div className="max-w-md mx-auto h-[calc(100vh-140px)] flex flex-col pb-4">
             {/* Mobile Tab Switcher */}
-            <div className="md:hidden flex mb-4 bg-white p-1 rounded-lg flex-shrink-0 border border-slate-200">
+            <div className="flex mb-4 bg-white p-1 rounded-lg flex-shrink-0 border border-slate-200">
                 <button
                     onClick={() => setMobileTab('passage')}
                     className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${mobileTab === 'passage' ? 'bg-blue-50 text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
@@ -88,10 +88,10 @@ export const QuizViewReading: React.FC<QuizViewReadingProps> = ({
                 </button>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 flex-1 overflow-hidden">
+            <div className="grid gap-4 grid-cols-1 flex-1 overflow-hidden">
                 {/* Passage Pane */}
                 {passageText && (
-                    <div className={`${mobileTab === 'passage' ? 'block' : 'hidden'} md:block h-full overflow-hidden`}>
+                    <div className={`${mobileTab === 'passage' ? 'block' : 'hidden'} h-full overflow-hidden`}>
                         <ReadingPassage
                             text={passageText}
                             textSize={textSize}
@@ -102,10 +102,10 @@ export const QuizViewReading: React.FC<QuizViewReadingProps> = ({
                 )}
 
                 {/* Question Pane */}
-                <div className={`${mobileTab === 'passage' ? 'hidden' : 'block'} md:block h-full overflow-hidden flex flex-col`}>
+                <div className={`${mobileTab === 'passage' ? 'hidden' : 'block'} h-full overflow-hidden flex flex-col`}>
                     <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col h-full">
                         {/* Question Text */}
-                        <div className="p-8 border-b border-slate-200 bg-white flex-shrink-0">
+                        <div className="p-5 border-b border-slate-200 bg-white flex-shrink-0">
                             <div className="mb-4 flex flex-wrap items-center gap-2">
                                 <span className={`inline-block px-2 py-1 text-xs font-bold rounded uppercase tracking-wide ${currentQuestion.section === 'reading' ? 'bg-blue-50 text-blue-600' :
                                         currentQuestion.section === 'listening' ? 'bg-purple-50 text-purple-600' :
@@ -124,7 +124,7 @@ export const QuizViewReading: React.FC<QuizViewReadingProps> = ({
                                 )}
                             </div>
 
-                            <div className="text-left font-serif text-xl font-medium text-slate-800 leading-relaxed">
+                            <div className="text-left font-serif text-lg font-medium text-slate-800 leading-relaxed">
                                 {isTyping && !showExplanation ? (
                                     <Typewriter
                                         text={currentQuestion.prompt}
@@ -160,7 +160,7 @@ export const QuizViewReading: React.FC<QuizViewReadingProps> = ({
                         </div>
 
                         {/* Options */}
-                        <div className="p-8 bg-white flex-1 overflow-y-auto">
+                        <div className="p-5 bg-white flex-1 overflow-y-auto">
                             <div className="grid gap-4 grid-cols-1">
                                 {currentQuestion.choices.map((choiceText, idx) => {
                                     const isSelected = selectedAnswerIndex === idx;
@@ -196,7 +196,7 @@ export const QuizViewReading: React.FC<QuizViewReadingProps> = ({
                                             <span className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-slate-500 font-bold text-sm mr-3 border border-slate-200 ${isEliminated ? 'opacity-50' : ''}`}>
                                                 {optionLabel}
                                             </span>
-                                            <span className={`text-lg flex-1 ${isEliminated ? 'line-through decoration-slate-400 decoration-2' : 'text-slate-800'}`}>
+                                            <span className={`text-sm flex-1 ${isEliminated ? 'line-through decoration-slate-400 decoration-2' : 'text-slate-800'}`}>
                                                 {choiceText}
                                             </span>
                                             {!showExplanation && (
@@ -246,7 +246,7 @@ export const QuizViewReading: React.FC<QuizViewReadingProps> = ({
                         )}
                     </div>
                     <div className="flex justify-end pt-4 border-t border-slate-200">
-                        <Button onClick={onNext} className="w-full md:w-auto text-lg px-8">
+                        <Button onClick={onNext} className="w-full text-base px-6">
                             {isLastQuestion ? "Finish Quiz" : "Next Question"} <ArrowRight className="ml-2 w-5 h-5" />
                         </Button>
                     </div>

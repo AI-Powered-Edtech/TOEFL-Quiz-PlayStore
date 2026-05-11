@@ -44,7 +44,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({ currentView, onNavig
         <nav 
             id="mobile-tab-bar"
             aria-label="Primary navigation"
-            className="fixed left-4 right-4 z-50 bg-white/90 backdrop-blur-md shadow-xl shadow-slate-200/50 border border-white/50 rounded-2xl md:left-1/2 md:right-auto md:w-[min(40rem,calc(100vw-2rem))] md:-translate-x-1/2 md:px-6"
+            className="fixed left-1/2 z-50 w-[calc(100%-2rem)] max-w-[calc(28rem-2rem)] -translate-x-1/2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-xl shadow-slate-200/50 dark:shadow-black/30 border border-white/50 dark:border-slate-800 rounded-2xl px-0"
             style={{ bottom: 'calc(1rem + var(--sab))' }}
         >
             <div className="px-2 py-3">
@@ -59,7 +59,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({ currentView, onNavig
                                 aria-label={tab.label}
                                 aria-current={active ? 'page' : undefined}
                                 onClick={() => handleTabClick(tab.id)}
-                                className={`flex flex-col items-center justify-center p-1 transition-all duration-300 min-w-[56px] min-h-[48px] rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 group relative ${active ? 'scale-110' : 'hover:scale-105'}`}
+                                className={`flex flex-col items-center justify-center p-1 transition-all duration-300 min-w-[56px] min-h-[48px] rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 group relative ${active ? 'scale-[1.03]' : 'hover:scale-[1.02]'}`}
                                 data-testid={`tab-${tab.id}`}
                             >
                                 {active && (

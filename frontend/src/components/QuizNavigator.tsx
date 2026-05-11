@@ -78,12 +78,12 @@ export const QuizNavigator: React.FC<QuizNavigatorProps> = React.memo(({
         <>
             {/* Expanded Review Grid (Slide Up) */}
             <div
-                className={`fixed inset-x-0 bottom-16 z-40 bg-white border-t border-slate-200 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] transition-transform duration-300 ease-out rounded-t-2xl ${isOpen ? 'translate-y-0' : 'translate-y-[120%]'
+                className={`fixed left-1/2 bottom-16 z-40 w-full max-w-md -translate-x-1/2 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] transition-transform duration-300 ease-out rounded-t-2xl ${isOpen ? 'translate-y-0' : 'translate-y-[120%]'
                     }`}
                 style={{ maxHeight: '70vh' }}
             >
                 <div
-                    className="p-4 bg-white border-b border-slate-100 rounded-t-2xl flex justify-between items-center sticky top-0 z-10 cursor-pointer"
+                    className="p-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 rounded-t-2xl flex justify-between items-center sticky top-0 z-10 cursor-pointer"
                     onClick={() => setIsOpen(false)}
                 >
                     <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm uppercase tracking-wide">
@@ -95,7 +95,7 @@ export const QuizNavigator: React.FC<QuizNavigatorProps> = React.memo(({
                     </button>
                 </div>
 
-                <div className="p-4 overflow-y-auto max-h-[60vh] custom-scrollbar bg-slate-50/50">
+                <div className="p-4 overflow-y-auto max-h-[60vh] custom-scrollbar bg-slate-50/50 dark:bg-slate-950/60">
                     <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2.5 pb-8">
                         {gridItems}
                     </div>
@@ -103,7 +103,7 @@ export const QuizNavigator: React.FC<QuizNavigatorProps> = React.memo(({
             </div>
 
             {/* Bottom Bar (Always Visible) */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-2 z-50 flex items-center justify-between shadow-lg safe-area-bottom h-16">
+            <div className="fixed bottom-0 left-1/2 z-50 flex h-16 w-full max-w-md -translate-x-1/2 items-center justify-between bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-4 py-2 shadow-lg safe-area-bottom">
 
                 {/* Left: Counter */}
                 <div className="flex items-center gap-3 w-1/4">

@@ -196,6 +196,37 @@ html.dark .pdf-scrollbar::-webkit-scrollbar-thumb { background: rgb(71 85 105); 
 html.dark .pdf-scrollbar::-webkit-scrollbar-thumb:hover { background: rgb(100 116 139); }
 
 
+
+@layer components {
+    .app-phone-width {
+        width: 100%;
+        max-width: 28rem;
+    }
+
+    .app-shell-fixed {
+        position: fixed;
+        left: 50%;
+        width: 100%;
+        max-width: 28rem;
+        transform: translateX(-50%);
+    }
+
+    .app-card {
+        border-radius: 1.5rem;
+        border: 1px solid var(--color-border-subtle);
+        background: var(--color-surface-card);
+        box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+    }
+
+    .app-screen {
+        min-height: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: var(--color-surface-app);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: 0.01ms !important;

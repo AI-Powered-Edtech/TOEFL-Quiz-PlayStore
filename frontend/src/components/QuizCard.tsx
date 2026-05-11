@@ -134,7 +134,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
     };
 
     return (
-        <div className="max-w-2xl mx-auto flex flex-col h-full">
+        <div className="max-w-md mx-auto flex flex-col h-full">
 
             {/* CARD CONTAINER */}
             <div className="bg-white rounded-[24px] shadow-xl shadow-slate-200/60 border border-slate-100 overflow-hidden flex flex-col relative z-10">
@@ -255,7 +255,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                                                 onClick={(e) => toggleElimination(e, idx)}
                                                 className={`p-2 rounded-full transition-all ${isEliminated
                                                     ? 'text-orange-500 bg-orange-50 hover:bg-orange-100'
-                                                    : 'text-slate-300 opacity-0 group-hover:opacity-100 hover:bg-slate-100'
+                                                    : 'text-slate-300 opacity-70 group-hover:opacity-100 hover:bg-slate-100'
                                                     }`}
                                             >
                                                 <Ban className="w-4 h-4" />

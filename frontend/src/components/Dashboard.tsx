@@ -152,6 +152,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div className="px-4 pt-4 pb-3">
                         <nav className="flex items-center justify-between gap-3">
                             <button
+                                type="button"
                                 aria-label="Notifications"
                                 onClick={onOpenNotifications}
                                 className="p-2.5 bg-white rounded-full shadow-sm border border-slate-100 hover:bg-slate-50 transition-colors relative"
@@ -162,20 +163,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                 )}
                             </button>
 
-                            <button className="flex-1 flex items-center justify-center gap-2 bg-white rounded-full px-4 py-2.5 shadow-sm border border-slate-100 hover:shadow-md transition-all">
+                            <button type="button" aria-label="TOEFL Quiz AI home" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-full px-4 py-2.5 shadow-sm border border-slate-100 hover:shadow-md transition-all">
                                 <span className="font-serif font-bold text-slate-800 text-sm tracking-tight">
                                     TOEFL Quiz AI
                                 </span>
                             </button>
 
-                            {/* HIDDEN DEBUG BENCHMARK BUTTON FOR PLAYWRIGHT */}
-                            <button id="debug-tts-benchmark" style={{ display: 'none' }} onClick={() => onNavigate(AppView.TTS_BENCHMARK)}>
-                                Benchmark
-                            </button>
-
                             <div className="flex items-center gap-2">
                                 {streak > 0 && (
                                     <button
+                                        type="button"
+                                        aria-label="View leaderboard"
                                         onClick={() => onNavigate(AppView.LEADERBOARD)}
                                         className="flex items-center gap-1.5 bg-orange-50 hover:bg-orange-100 border border-orange-100 px-3 py-1.5 rounded-full transition-colors cursor-pointer"
                                         title="View Leaderboard"
@@ -185,6 +183,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                     </button>
                                 )}
                                 <button
+                                    type="button"
                                     aria-label="Profile Settings"
                                     onClick={() => onNavigate(AppView.PROFILE)}
                                     className="relative p-2 bg-white rounded-full shadow-sm border border-slate-100 hover:shadow-md transition-all"
@@ -199,19 +198,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <LandingSocialProof />
 
                     {/* 2. Greeting */}
-                    <div className="px-5 md:px-8">
+                    <div className="px-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p data-testid="dashboard-greeting" className="text-slate-500 text-xs md:text-sm font-medium mb-0.5">Let's learn</p>
-                                <h1 className="text-xl md:text-2xl font-bold text-slate-900 font-serif">
+                                <p data-testid="dashboard-greeting" className="text-slate-500 text-xs font-medium mb-0.5">Let's learn</p>
+                                <h1 className="text-xl font-bold text-slate-900 font-serif">
                                     {userName}
                                 </h1>
                             </div>
 
                             {/* Section Badge - shows current focus section */}
                             {todaysFocus && (
-                                <div className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-semibold border border-blue-100">
-                                    <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                                <div className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold border border-blue-100">
+                                    <Sparkles className="w-3.5 h-3.5" />
                                     <span>{todaysFocus.section}</span>
                                 </div>
                             )}
@@ -221,8 +220,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </header>
 
             {/* --- SCROLLABLE CONTENT --- */}
-            <main className="flex-1 overflow-y-auto custom-scrollbar pb-24 px-4 pt-2 md:px-8 md:pt-6">
-                <div className="w-full max-w-7xl mx-auto">
+            <main className="flex-1 overflow-y-auto custom-scrollbar pb-24 px-4 pt-2">
+                <div className="w-full max-w-md mx-auto">
 
                     {/* 3. Resume Banner (if active session) */}
                     {hasActiveSession && onResumeSession && (
@@ -251,7 +250,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div data-testid="todays-focus" className="mb-4">
                         <div
                             onClick={handleStartSession}
-                            className={`relative rounded-[24px] p-5 md:p-10 cursor-pointer group overflow-hidden shadow-lg transition-all duration-300 ${currentTheme.shadow}`}
+                            className={`relative rounded-[24px] p-5 cursor-pointer group overflow-hidden shadow-lg transition-all duration-300 ${currentTheme.shadow}`}
                             style={{
                                 background: currentTheme.gradient
                             }}
@@ -261,25 +260,25 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                             {isLoadingFocus ? (
                                 // Loading skeleton matched to loaded state height
-                                <div className="animate-pulse min-h-[160px] md:min-h-[220px] flex flex-col justify-between">
+                                <div className="animate-pulse min-h-[160px] flex flex-col justify-between">
                                     <div>
                                         <div className="h-4 bg-white/20 rounded-md w-28 mb-4"></div>
-                                        <div className="h-8 md:h-12 bg-white/20 rounded-lg w-3/4 mb-3"></div>
-                                        <div className="h-4 md:h-6 bg-white/20 rounded-md w-1/2 mb-6"></div>
+                                        <div className="h-8 bg-white/20 rounded-lg w-3/4 mb-3"></div>
+                                        <div className="h-4 bg-white/20 rounded-md w-1/2 mb-6"></div>
                                     </div>
-                                    <div className="w-32 md:w-48 h-10 md:h-14 bg-white/20 rounded-full mt-auto"></div>
+                                    <div className="w-32 h-10 bg-white/20 rounded-full mt-auto"></div>
                                 </div>
                             ) : focusError ? (
-                                <div role="alert" aria-live="assertive" className="relative z-10 min-h-[160px] md:min-h-[220px] flex flex-col justify-between text-white">
+                                <div role="alert" aria-live="assertive" className="relative z-10 min-h-[160px] flex flex-col justify-between text-white">
                                     <div>
-                                        <div className="inline-flex items-center gap-2 text-white/85 text-[10px] md:text-sm font-bold uppercase tracking-widest mb-2 md:mb-3">
-                                            <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                                        <div className="inline-flex items-center gap-2 text-white/85 text-[10px] font-bold uppercase tracking-widest mb-2 md:mb-3">
+                                            <Sparkles className="w-3.5 h-3.5" />
                                             TODAY'S FOCUS
                                         </div>
-                                        <h2 className="text-white text-lg md:text-3xl font-bold leading-tight mb-2 md:mb-3 font-serif">
+                                        <h2 className="text-white text-lg font-bold leading-tight mb-2 md:mb-3 font-serif">
                                             Rekomendasi AI belum bisa dimuat
                                         </h2>
-                                        <p className="text-white/85 text-xs md:text-base mb-4 md:mb-6 leading-relaxed max-w-md">
+                                        <p className="text-white/85 text-xs mb-4 md:mb-6 leading-relaxed max-w-md">
                                             Koneksi AI sedang tidak stabil. Kamu tetap bisa lanjut latihan manual tanpa menunggu rekomendasi.
                                         </p>
                                     </div>
@@ -287,7 +286,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                         <button
                                             type="button"
                                             onClick={(event) => { event.stopPropagation(); fetchTodaysFocus(); }}
-                                            className="inline-flex items-center gap-2 bg-white text-blue-700 px-4 py-2 rounded-full text-xs md:text-sm font-bold shadow-md hover:shadow-lg transition-all"
+                                            className="inline-flex items-center gap-2 bg-white text-blue-700 px-4 py-2 rounded-full text-xs font-bold shadow-md hover:shadow-lg transition-all"
                                         >
                                             <RotateCcw className="w-3.5 h-3.5" />
                                             Coba lagi
@@ -295,7 +294,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                         <button
                                             type="button"
                                             onClick={(event) => { event.stopPropagation(); onNavigate(AppView.PRACTICE_HUB); }}
-                                            className="inline-flex items-center gap-2 bg-white/15 text-white border border-white/25 px-4 py-2 rounded-full text-xs md:text-sm font-bold hover:bg-white/20 transition-all"
+                                            className="inline-flex items-center gap-2 bg-white/15 text-white border border-white/25 px-4 py-2 rounded-full text-xs font-bold hover:bg-white/20 transition-all"
                                         >
                                             Buka Practice
                                             <ChevronRight className="w-3.5 h-3.5" />
@@ -306,13 +305,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                 <>
                                     <div className="relative z-10 flex items-start justify-between">
                                         <div className="flex-1 pr-3">
-                                            <div className="inline-flex items-center text-white/80 text-[10px] md:text-sm font-bold uppercase tracking-widest mb-1.5 md:mb-3">
+                                            <div className="inline-flex items-center text-white/80 text-[10px] font-bold uppercase tracking-widest mb-1.5">
                                                 TODAY'S FOCUS
                                             </div>
-                                            <h2 className="text-white text-lg md:text-4xl font-bold leading-tight mb-1 md:mb-3 font-serif">
+                                            <h2 className="text-white text-lg font-bold leading-tight mb-1 font-serif">
                                                 {todaysFocus ? getCleanSkillName(todaysFocus.skill) : 'Start Learning'}
                                             </h2>
-                                            <p className="text-white/80 text-xs md:text-lg mb-3 md:mb-8 line-clamp-2 leading-relaxed">
+                                            <p className="text-white/80 text-xs mb-3 line-clamp-2 leading-relaxed">
                                                 {todaysFocus ? (
                                                     <>
                                                         {todaysFocus.accuracy > 0 ? (
@@ -328,39 +327,39 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                                     </>
                                                 ) : 'Begin your learning journey'}
                                             </p>
-                                            <button data-testid="start-session-btn" className={`inline-flex items-center gap-2 bg-white ${currentTheme.buttonText} px-3.5 py-1.5 md:px-8 md:py-4 rounded-full text-xs md:text-lg font-bold shadow-md hover:shadow-lg transition-all group-hover:scale-105`}>
+                                            <button data-testid="start-session-btn" className={`inline-flex items-center gap-2 bg-white ${currentTheme.buttonText} px-3.5 py-1.5 rounded-full text-xs font-bold shadow-md hover:shadow-lg transition-all group-hover:scale-105`}>
                                                 <span>Start session</span>
-                                                <div className={`w-4 h-4 md:w-6 md:h-6 ${currentTheme.iconBg} rounded-full flex items-center justify-center`}>
-                                                    <Play className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 text-white fill-white ml-0.5" />
+                                                <div className={`w-4 h-4 ${currentTheme.iconBg} rounded-full flex items-center justify-center`}>
+                                                    <Play className="w-2.5 h-2.5 text-white fill-white ml-0.5" />
                                                 </div>
                                             </button>
                                         </div>
                                         <div className="relative mt-1">
-                                            <div className="w-12 h-12 md:w-24 md:h-24 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 shadow-lg">
-                                                <currentTheme.icon className="w-6 h-6 md:w-12 md:h-12 text-white" />
+                                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 shadow-lg">
+                                                <currentTheme.icon className="w-6 h-6 text-white" />
                                             </div>
                                             <div className="absolute -bottom-1.5 -left-1.5 flex gap-0.5">
-                                                <div className="w-5 h-5 md:w-10 md:h-10 bg-orange-500 rounded-md flex items-center justify-center shadow-md">
-                                                    <Zap className="w-3 h-3 md:w-6 md:h-6 text-white fill-white" />
+                                                <div className="w-5 h-5 bg-orange-500 rounded-md flex items-center justify-center shadow-md">
+                                                    <Zap className="w-3 h-3 text-white fill-white" />
                                                 </div>
-                                                <div className="w-5 h-5 md:w-10 md:h-10 bg-yellow-400 rounded-md flex items-center justify-center shadow-md">
-                                                    <Flame className="w-3 h-3 md:w-6 md:h-6 text-white fill-white" />
+                                                <div className="w-5 h-5 bg-yellow-400 rounded-md flex items-center justify-center shadow-md">
+                                                    <Flame className="w-3 h-3 text-white fill-white" />
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="relative z-10 flex items-center gap-3 mt-3 md:mt-6 pt-2.5 md:pt-4 border-t border-white/20">
-                                        <div className="flex items-center gap-1.5 text-white/90 text-[10px] md:text-base">
-                                            <div className="w-3.5 h-3.5 md:w-5 md:h-5 rounded-full bg-white/20 flex items-center justify-center">
-                                                <Sparkles className="w-2 h-2 md:w-3 md:h-3" />
+                                    <div className="relative z-10 flex items-center gap-3 mt-3 pt-2.5 border-t border-white/20">
+                                        <div className="flex items-center gap-1.5 text-white/90 text-[10px]">
+                                            <div className="w-3.5 h-3.5 rounded-full bg-white/20 flex items-center justify-center">
+                                                <Sparkles className="w-2 h-2" />
                                             </div>
                                             <span>{todaysFocus?.section || 'Structure'}</span>
                                         </div>
                                         {todaysFocus?.quizCount ? (
-                                            <div className="flex items-center gap-1.5 text-white/90 text-[10px] md:text-base">
-                                                <div className="w-3.5 h-3.5 md:w-5 md:h-5 rounded-full bg-white/20 flex items-center justify-center">
-                                                    <Target className="w-2 h-2 md:w-3 md:h-3" />
+                                            <div className="flex items-center gap-1.5 text-white/90 text-[10px]">
+                                                <div className="w-3.5 h-3.5 rounded-full bg-white/20 flex items-center justify-center">
+                                                    <Target className="w-2 h-2" />
                                                 </div>
                                                 <span>{todaysFocus.quizCount} quizzes</span>
                                             </div>
@@ -375,19 +374,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                     {/* 5. Quick Actions */}
                     <div className="mb-5">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+                        <div className="grid grid-cols-2 gap-3">
                             <button
                                 data-testid="quick-action-pdf"
                                 onClick={() => onNavigate(AppView.PDF_UPLOAD)}
-                                className="bg-white p-4 md:p-6 rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all text-left group"
+                                className="bg-white p-4 rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all text-left group"
                             >
-                                <div className="flex items-center gap-3 md:gap-5">
-                                    <div className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-                                        <FileText className="w-5 h-5 md:w-8 md:h-8 text-slate-500 group-hover:text-purple-600 transition-colors" />
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                                        <FileText className="w-5 h-5 text-slate-500 group-hover:text-purple-600 transition-colors" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-slate-800 text-sm md:text-xl mb-0.5 md:mb-1">PDF to Quiz</h3>
-                                        <p className="text-[11px] md:text-sm text-slate-500 leading-tight line-clamp-2">
+                                        <h3 className="font-bold text-slate-800 text-sm mb-0.5">PDF to Quiz</h3>
+                                        <p className="text-[11px] text-slate-500 leading-tight line-clamp-2">
                                             Upload & generate
                                         </p>
                                     </div>
@@ -397,20 +396,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             <button
                                 data-testid="quick-action-error-jail"
                                 onClick={() => onNavigate(AppView.ERROR_JAIL)}
-                                className="bg-white p-4 md:p-6 rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all text-left group relative"
+                                className="bg-white p-4 rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all text-left group relative"
                             >
                                 {jailCount > 0 && (
-                                    <span className="absolute top-2 right-2 md:top-3 md:right-3 bg-orange-500 text-white text-[9px] md:text-xs font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">
+                                    <span className="absolute top-2 right-2 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">
                                         {jailCount}
                                     </span>
                                 )}
-                                <div className="flex items-center gap-3 md:gap-5">
-                                    <div className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
-                                        <Lock className="w-5 h-5 md:w-8 md:h-8 text-slate-500 group-hover:text-orange-600 transition-colors" />
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
+                                        <Lock className="w-5 h-5 text-slate-500 group-hover:text-orange-600 transition-colors" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-slate-800 text-sm md:text-xl mb-0.5 md:mb-1">Error Jail</h3>
-                                        <p className="text-[11px] md:text-sm text-slate-500 leading-tight line-clamp-2">
+                                        <h3 className="font-bold text-slate-800 text-sm mb-0.5">Error Jail</h3>
+                                        <p className="text-[11px] text-slate-500 leading-tight line-clamp-2">
                                             Fix past mistakes
                                         </p>
                                     </div>
@@ -431,35 +430,35 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 pb-4">
+                        <div className="grid grid-cols-2 gap-3 pb-4">
                             <button
                                 data-testid="skill-tool-writing-gym"
                                 onClick={() => onNavigate(AppView.WRITING_GYM)}
-                                className="bg-white p-3 md:p-5 md:rounded-[24px] rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md transition-all w-full text-left group"
+                                className="bg-white p-3 rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md transition-all w-full text-left group"
                             >
                                 <div className="flex items-center justify-between mb-2">
-                                    <div className="w-9 h-9 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                        <Dumbbell className="w-4.5 h-4.5 md:w-6 md:h-6 text-orange-500" />
+                                    <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                        <Dumbbell className="w-4.5 h-4.5 text-orange-500" />
                                     </div>
-                                    <span className="text-[9px] md:text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 md:px-2.5 md:py-0.5 rounded-full">Grammar</span>
+                                    <span className="text-[9px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">Grammar</span>
                                 </div>
-                                <h4 className="font-bold text-slate-800 text-xs md:text-base mb-0.5 font-serif group-hover:text-blue-600 transition-colors">Writing Gym</h4>
-                                <p className="text-[10px] md:text-xs text-slate-500 leading-tight">Build muscle memory</p>
+                                <h4 className="font-bold text-slate-800 text-xs mb-0.5 font-serif group-hover:text-blue-600 transition-colors">Writing Gym</h4>
+                                <p className="text-[10px] text-slate-500 leading-tight">Build muscle memory</p>
                             </button>
 
                             <button
                                 data-testid="skill-tool-essay-dojo"
                                 onClick={() => onNavigate(AppView.ESSAY_DOJO_HUB)}
-                                className="bg-white p-3 md:p-5 md:rounded-[24px] rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md transition-all w-full text-left group"
+                                className="bg-white p-3 rounded-[20px] border border-slate-100 shadow-sm hover:shadow-md transition-all w-full text-left group"
                             >
                                 <div className="flex items-center justify-between mb-2">
-                                    <div className="w-9 h-9 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                        <PenTool className="w-4.5 h-4.5 md:w-6 md:h-6 text-blue-600" />
+                                    <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                        <PenTool className="w-4.5 h-4.5 text-blue-600" />
                                     </div>
-                                    <span className="text-[9px] md:text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 md:px-2.5 md:py-0.5 rounded-full">Writing</span>
+                                    <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">Writing</span>
                                 </div>
-                                <h4 className="font-bold text-slate-800 text-xs md:text-base mb-0.5 font-serif group-hover:text-blue-600 transition-colors">Essay Dojo</h4>
-                                <p className="text-[10px] md:text-xs text-slate-500 leading-tight">Timed AI grading</p>
+                                <h4 className="font-bold text-slate-800 text-xs mb-0.5 font-serif group-hover:text-blue-600 transition-colors">Essay Dojo</h4>
+                                <p className="text-[10px] text-slate-500 leading-tight">Timed AI grading</p>
                             </button>
 
 

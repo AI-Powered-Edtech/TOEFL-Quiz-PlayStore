@@ -123,7 +123,7 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({ onNavigate, onBack, 
         return (
             <div className="flex flex-col min-h-full bg-white">
                 <div className="px-4 py-4 border-b border-slate-100">
-                    <button onClick={onBack} className="p-2 hover:bg-slate-50 rounded-xl"><ArrowLeft className="w-6 h-6 text-slate-600" /></button>
+                    <button type="button" aria-label="Back to blog" onClick={onBack} className="p-2 hover:bg-slate-50 rounded-xl"><ArrowLeft className="w-6 h-6 text-slate-600" /></button>
                 </div>
                 <div className="flex-1 flex items-center justify-center p-6 text-center">
                     <div className="max-w-sm">
@@ -144,7 +144,7 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({ onNavigate, onBack, 
         <div className="flex flex-col min-h-full bg-white relative">
             <motion.div className="fixed top-0 left-0 right-0 h-1.5 bg-blue-600 origin-left z-50 rounded-r-full" style={progressStyle}  />
             <div className="px-4 py-4 flex items-center justify-between border-b border-slate-100 sticky top-0 bg-white/80 backdrop-blur-md z-40">
-                <button onClick={onBack} className="p-2 hover:bg-slate-50 rounded-xl transition-colors"><ArrowLeft className="w-6 h-6 text-slate-600" /></button>
+                <button type="button" aria-label="Back to blog" onClick={onBack} className="p-2 hover:bg-slate-50 rounded-xl transition-colors"><ArrowLeft className="w-6 h-6 text-slate-600" /></button>
                 <div className="flex gap-2">
                     <button onClick={toggleBookmark} className={`p-2 rounded-xl transition-all ${isBookmarked ? 'bg-blue-50 text-blue-600' : 'hover:bg-slate-50 text-slate-400'}`} aria-label="Save lesson"><Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} /></button>
                     <button onClick={handleShare} className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-400" aria-label="Share lesson"><Share2 className="w-5 h-5" /></button>
@@ -202,7 +202,7 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({ onNavigate, onBack, 
                         >
                             <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-white z-10 sticky top-0">
                                 <div><h3 className="text-xl font-bold text-slate-900">Choose a Skill</h3><p className="text-sm text-slate-500 mt-1">Select a specific skill to practice what you learned.</p></div>
-                                <button onClick={() => setShowSkillPicker(false)} className="p-2 h-10 w-10 flex items-center justify-center text-slate-400 hover:bg-slate-100 rounded-full transition-colors shrink-0"><X className="w-6 h-6" /></button>
+                                <button type="button" aria-label="Close skill picker" onClick={() => setShowSkillPicker(false)} className="p-2 h-10 w-10 flex items-center justify-center text-slate-400 hover:bg-slate-100 rounded-full transition-colors shrink-0"><X className="w-6 h-6" /></button>
                             </div>
                             <div className="p-6 overflow-y-auto custom-scrollbar bg-slate-50 flex-1">
                                 <SkillSelector onSelectSkill={handleSelectSkill} userId={user?.id} initialSection={post.category === 'Structure' || post.category === 'Written' ? 'STRUCTURE' : (post.category === 'Reading' ? 'READING' : 'LISTENING')} />

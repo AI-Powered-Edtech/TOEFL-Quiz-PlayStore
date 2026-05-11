@@ -3,6 +3,28 @@ import { apiV2 } from './apiV2';
 import { BlogPost, BLOG_POSTS } from '../data/blogPosts';
 import { debugLog } from '../utils/debugLogger';
 
+const BLOG_API_TIMEOUT_MS = 2500;
+
+async function withBlogTimeout<T>(promise: Promise<T>, fallback: T, label: string): Promise<T> {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    try {
+        return await Promise.race([
+            promise,
+            new Promise<T>((resolve) => {
+                timeoutId = setTimeout(() => {
+                    debugLog('BlogService', `${label} timed out; using local fallback`);
+                    resolve(fallback);
+                }, BLOG_API_TIMEOUT_MS);
+            })
+        ]);
+    } catch (error) {
+        debugLog('BlogService', `${label} failed; using local fallback`, error);
+        return fallback;
+    } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+    }
+}
+
 
 // Try the new declarative VWFD endpoint first; fall back to the imperative
 // Rust handler if VWFD is unreachable or returns an error.
@@ -122,20 +144,48 @@ function detailRowToLegacy(row: PostDetailRow, skillId?: string): BlogPost {
     };
 }
 
+function mergeLegacyPosts(primary: BlogPost[], fallback: BlogPost[] = BLOG_POSTS): BlogPost[] {
+    const byId = new Map<string, BlogPost>();
+    for (const post of [...fallback, ...primary]) {
+        const key = post.id || String(post.skillId || post.title);
+        const existing = byId.get(key);
+        byId.set(key, {
+            ...(existing || {} as BlogPost),
+            ...post,
+            excerpt: post.excerpt || existing?.excerpt || 'TOEFL lesson is available offline.',
+            content: post.content || existing?.content || '',
+            thumbnail: post.thumbnail || existing?.thumbnail || 'bg-blue-500',
+        });
+    }
+    return Array.from(byId.values());
+}
+
+function findLocalPost(skillId: string): BlogPost | undefined {
+    const normalized = skillId.toLowerCase();
+    const numeric = skillId.replace(/\D/g, '');
+    return BLOG_POSTS.find(p =>
+        p.id.toLowerCase() === normalized ||
+        String(p.skillId || '') === numeric ||
+        p.id.toLowerCase().includes(normalized) ||
+        (numeric.length > 0 && p.id.toLowerCase().includes(numeric))
+    );
+}
+
 export async function fetchBlogPost(skillId: string): Promise<BlogPost | null> {
     try {
-        const response = await api.get<PostDetailRow>(`/api/blog/posts/${skillId}`);
+        const response = await withBlogTimeout(api.get<PostDetailRow>(`/api/blog/posts/${skillId}`), { data: undefined as PostDetailRow | undefined, error: null as any }, 'fetchBlogPost');
         if (response.data) {
-            return detailRowToLegacy(response.data, skillId);
+            const remotePost = detailRowToLegacy(response.data, skillId);
+            if (remotePost.content && remotePost.content.trim().length > 0) return remotePost;
         }
-        const localPost = BLOG_POSTS.find(p => p.id === skillId || p.skillId?.toString() === skillId);
+        const localPost = findLocalPost(skillId);
         if (localPost) return localPost;
-        return null;
+        return BLOG_POSTS[0] || null;
     } catch (e) {
         debugLog('BlogService', 'Error fetching post', e);
-        const localPost = BLOG_POSTS.find(p => p.id === skillId || p.skillId?.toString() === skillId);
+        const localPost = findLocalPost(skillId);
         if (localPost) return localPost;
-        return null;
+        return BLOG_POSTS[0] || null;
     }
 }
 
@@ -143,12 +193,12 @@ export async function fetchBlogPostsBySection(
     section: 'structure' | 'written' | 'listening' | 'reading'
 ): Promise<BlogPost[]> {
     try {
-        const data = await fetchBlogPostsList<PostListRow[]>();
+        const data: PostListRow[] = await withBlogTimeout<PostListRow[]>(fetchBlogPostsList<PostListRow[]>(), [], 'fetchBlogPostsList');
         const response = { data, error: null as any };
         if (response.data && response.data.length > 0) {
-            return response.data
+            return mergeLegacyPosts(response.data
                 .filter(p => p.section === section)
-                .map(listRowToLegacy);
+                .map(listRowToLegacy), BLOG_POSTS.filter(p => p.category.toLowerCase() === section.toLowerCase()));
         }
         return BLOG_POSTS.filter(p => p.category.toLowerCase() === section.toLowerCase());
     } catch (e) {
@@ -159,12 +209,12 @@ export async function fetchBlogPostsBySection(
 
 export async function fetchFeaturedPosts(): Promise<BlogPost[]> {
     try {
-        const data = await fetchBlogPostsList<PostListRow[]>();
+        const data: PostListRow[] = await withBlogTimeout<PostListRow[]>(fetchBlogPostsList<PostListRow[]>(), [], 'fetchBlogPostsList');
         const response = { data, error: null as any };
         if (response.data && response.data.length > 0) {
-            return response.data
+            return mergeLegacyPosts(response.data
                 .filter(p => p.is_featured === 1)
-                .map(listRowToLegacy);
+                .map(listRowToLegacy), BLOG_POSTS);
         }
         return BLOG_POSTS;
     } catch (e) {
@@ -176,9 +226,9 @@ export async function fetchFeaturedPosts(): Promise<BlogPost[]> {
 
 export async function fetchAllBlogPosts(): Promise<BlogPost[]> {
     try {
-        const data = await fetchBlogPostsList<PostListRow[]>();
+        const data: PostListRow[] = await withBlogTimeout<PostListRow[]>(fetchBlogPostsList<PostListRow[]>(), [], 'fetchBlogPostsList');
         if (data && data.length > 0) {
-            return data.map(listRowToLegacy);
+            return mergeLegacyPosts(data.map(listRowToLegacy), BLOG_POSTS);
         }
         return BLOG_POSTS;
     } catch (e) {
@@ -205,7 +255,7 @@ export async function incrementBlogPostViews(skillId: string): Promise<void> {
 
 export async function adminFetchAllPosts(): Promise<BlogPostDB[]> {
     try {
-        const data = await fetchBlogPostsList<PostListRow[]>();
+        const data: PostListRow[] = await withBlogTimeout<PostListRow[]>(fetchBlogPostsList<PostListRow[]>(), [], 'fetchBlogPostsList');
         const response = { data, error: null as any };
         if (response.data) {
             return response.data.map(p => ({

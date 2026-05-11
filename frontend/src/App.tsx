@@ -26,6 +26,41 @@ import { getBackTargetForView, getPrimaryTabViews, getPathForView, getViewForPat
 import { AppView, SectionType } from './types';
 import { debugLog } from './utils/debugLogger';
 
+
+const getQuizGenerationErrorMessage = (error: unknown): string => {
+    const err = error as any;
+    const raw = [
+        err?.message,
+        err?.name,
+        err?.code,
+        err?.status,
+        err?.details,
+        err?.cause?.message,
+        err?.cause?.code,
+        err?.cause?.status,
+        typeof error === 'string' ? error : '',
+    ].filter(Boolean).join(' ').toLowerCase();
+
+    const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    if (isOffline || /failed to fetch|network|connection|timeout|timed out|offline|net::|refused|unreachable|dns/.test(raw)) {
+        return 'Koneksi ke server AI gagal. Cek internet kamu atau coba lagi beberapa saat lagi.';
+    }
+
+    if (/quota|credit|credits|billing|insufficient|payment|limit exceeded|rate limit|too many requests|429|token budget|tokens? exhausted|usage cap/.test(raw)) {
+        return 'Credit atau kuota AI sedang habis / limit provider tercapai. Coba lagi nanti atau periksa konfigurasi billing/kuota AI.';
+    }
+
+    if (/401|403|unauthorized|forbidden|api key|invalid key|permission|auth/.test(raw)) {
+        return 'Akses AI ditolak. API key atau izin backend perlu dicek.';
+    }
+
+    if (/500|502|503|504|internal server|bad gateway|service unavailable|gateway timeout|backend|server|circuit breaker|provider unavailable|groq/.test(raw)) {
+        return 'Server AI/backend sedang bermasalah. Coba lagi beberapa saat lagi.';
+    }
+
+    return 'AI gagal membuat soal saat ini. Coba lagi nanti atau pilih latihan manual dari Practice.';
+};
+
 const OfflineIndicator = () => {
     const { isOnline } = useNetworkState();
 
@@ -78,13 +113,16 @@ const App: React.FC = () => {
             });
         }
 
-        const handlePopState = () => {
+        const syncViewFromPath = () => {
             const nextView = getViewForPath(window.location.pathname);
             if (nextView && isRouteAvailable(nextView)) {
                 isRestoringHistoryRef.current = true;
                 useNavigationStore.getState().setCurrentView(nextView);
             }
         };
+
+        const handlePopState = () => syncViewFromPath();
+        syncViewFromPath();
         window.addEventListener('popstate', handlePopState);
 
         return () => {
@@ -203,17 +241,26 @@ const App: React.FC = () => {
             setCurrentView(AppView.QUIZ);
 
             const requestedQuestionCount = 5;
-            const questions = await generateQuizUnified(topicToUse, sect, requestedQuestionCount, numericSkillId);
+            let questions = [] as Awaited<ReturnType<typeof generateQuizUnified>>;
+            try {
+                questions = await generateQuizUnified(topicToUse, sect, requestedQuestionCount, numericSkillId);
+            } catch (generationError) {
+                console.warn('[App] AI quiz generation failed; showing user-facing error:', generationError);
+                quizStore.setStatus('idle');
+                setCurrentView(AppView.DASHBOARD);
+                showError(getQuizGenerationErrorMessage(generationError));
+                return;
+            }
 
             if (questions.length === 0) {
                 quizStore.setStatus('idle');
                 setCurrentView(AppView.DASHBOARD);
-                showError('Failed to generate questions. Please try again.');
+                showError('AI/backend tidak mengembalikan soal. Coba lagi nanti atau pilih latihan manual dari Practice.');
                 return;
             }
 
             if (questions.length < requestedQuestionCount) {
-                showError(`Only ${questions.length} valid questions were generated, so this practice set is shorter than usual.`);
+                showError(`Hanya ${questions.length} soal yang tersedia dari AI/backend, jadi sesi ini lebih singkat dari biasanya.`);
             }
 
             const questionsWithIds = questions.map(q => ({
@@ -385,21 +432,15 @@ const App: React.FC = () => {
             <div className="h-screen w-full bg-slate-900 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    <div className="text-white font-bold opacity-70 animate-pulse">Initializing Protocol...</div>
+                    <div className="text-white font-bold opacity-70 animate-pulse">Preparing your TOEFL practice...</div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-[100dvh] bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans w-full overflow-x-hidden md:px-4">
-        <div className="mx-auto min-h-[100dvh] w-full max-w-md sm:max-w-lg md:max-w-2xl relative flex flex-col overflow-x-hidden bg-[#F5F5FA] dark:bg-slate-950 shadow-sm md:shadow-2xl md:shadow-slate-900/10">
-            {import.meta.env.DEV && (
-                <button id="debug-tts-benchmark" style={{ display: 'none' }} onClick={() => setCurrentView(AppView.TTS_BENCHMARK)}>
-                    Benchmark
-                </button>
-            )}
-
+        <div className="min-h-[100dvh] bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans w-full overflow-x-hidden sm:px-4">
+        <div className="mx-auto min-h-[100dvh] w-full max-w-md relative flex flex-col overflow-x-hidden bg-[#F5F5FA] dark:bg-slate-950 shadow-sm sm:shadow-2xl sm:shadow-slate-900/10">
             <OfflineIndicator />
             <FeatureTourModal
                 isOpen={showFeatureTour}

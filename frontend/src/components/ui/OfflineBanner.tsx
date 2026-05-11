@@ -26,7 +26,7 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({
             aria-live="polite"
             aria-atomic="true"
             className={`
-                fixed bottom-[72px] inset-x-0 z-40 flex items-center justify-center gap-2
+                fixed bottom-[calc(5.25rem+var(--sab))] left-1/2 z-40 flex w-full max-w-md -translate-x-1/2 items-center justify-center gap-2
                 px-4 py-2.5 text-sm font-semibold
                 transition-all duration-300 ease-out
                 ${justReconnected

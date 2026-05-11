@@ -161,7 +161,7 @@ export class ErrorBoundary extends Component<Props, State> {
                                     className="bg-indigo-600 hover:bg-indigo-700 text-white"
                                 >
                                     <RefreshCw className="w-4 h-4 mr-2" />
-                                    Try Again
+                                    Coba lagi
                                 </Button>
                             )}
 
@@ -171,7 +171,7 @@ export class ErrorBoundary extends Component<Props, State> {
                                 className="border-slate-300 dark:border-slate-700"
                             >
                                 <RefreshCw className="w-4 h-4 mr-2" />
-                                Reload Page
+                                Muat ulang
                             </Button>
 
                             <Button
@@ -180,7 +180,7 @@ export class ErrorBoundary extends Component<Props, State> {
                                 className="text-slate-600 dark:text-slate-400"
                             >
                                 <Home className="w-4 h-4 mr-2" />
-                                Go Home
+                                Ke beranda
                             </Button>
                         </div>
 
@@ -224,7 +224,7 @@ export class ErrorBoundary extends Component<Props, State> {
             case 'timeout':
                 return 'Request Timed Out';
             default:
-                return 'Something Went Wrong';
+                return 'Terjadi kendala';
         }
     }
 

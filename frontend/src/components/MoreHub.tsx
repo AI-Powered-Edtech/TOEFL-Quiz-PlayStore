@@ -125,14 +125,16 @@ export const MoreHub: React.FC<MoreHubProps> = ({ onNavigate, onSignOut, user, p
                 <div className="px-5 pt-6 pb-6">
                     <div className="flex items-center gap-4">
                         <button
+                            type="button"
+                            aria-label="Back to home"
                             onClick={() => onNavigate(AppView.DASHBOARD)}
                             className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 transition-all active:scale-95"
                         >
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div>
-                            <h1 className="text-2xl font-bold text-white tracking-tight">More Menu</h1>
-                            <p className="text-blue-100 text-xs font-medium opacity-80">Profile, Settings & Tools</p>
+                            <h1 className="text-2xl font-bold text-white tracking-tight">More</h1>
+                            <p className="text-blue-100 text-xs font-medium opacity-80">Tools, settings, and progress</p>
                         </div>
                     </div>
                 </div>
@@ -203,7 +205,7 @@ export const MoreHub: React.FC<MoreHubProps> = ({ onNavigate, onSignOut, user, p
                             <FeatureCard
                                 icon={TrendingUp}
                                 title="Score Oracle"
-                                subtitle="Predict band"
+                                subtitle="Score insight"
                                 colorClass="bg-cyan-50 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400"
                                 onClick={() => onNavigate(AppView.ORACLE)}
                             />
@@ -230,7 +232,7 @@ export const MoreHub: React.FC<MoreHubProps> = ({ onNavigate, onSignOut, user, p
                             <FeatureCard
                                 icon={Database}
                                 title="Custom Practice"
-                                subtitle="Build drills"
+                                subtitle="Custom drills"
                                 colorClass="bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400"
                                 onClick={() => onNavigate(AppView.BANK)}
                             />

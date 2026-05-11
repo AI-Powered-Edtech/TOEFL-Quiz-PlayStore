@@ -63,7 +63,6 @@ export const PRIMARY_TAB_VIEWS: AppView[] = [
     AppView.SOCIAL_HUB,
     AppView.MORE_HUB,
     AppView.BLOG,
-    AppView.TTS_BENCHMARK,
 ];
 
 export const getPrimaryTabViews = (includeDev = import.meta.env.DEV): AppView[] => {

@@ -99,7 +99,7 @@ export const generateQuizUnified = async (
         console.log(`[AIProvider] Groq generated ${result.length} questions`);
         return result;
     } catch (error) {
-        console.error('[AIProvider] Generation failed:', error);
+        console.warn('[AIProvider] Generation unavailable:', error);
         throw toUserFriendlyError(error);
     }
 };

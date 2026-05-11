@@ -98,7 +98,7 @@ const TrendChart: React.FC<{
                 <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Score Progress</h3>
                 <div className="flex flex-col items-center justify-center py-8 text-slate-400">
                     <BarChart3 className="w-8 h-8 mb-2 opacity-40" />
-                    <p className="text-xs font-medium">Need at least 2 data points to show trend</p>
+                    <p className="text-xs font-medium">Butuh minimal 2 sesi untuk melihat tren</p>
                 </div>
             </div>
         );
@@ -203,7 +203,7 @@ const RecommendationCard: React.FC<{
                 onClick={handleAction}
                 className="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 active:opacity-70"
             >
-                Start Practicing <ChevronRight className="w-3 h-3" />
+                Mulai latihan <ChevronRight className="w-3 h-3" />
             </button>
         </div>
     );
@@ -279,7 +279,7 @@ const UnlockCard: React.FC<{
                     onClick={() => onNavigate(AppView.PRACTICE_HUB)}
                     className="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-sm shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 active:scale-95 transition-transform"
                 >
-                    Start Practicing
+                    Mulai latihan
                     <ChevronRight className="w-4 h-4" />
                 </button>
             </div>
@@ -492,7 +492,7 @@ export const ScoreOracleView: React.FC<ScoreOracleViewProps> = ({ onNavigate, us
             <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-950">
                 <div className="flex-shrink-0 bg-[#2563EB] z-10 px-5 py-6">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => onNavigate(AppView.MORE_HUB)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 text-white">
+                        <button type="button" aria-label="Back to More" onClick={() => onNavigate(AppView.MORE_HUB)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 text-white">
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div>
@@ -537,6 +537,8 @@ export const ScoreOracleView: React.FC<ScoreOracleViewProps> = ({ onNavigate, us
                 <div className="px-5 pt-6 pb-6">
                     <div className="flex items-center gap-4">
                         <button
+                            type="button"
+                            aria-label="Back to More"
                             onClick={() => onNavigate(AppView.MORE_HUB)}
                             className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 transition-all active:scale-95"
                         >
@@ -547,9 +549,11 @@ export const ScoreOracleView: React.FC<ScoreOracleViewProps> = ({ onNavigate, us
                                 Score Oracle
                                 <Sparkles className="w-5 h-5 text-amber-300" />
                             </h1>
-                            <p className="text-blue-100 text-xs font-medium opacity-80">Predict Your Test Scores</p>
+                            <p className="text-blue-100 text-xs font-medium opacity-80">TOEFL score insights</p>
                         </div>
                         <button
+                            type="button"
+                            aria-label="Refresh score insight"
                             onClick={handleRefresh}
                             disabled={refreshing}
                             className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 text-white active:scale-95 transition-all"

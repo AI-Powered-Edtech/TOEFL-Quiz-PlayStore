@@ -146,7 +146,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                 console.warn('Failed to fetch leaderboard:', error);
                 setLeaderboard([]);
                 setMyRank(null);
-                setLeaderboardError('Ringkasan komunitas belum bisa dimuat. Kamu tetap bisa memakai Social Hub dan lanjut latihan.');
+                setLeaderboardError('Ranking komunitas belum bisa dimuat. Kamu tetap bisa memakai Social Hub dan lanjut latihan.');
             } finally {
                 setLoading(false);
             }
@@ -257,6 +257,8 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                 <div className="px-5 pt-6 pb-6">
                     <div className="flex items-center gap-4">
                         <button
+                            type="button"
+                            aria-label="Back to home"
                             onClick={() => onNavigate(AppView.DASHBOARD)}
                             className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 transition-all active:scale-95"
                         >
@@ -264,7 +266,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                         </button>
                         <div>
                             <h1 className="text-2xl font-bold text-white tracking-tight">Social Hub</h1>
-                            <p className="text-blue-100 text-xs font-medium opacity-80">Compete, Connect, Conquer</p>
+                            <p className="text-blue-100 text-xs font-medium opacity-80">Community, friends, and rankings</p>
                         </div>
                     </div>
                 </div>
@@ -367,8 +369,8 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                                     <div role="alert" aria-live="polite" className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-blue-900 flex items-start gap-3">
                                         <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                                         <div className="flex-1">
-                                            <p className="text-sm font-bold">Ringkasan AI belum tersedia</p>
-                                            <p className="text-xs mt-1 text-blue-800">Kami gagal memuat insight AI saat ini, tapi komunitas dan latihan tetap bisa digunakan.</p>
+                                            <p className="text-sm font-bold">Ranking komunitas belum tersedia</p>
+                                            <p className="text-xs mt-1 text-blue-800">Kami gagal memuat ranking saat ini, tapi Social Hub dan latihan tetap bisa digunakan.</p>
                                         </div>
                                         <button
                                             type="button"
@@ -386,7 +388,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                                                     console.warn('Failed to retry leaderboard:', error);
                                                     setLeaderboard([]);
                                                     setMyRank(null);
-                                                    setLeaderboardError('Ringkasan komunitas belum bisa dimuat. Kamu tetap bisa memakai Social Hub dan lanjut latihan.');
+                                                    setLeaderboardError('Ranking komunitas belum bisa dimuat. Kamu tetap bisa memakai Social Hub dan lanjut latihan.');
                                                 } finally {
                                                     setLoading(false);
                                                 }
@@ -416,8 +418,8 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                                 ) : leaderboard.length === 0 ? (
                                     <div className="text-center py-12 text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
                                         <Trophy className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-                                        <p className="text-slate-600 dark:text-slate-400 font-medium">No rankings yet</p>
-                                        <p className="text-xs mt-1">Complete quizzes to appear here!</p>
+                                        <p className="text-slate-600 dark:text-slate-400 font-medium">Belum ada ranking</p>
+                                        <p className="text-xs mt-1">Selesaikan latihan agar masuk ranking.</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
@@ -500,6 +502,8 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                                         <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-xl p-3 border border-slate-100 dark:border-slate-700 dashed">
                                             <span className="font-mono font-bold text-lg tracking-wider text-slate-800 dark:text-slate-200">{realFriendCode || 'Generating...'}</span>
                                             <button
+                                                type="button"
+                                                aria-label="Copy friend code"
                                                 onClick={copyFriendCode}
                                                 className="p-2 bg-white dark:bg-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors shadow-sm border border-slate-100 dark:border-slate-600"
                                             >
@@ -550,7 +554,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                                     {loadingFriends ? (
                                         <div className="text-center py-10 text-slate-400">
                                             <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                                            Loading friends...
+                                            Memuat teman...
                                         </div>
                                     ) : friends.length === 0 ? (
                                         <div className="text-center py-10 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
@@ -585,6 +589,8 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                                                 </div>
 
                                                 <button
+                                                    type="button"
+                                                    aria-label="Remove friend"
                                                     onClick={() => setFriendToRemove(friend)}
                                                     className="text-slate-300 hover:text-red-500 p-2"
                                                     title="Remove Friend"
@@ -600,7 +606,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                                 {loadingActivities ? (
                                     <div className="text-center py-6 text-slate-400">
                                         <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
-                                        <span className="text-xs">Loading activities...</span>
+                                        <span className="text-xs">Memuat aktivitas...</span>
                                     </div>
                                 ) : friendActivities.length > 0 ? (
                                     <div className="mt-6">
@@ -743,7 +749,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                     <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm p-6 shadow-xl animate-in fade-in zoom-in duration-200">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create Circle</h2>
-                            <button onClick={() => setShowCreateModal(false)} className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                            <button type="button" aria-label="Close create circle dialog" onClick={() => setShowCreateModal(false)} className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                                 <X className="w-5 h-5 text-slate-500" />
                             </button>
                         </div>
@@ -782,7 +788,7 @@ export const SocialHub: React.FC<SocialHubProps> = ({ onNavigate, currentUserNam
                     <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm p-6 shadow-xl animate-in fade-in zoom-in duration-200">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Join Circle</h2>
-                            <button onClick={() => setShowJoinModal(false)} className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                            <button type="button" aria-label="Close join circle dialog" onClick={() => setShowJoinModal(false)} className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                                 <X className="w-5 h-5 text-slate-500" />
                             </button>
                         </div>

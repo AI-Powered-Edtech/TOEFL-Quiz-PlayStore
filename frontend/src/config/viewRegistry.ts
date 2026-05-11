@@ -115,7 +115,7 @@ export function getViewStatus(view: AppView): ViewStatus {
 
 export function isViewEnabledForRuntime(view: AppView, includeDev = import.meta.env.DEV): boolean {
   const status = getViewStatus(view);
-  if (status === 'active' || status === 'hidden' || status === 'internal') return true;
+  if (status === 'active') return true;
   if (status === 'dev-only') return includeDev;
   return false;
 }

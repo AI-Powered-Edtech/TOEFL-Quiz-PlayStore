@@ -61,11 +61,11 @@ export const QuizViewStructure: React.FC<QuizViewStructureProps> = ({
     };
 
     return (
-        <div className="max-w-2xl mx-auto flex flex-col h-full">
+        <div className="max-w-md mx-auto flex flex-col h-full">
             <div className="bg-white rounded-[24px] shadow-xl shadow-slate-200/60 border border-slate-100 overflow-hidden flex flex-col h-full max-h-[calc(100vh-120px)]">
 
                 {/* Header */}
-                <div className="p-6 bg-gradient-to-b from-green-50/50 to-white border-b border-slate-100 shrink-0">
+                <div className="p-5 bg-gradient-to-b from-green-50/50 to-white border-b border-slate-100 shrink-0">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                             <span className="px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider bg-green-100 text-green-700 border border-green-200">
@@ -91,7 +91,7 @@ export const QuizViewStructure: React.FC<QuizViewStructureProps> = ({
 
                     {/* Question Prompt */}
                     <div className="min-h-[100px] flex items-center">
-                        <div className="font-serif text-xl leading-relaxed text-slate-800 w-full">
+                        <div className="font-serif text-lg leading-relaxed text-slate-800 w-full">
                             {isTyping && !showExplanation ? (
                                 <Typewriter
                                     text={currentQuestion.prompt.replace(/_{2,}/g, '_______')}
@@ -139,7 +139,7 @@ export const QuizViewStructure: React.FC<QuizViewStructureProps> = ({
 
                     {/* Tab: Question (Options) */}
                     {(!showExplanation || activeTab === 'question') && (
-                        <div className="p-6 bg-white min-h-full">
+                        <div className="p-5 bg-white min-h-full">
                             <div className="grid gap-3">
                                 {currentQuestion.choices.map((choiceText, idx) => {
                                     const isSelected = selectedAnswerIndex === idx;
@@ -185,11 +185,14 @@ export const QuizViewStructure: React.FC<QuizViewStructureProps> = ({
                                                 }`}>
                                                 {optionLabel}
                                             </span>
-                                            <span className={`text-base font-medium flex-1 ${isEliminated ? 'line-through decoration-slate-300' : ''}`}>
+                                            <span className={`text-sm font-medium flex-1 ${isEliminated ? 'line-through decoration-slate-300' : ''}`}>
                                                 {choiceText}
                                             </span>
                                             {!showExplanation && (
-                                                <div
+                                                <button
+                                                    type="button"
+                                                    aria-pressed={isEliminated}
+                                                    aria-label={`Eliminate option ${optionLabel}`}
                                                     onClick={(e) => handleToggleElimination(e, idx)}
                                                     className={`p-2 rounded-full transition-all ${isEliminated
                                                         ? 'text-orange-500 bg-orange-50 hover:bg-orange-100'
@@ -197,7 +200,7 @@ export const QuizViewStructure: React.FC<QuizViewStructureProps> = ({
                                                         }`}
                                                 >
                                                     <Ban className="w-4 h-4" />
-                                                </div>
+                                                </button>
                                             )}
                                         </button>
                                     );

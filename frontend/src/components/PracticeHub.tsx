@@ -181,6 +181,8 @@ export const PracticeHubView: React.FC<PracticeHubViewProps> = ({ onNavigate }) 
                 <div className="px-5 pt-6 pb-6">
                     <div className="flex items-center gap-4">
                         <button
+                            type="button"
+                            aria-label="Back to home"
                             onClick={() => onNavigate(AppView.DASHBOARD)}
                             className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 transition-all active:scale-95"
                         >
@@ -204,7 +206,7 @@ export const PracticeHubView: React.FC<PracticeHubViewProps> = ({ onNavigate }) 
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-[0.03] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                     <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-500 opacity-[0.05] rounded-full blur-2xl translate-y-1/2 -translate-x-1/4" />
 
-                    <div className="relative z-10 max-w-2xl mx-auto flex gap-3">
+                    <div className="relative z-10 max-w-md mx-auto flex gap-3">
                         <div className="flex-1 bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/5 flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center text-orange-300">
                                 <Zap className="w-4 h-4" />
@@ -227,12 +229,12 @@ export const PracticeHubView: React.FC<PracticeHubViewProps> = ({ onNavigate }) 
                 </div>
 
                 <div className="relative z-10 -mt-12 bg-slate-50 rounded-t-[2.5rem]">
-                    <div className="container max-w-2xl mx-auto px-5 pt-6 space-y-6">
+                    <div className="max-w-md mx-auto px-5 pt-6 space-y-6">
 
                         <div className="space-y-3">
                             <div className="flex items-center gap-2 pl-1">
                                 <Target className="w-4 h-4 text-slate-500" />
-                                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Core Training</h2>
+                                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">TOEFL Practice</h2>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 {coreItems.map(item => (
@@ -244,7 +246,7 @@ export const PracticeHubView: React.FC<PracticeHubViewProps> = ({ onNavigate }) 
                         <div className="space-y-3">
                             <div className="flex items-center gap-2 pl-1">
                                 <Dumbbell className="w-4 h-4 text-slate-500" />
-                                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Skill Gym</h2>
+                                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Skill Drills</h2>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 {skillItems.map(item => (

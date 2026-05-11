@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { AppView, SectionType } from '../../types';
 import { fetchFeaturedPosts, fetchAllBlogPosts } from '../../services/blogService';
-import { BlogPost } from '../../data/blogPosts';
+import { BlogPost, BLOG_POSTS } from '../../data/blogPosts';
 
 interface BlogListingViewProps {
     onNavigate: (view: AppView, params?: any) => void;
@@ -15,9 +15,9 @@ const sectionToApi = (category: SectionType) => category;
 export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) => {
     const { user } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
-    const [featuredPosts, setFeaturedPosts] = useState<BlogPost[]>([]);
-    const [allPosts, setAllPosts] = useState<BlogPost[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [featuredPosts, setFeaturedPosts] = useState<BlogPost[]>(BLOG_POSTS);
+    const [allPosts, setAllPosts] = useState<BlogPost[]>(BLOG_POSTS);
+    const [isLoading, setIsLoading] = useState(false);
     const [categoryProgress, setCategoryProgress] = useState({
         STRUCTURE: { completed: 0, total: 60 },
         WRITTEN: { completed: 0, total: 40 },
@@ -31,8 +31,8 @@ export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) 
         Promise.all([fetchFeaturedPosts(), fetchAllBlogPosts()])
             .then(([featured, all]) => {
                 if (!isMounted) return;
-                setFeaturedPosts(featured);
-                setAllPosts(all);
+                setFeaturedPosts(featured.length > 0 ? featured : BLOG_POSTS);
+                setAllPosts(all.length > 0 ? all : BLOG_POSTS);
             })
             .finally(() => { if (isMounted) setIsLoading(false); });
         return () => { isMounted = false; };
@@ -73,6 +73,15 @@ export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) 
 
     const handleCategoryClick = (category: SectionType) => {
         onNavigate(AppView.BLOG_SKILL_PICKER, { selectedSkillCategory: sectionToApi(category) });
+    };
+
+    const recommendedPosts = featuredPosts.length > 0 ? featuredPosts : allPosts;
+
+    const categoryStyles: Record<string, { bg: string; text: string; bar: string }> = {
+        blue: { bg: 'bg-blue-50', text: 'text-blue-600', bar: 'bg-blue-500' },
+        fuchsia: { bg: 'bg-fuchsia-50', text: 'text-fuchsia-600', bar: 'bg-fuchsia-500' },
+        emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', bar: 'bg-emerald-500' },
+        orange: { bg: 'bg-orange-50', text: 'text-orange-600', bar: 'bg-orange-500' },
     };
 
     const renderPostCard = (post: BlogPost, idx: number, compact = false) => (
@@ -122,7 +131,7 @@ export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) 
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full bg-slate-100/80 text-slate-700 py-3.5 pl-11 pr-11 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium placeholder-slate-400"
                     />
-                    {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400"><X className="w-4 h-4" /></button>}
+                    {searchQuery && <button type="button" aria-label="Clear search" onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400"><X className="w-4 h-4" /></button>}
                 </div>
             </div>
 
@@ -149,7 +158,7 @@ export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) 
                                 <button onClick={() => setSearchQuery(' ')} className="text-blue-600 font-bold text-sm flex items-center gap-0.5 hover:text-blue-700">See all <ChevronRight className="w-4 h-4" /></button>
                             </div>
                             <div className="flex gap-4 overflow-x-auto pb-6 -mx-5 px-5 custom-scrollbar snap-x">
-                                {isLoading ? <p className="text-sm text-slate-400 font-medium">Loading TOEFL lessons...</p> : featuredPosts.length === 0 ? <p className="text-sm text-slate-400 font-medium">No featured lessons found.</p> : featuredPosts.map((post, idx) => renderPostCard(post, idx))}
+                                {isLoading && featuredPosts.length === 0 ? <p className="text-sm text-slate-400 font-medium">Loading TOEFL lessons...</p> : featuredPosts.length === 0 ? <p className="text-sm text-slate-400 font-medium">No featured lessons found.</p> : featuredPosts.map((post, idx) => renderPostCard(post, idx))}
                             </div>
                         </div>
 
@@ -164,10 +173,11 @@ export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) 
                                 ] as const).map(([key, title, Icon, color, desc]) => {
                                     const progress = categoryProgress[key];
                                     const pct = Math.min(100, (progress.completed / progress.total) * 100);
+                                    const styles = categoryStyles[color];
                                     return (
-                                        <button key={key} onClick={() => handleCategoryClick(key as SectionType)} className="border border-slate-100 rounded-3xl p-4 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer active:scale-95 text-left">
-                                            <div className="flex items-center gap-3 mb-4"><div className={`w-10 h-10 rounded-full bg-${color}-50 flex items-center justify-center`}><Icon className={`w-5 h-5 text-${color}-600`} /></div><h3 className="font-bold text-slate-900">{title}</h3></div>
-                                            <div className="mb-3"><div className="flex justify-between text-xs font-bold text-slate-500 mb-1.5"><span>Progress</span><span className={`text-${color}-600`}>{progress.completed}/{progress.total}</span></div><div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden"><div className={`h-full bg-${color}-500 rounded-full`} style={{ width: `${pct}%` }} /></div></div>
+                                        <button key={key} type="button" onClick={() => handleCategoryClick(key as SectionType)} className="border border-slate-100 rounded-3xl p-4 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer active:scale-95 text-left">
+                                            <div className="flex items-center gap-3 mb-4"><div className={`w-10 h-10 rounded-full ${styles.bg} flex items-center justify-center`}><Icon className={`w-5 h-5 ${styles.text}`} /></div><h3 className="font-bold text-slate-900">{title}</h3></div>
+                                            <div className="mb-3"><div className="flex justify-between text-xs font-bold text-slate-500 mb-1.5"><span>Progress</span><span className={styles.text}>{progress.completed}/{progress.total}</span></div><div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden"><div className={`h-full ${styles.bar} rounded-full`} style={{ width: `${pct}%` }} /></div></div>
                                             <p className="text-[10px] sm:text-xs text-slate-500 font-medium">{progress.total} skills • {desc}</p>
                                         </button>
                                     );
@@ -177,7 +187,7 @@ export const BlogListingView: React.FC<BlogListingViewProps> = ({ onNavigate }) 
 
                         <div className="px-5 mt-10 mb-8">
                             <h2 className="text-[22px] font-black font-serif text-slate-900 mb-4">Recommended</h2>
-                            <div className="space-y-3">{featuredPosts.slice(0, 2).map((post, idx) => renderPostCard(post, idx, true))}</div>
+                            <div className="space-y-3">{recommendedPosts.slice(0, 4).map((post, idx) => renderPostCard(post, idx, true))}</div>
                         </div>
                     </>
                 )}

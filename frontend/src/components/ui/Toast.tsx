@@ -57,7 +57,7 @@ const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
             initial={prefersReducedMotion ? false : { opacity: 0, x: 300 }}
             animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
             exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 300 }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg ${getColorClasses()} min-w-[300px] max-w-md`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg ${getColorClasses()} w-full max-w-md`}
         >
             <div className="flex-shrink-0">
                 {getIcon()}
@@ -82,7 +82,7 @@ interface ToastContainerProps {
 
 export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onRemove }) => {
     return (
-        <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2">
+        <div className="fixed top-4 left-1/2 z-[100] flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 flex-col gap-2">
             <AnimatePresence>
                 {toasts.map((toast) => (
                     <Toast
