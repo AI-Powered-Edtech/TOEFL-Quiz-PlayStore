@@ -1,5 +1,6 @@
 pub mod account_profile;
 pub mod auth;
+pub mod account;
 pub mod admin;
 pub mod oauth;
 pub mod quiz;
