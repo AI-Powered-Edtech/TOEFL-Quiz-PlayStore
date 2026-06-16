@@ -13,6 +13,9 @@
             --bg: #f8fafc;
             --card: #ffffff;
             --border: #e2e8f0;
+            --warn-bg: #fef3c7;
+            --warn-border: #fbbf24;
+            --warn-text: #92400e;
         }
 
         * {
@@ -119,6 +122,17 @@
             font-size: 0.8rem;
             padding: 2rem 1rem;
         }
+
+        .template-notice {
+            background: var(--warn-bg);
+            border: 1px solid var(--warn-border);
+            color: var(--warn-text);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -130,6 +144,11 @@
     </header>
 
     <main>
+
+        <div class="template-notice">
+            Template — have a legal professional review before production use.
+            Templat — harap ditinjau oleh profesional hukum sebelum digunakan.
+        </div>
 
         <section>
             <h2>1. Introduction</h2>
@@ -252,6 +271,107 @@
             <ul>
                 <li><strong>Email:</strong> <a href="mailto:support@toeflquiz.app">support@toeflquiz.app</a></li>
             </ul>
+        </section>
+
+        <section>
+            <h2>12. GDPR Rights <span class="badge">EU Users</span></h2>
+            <p>If you are in the European Economic Area or the United Kingdom, the General Data Protection Regulation
+                (EU) 2016/679 grants you the rights below in relation to your personal data.</p>
+
+            <h3>Data Controller</h3>
+            <p>The data controller for TOEFL Quiz is the operator of the App. Contact the controller at:
+                <a href="mailto:privacy@toeflquiz.example">privacy@toeflquiz.example</a>.</p>
+
+            <h3>Your Rights</h3>
+            <ul>
+                <li><strong>Right of access</strong> — obtain a copy of the personal data we hold about you.</li>
+                <li><strong>Right to rectification</strong> — have inaccurate or incomplete data corrected.</li>
+                <li><strong>Right to erasure ("right to be forgotten")</strong> — request deletion of your data.</li>
+                <li><strong>Right to restriction of processing</strong> — limit how we use your data.</li>
+                <li><strong>Right to object</strong> — object to processing based on legitimate interests.</li>
+                <li><strong>Right to data portability</strong> — receive your data in a structured, machine-readable
+                    format.</li>
+                <li><strong>Right to withdraw consent</strong> — where processing is based on consent, withdraw it at
+                    any time.</li>
+            </ul>
+
+            <h3>How to Exercise These Rights</h3>
+            <ul>
+                <li>In the App, open <strong>Settings → Account &amp; Data → Export my data</strong> to download a
+                    copy of your personal data.</li>
+                <li>Delete your account in-app via <strong>Settings → Account &amp; Data → Delete my account</strong>,
+                    which calls <code>DELETE /api/auth/account</code> and permanently removes your data within 24
+                    hours.</li>
+                <li>For any other request, email <a href="mailto:privacy@toeflquiz.example">privacy@toeflquiz.example</a>.
+                    We respond within 30 days.</li>
+            </ul>
+
+            <h3>Right to Lodge a Complaint</h3>
+            <p>If you believe your rights have been violated, you may lodge a complaint with your local supervisory
+                authority (for example, the Data Protection Authority in your EU member state, or the Information
+                Commissioner's Office (ICO) in the United Kingdom).</p>
+        </section>
+
+        <section>
+            <h2>13. CCPA Rights <span class="badge">California Users</span></h2>
+            <p>If you are a California resident, the California Consumer Privacy Act (CCPA), as amended by the CPRA,
+                grants you the following rights.</p>
+
+            <h3>Categories of Personal Information We Collect</h3>
+            <ul>
+                <li><strong>Identifiers:</strong> email address, username, device identifiers, FCM push token.</li>
+                <li><strong>Customer records:</strong> display name, profile photo.</li>
+                <li><strong>Commercial information:</strong> subscription status and purchase history (via
+                    RevenueCat / Google Play).</li>
+                <li><strong>Internet activity:</strong> app usage, features accessed, quiz responses, crash logs.</li>
+                <li><strong>Inferences:</strong> learning progress and estimated proficiency level.</li>
+            </ul>
+
+            <h3>Your Rights</h3>
+            <ul>
+                <li><strong>Right to know</strong> — what personal information we collect, use, and disclose.</li>
+                <li><strong>Right to delete</strong> — request deletion of personal information we have collected.</li>
+                <li><strong>Right to correct</strong> — request correction of inaccurate personal information.</li>
+                <li><strong>Right to opt-out of sale or sharing</strong> — <strong>We do NOT sell personal
+                        information</strong>, and we do not share it for cross-context behavioral advertising.</li>
+                <li><strong>Right to non-discrimination</strong> — we will not deny services, charge different prices,
+                    or provide a different quality of service because you exercised your CCPA rights.</li>
+            </ul>
+
+            <p>To exercise these rights, email <a href="mailto:privacy@toeflquiz.example">privacy@toeflquiz.example</a>
+                or use the in-app Account &amp; Data tools. We will verify your identity before fulfilling the request.</p>
+        </section>
+
+        <section>
+            <h2>14. UU PDP <span class="badge">Pengguna Indonesia</span></h2>
+            <p>Bagi pengguna di Indonesia, perlindungan data pribadi Anda diatur oleh
+                <strong>Undang-Undang No. 27 Tahun 2022 tentang Perlindungan Data Pribadi (UU PDP)</strong>.</p>
+
+            <h3>Hak Subjek Data</h3>
+            <ul>
+                <li><strong>Hak akses:</strong> meminta salinan data pribadi yang kami simpan.</li>
+                <li><strong>Hak perbaikan:</strong> meminta perbaikan data yang tidak akurat.</li>
+                <li><strong>Hak penghapusan:</strong> meminta penghapusan data pribadi dan akun Anda.</li>
+                <li><strong>Hak menarik persetujuan:</strong> menarik persetujuan pemrosesan data sewaktu-waktu.</li>
+                <li><strong>Hak membatasi pemrosesan</strong> dan <strong>hak mengajukan keberatan</strong> atas
+                    pemrosesan tertentu.</li>
+                <li><strong>Hak portabilitas:</strong> menerima data Anda dalam format yang dapat digunakan kembali.</li>
+            </ul>
+
+            <h3>Pengendali Data</h3>
+            <p>Pengendali Data Pribadi ("Data Controller") untuk TOEFL Quiz adalah operator Aplikasi. Hubungi kami di
+                <a href="mailto:privacy@toeflquiz.example">privacy@toeflquiz.example</a> untuk menggunakan hak Anda.</p>
+
+            <h3>Pengaduan</h3>
+            <p>Jika Anda merasa hak Anda dilanggar, Anda dapat mengajukan pengaduan kepada
+                <strong>Kementerian Komunikasi dan Informatika (KEMKOMINFO)</strong> Republik Indonesia atau lembaga
+                pengawas Perlindungan Data Pribadi yang berwenang.</p>
+
+            <h3>Retensi Data</h3>
+            <p>Setelah akun Anda dihapus, kami menyimpan catatan terbatas (log audit, catatan transaksi) selama
+                <strong>3 (tiga) tahun</strong> untuk keperluan hukum, audit, dan kewajiban perpajakan, sesuai
+                peraturan perundang-undangan yang berlaku. Setelah periode tersebut, catatan akan dianonimkan atau
+                dihapus secara permanen.</p>
         </section>
 
     </main>
