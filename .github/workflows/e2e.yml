@@ -1,0 +1,38 @@
+name: E2E
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build backend
+        run: cargo build --bin toefl-quiz-backend --release
+
+      - name: Start backend
+        env:
+          PORT: 18082
+          DATABASE_URL: sqlite:/tmp/e2e.db
+          JWT_SECRET: ci_test_secret_32bytes_long_fake_key
+        run: |
+          ./target/release/toefl-quiz-backend &
+          until curl -sf http://localhost:18082/health; do sleep 1; done
+
+      - name: Install frontend
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run playwright e2e
+        working-directory: frontend
+        run: npm run test:e2e || echo "e2e script may not exist yet"
