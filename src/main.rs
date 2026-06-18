@@ -14,7 +14,7 @@ mod tasks;
 
 use crate::config::AppConfig;
 use crate::db::Database;
-use crate::services::{admin, admin_monitoring, ai, auth, oauth, blog, creator, monitoring, profile, quiz, social, storage, writing, purchases, oracle};
+use crate::services::{admin, admin_monitoring, ai, auth, oauth, blog, creator, monitoring, profile, quiz, social, storage, writing, purchases, oracle, account_export};
 
 #[tokio::main]
 async fn main() {
@@ -50,6 +50,7 @@ async fn main() {
         .endpoint(Method::POST, "/oauth/init", post(oauth::init_oauth))
         .endpoint(Method::POST, "/oauth/callback", post(oauth::oauth_callback))
         .endpoint(Method::POST, "/oauth/rotate", post(oauth::rotate_tokens))
+        .endpoint(Method::GET, "/export", get(account_export::export_account))
         .state(state.clone());
 
     let admin_svc = ServiceProcess::new("admin")
