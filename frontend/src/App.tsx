@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AppRouter } from './components/AppRouter';
 import { FeatureTourModal, FEATURE_TOUR_KEY } from './components/FeatureTourModal';
 import { MobileTabBar } from './components/MobileTabBar';
+import { TOSAcceptanceModal, needsTOSAcceptance } from './components/TOSAcceptanceModal';
 import { ToastContainer, useToast } from './components/ui/Toast';
 import { useAuth } from './hooks/useAuth';
 import { useNetworkState } from './hooks/useNetworkState';
@@ -80,6 +81,7 @@ const App: React.FC = () => {
     const { unreadCount } = useNotifications(user?.id);
     const [isAppInitialLoading, setIsAppInitialLoading] = useState(true);
     const [showFeatureTour, setShowFeatureTour] = useState(false);
+    const [needsTOS, setNeedsTOS] = useState(() => needsTOSAcceptance());
 
     const { currentView, setCurrentView, gymBackTarget } = useNavigationStore();
     const { setAuthState } = useAuthStore();
@@ -472,6 +474,8 @@ const App: React.FC = () => {
                 )}
 
             <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+            {needsTOS && <TOSAcceptanceModal onAccept={() => setNeedsTOS(false)} />}
         </div>
         </div>
     );
